@@ -15,8 +15,10 @@ from core.http import client_ip
 # At most this many wrong passwords per email in the window, then wait.
 MAX_FAILED_LOGINS = 10
 FAILED_LOGIN_WINDOW = datetime.timedelta(minutes=15)
-# Remembered sessions last this long; others end when the browser closes.
-REMEMBER_FOR = datetime.timedelta(days=30)
+# "Keep me logged in" should never run out. Browsers cap cookies at 400 days, so a
+# remembered session is renewed for another 400 days whenever it's used.
+# Sessions that aren't remembered end when the browser closes.
+REMEMBER_FOR = datetime.timedelta(days=400)
 # Don't write "last seen" on every request.
 LAST_SEEN_EVERY = datetime.timedelta(minutes=5)
 
@@ -31,13 +33,14 @@ class TooManyAttempts(Exception):
 
 def sign_in(request: HttpRequest, email: str, password: str, remember: bool) -> User:
     email = email.strip().lower()
-    recent_failures = FailedLogin.objects.filter(
-        email=email, at__gte=timezone.now() - FAILED_LOGIN_WINDOW
-    )
-    if recent_failures.count() >= MAX_FAILED_LOGINS:
+    window_start = timezone.now() - FAILED_LOGIN_WINDOW
+    if FailedLogin.objects.filter(email=email, at__gte=window_start).count() >= MAX_FAILED_LOGINS:
         raise TooManyAttempts
     user = authenticate(request, username=email, password=password)
     if user is None:
+        # Failures only matter inside the window; drop older ones as we go, so
+        # guesses at emails that never log in can't pile up.
+        FailedLogin.objects.filter(at__lt=window_start).delete()
         FailedLogin.objects.create(email=email, ip=client_ip(request))
         raise WrongCredentials
     FailedLogin.objects.filter(email=email).delete()
@@ -100,7 +103,10 @@ def forget_device(request: HttpRequest) -> None:
 
 
 def touch_device(request: HttpRequest) -> None:
+    """Note that the device was used, and keep a remembered session from running out."""
     now = timezone.now()
-    Device.objects.filter(
+    updated = Device.objects.filter(
         session_key=request.session.session_key, last_seen__lt=now - LAST_SEEN_EVERY
     ).update(last_seen=now, ip=client_ip(request))
+    if updated and not request.session.get_expire_at_browser_close():
+        request.session.set_expiry(REMEMBER_FOR)

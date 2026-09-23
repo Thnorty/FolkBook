@@ -105,8 +105,7 @@ def test_keep_me_logged_in(client, ela, remember):
 
     assert client.session.get_expire_at_browser_close() is not remember
     if remember:
-        thirty_days = 30 * 24 * 60 * 60
-        assert thirty_days - 60 < client.session.get_expiry_age() <= thirty_days
+        assert client.session.get_expiry_age() > 399 * 24 * 60 * 60
 
 
 def test_log_out(client, ela):
@@ -181,7 +180,7 @@ def test_change_password_signs_out_other_devices_but_not_this_one(client, ela):
     ("current", "new", "field"),
     [
         ("not my password", "a brand new passphrase", "current_password"),
-        (PASSWORD, "short", None),  # under 12 characters
+        (PASSWORD, "seven77", None),  # under 8 characters
         (PASSWORD, "123456789012345", None),  # only numbers
     ],
 )
@@ -312,3 +311,33 @@ def test_switching_accounts_in_the_same_browser(client, ela):
     assert response.status_code == 200
     assert client.get("/api/auth/me").json()["email"] == "deniz@example.com"
     assert Device.objects.get(session_key=client.session.session_key).user == deniz
+
+
+def test_a_remembered_session_is_renewed_when_used(client, ela):
+    log_in(client, "ela@example.com", remember=True)
+    session = client.session
+    session.set_expiry(60 * 60)  # as if it were about to run out
+    session.save()
+    Device.objects.update(last_seen=timezone.now() - LAST_SEEN_EVERY * 2)
+
+    client.get("/api/auth/me")
+
+    assert client.session.get_expiry_age() > 399 * 24 * 60 * 60
+
+
+def test_a_session_that_is_not_remembered_still_ends_with_the_browser(client, ela):
+    log_in(client, "ela@example.com", remember=False)
+    Device.objects.update(last_seen=timezone.now() - LAST_SEEN_EVERY * 2)
+
+    client.get("/api/auth/me")
+
+    assert client.session.get_expire_at_browser_close()
+
+
+def test_old_failed_logins_are_cleaned_up_as_new_ones_arrive(client, ela):
+    log_in(client, "someone@example.com", "wrong password")
+    FailedLogin.objects.update(at=timezone.now() - datetime.timedelta(hours=1))
+
+    log_in(client, "another@example.com", "wrong password")
+
+    assert list(FailedLogin.objects.values_list("email", flat=True)) == ["another@example.com"]
