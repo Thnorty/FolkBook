@@ -28,6 +28,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - Accounts log in with **email** (case-insensitive, stored lowercase). Server admins are users with `is_staff`.
 - Records exposed by the API use **UUID** primary keys, so IDs can't be guessed or counted.
 - Paths can cross shared spaces (Me → Defne → people in Defne's space).
+- The graph connects people three ways: **stored links**; a space's owner and **the people they put in it**; a space's owner and **its members**. When a pair is connected several ways, the stored link describes it. "How do I know …?" returns the fewest-steps route (stored links win ties) plus up to two alternatives that start with a different first step.
 - Everyone who can see a space sees the Me of its owner and of every member.
 - A link is shown only when the viewer can see its space **and** both people. A link inside a space can only be made between people in that space.
 - Only the owner deletes a person. Editors of a space can fix the basic details of people in it, but nobody edits another user's Me.
@@ -66,7 +67,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - Keyboard: `N` add person, `Shift+N` quick capture, `Ctrl/Cmd+K` command palette.
 
 ## Tech stack
-- **Backend:** Django + Django Ninja (auto OpenAPI), PostgreSQL (graph queries in recursive SQL, no separate graph DB).
+- **Backend:** Django + Django Ninja (auto OpenAPI), PostgreSQL, no separate graph database. The graph (`graph/queries.py`) loads the viewer's visible network in 5 queries and walks it in Python: personal books are small enough, and every query stays inside the permission layer. Revisit with recursive SQL only if big books get slow.
 - **Frontend:** Vite + React + TypeScript, Tailwind CSS + shadcn/ui, Motion, TanStack Query with a client generated from the OpenAPI spec, Reagraph for the graph (fallback: Sigma.js + graphology).
 - **Infra:** Docker Compose, Caddy.
 - Reagraph notes: `labelFontUrl` needs .ttf/.woff (not .woff2); `clusterAttribute` works only with force layouts; animation turns off above 400 nodes+edges; folded-space bubbles are synthetic nodes (not `collapsedNodeIds`).
