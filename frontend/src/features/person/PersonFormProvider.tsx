@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { X } from 'lucide-react'
-import { Dialog } from 'radix-ui'
 import { useMemo, useState, type ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
+import { FormDialog } from '@/components/ui/form-dialog'
 import { notify } from '@/lib/notify'
 import { removePhoto, uploadPhoto } from './photo'
 import { PersonForm, type PersonFormResult } from './PersonForm'
@@ -56,61 +54,25 @@ function PersonFormDialog({ personId, onClose }: { personId?: string; onClose: (
   })
 
   return (
-    <Dialog.Root open onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-30 bg-ink/25" />
-        <Dialog.Content
-          aria-describedby={undefined}
-          // Ctrl/⌘+Enter saves from anywhere in the dialog, not just from inside the form.
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-              event.preventDefault()
-              document.querySelector<HTMLFormElement>(`#${FORM_ID}`)?.requestSubmit()
-            }
-          }}
-          className="fixed inset-0 z-30 flex flex-col overflow-hidden bg-paper md:inset-auto md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:max-w-xl md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float"
-        >
-          {/* Phones: Cancel · title · Save across the top (screen 2b). Desktop: title and ✕. */}
-          <div className="flex flex-none items-center gap-2 border-b border-line px-3 py-2 md:px-5 md:py-3">
-            <Button variant="ghost" className="md:hidden" onClick={onClose}>
-              Cancel
-            </Button>
-            <Dialog.Title className="flex-1 text-center type-heading md:text-left">
-              {title}
-            </Dialog.Title>
-            <Button
-              type="submit"
-              form={FORM_ID}
-              variant="ghost"
-              className="font-semibold text-accent md:hidden"
-              disabled={save.isPending}
-            >
-              Save
-            </Button>
-            <Dialog.Close asChild>
-              <Button variant="ghost" aria-label="Close" className="hidden md:inline-flex">
-                <X aria-hidden />
-              </Button>
-            </Dialog.Close>
-          </div>
-          <div className="flex-1 overflow-y-auto px-4 py-5 md:px-5">
-            {editing && !person.data ? (
-              <p className="py-8 text-center text-ink-soft">
-                {person.error?.message ?? 'Opening…'}
-              </p>
-            ) : (
-              <PersonForm
-                formId={FORM_ID}
-                person={person.data}
-                saving={save.isPending}
-                error={save.error?.message}
-                onSubmit={(result) => save.mutate(result)}
-                onCancel={onClose}
-              />
-            )}
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <FormDialog
+      title={title}
+      formId={FORM_ID}
+      submitLabel="Save"
+      busy={save.isPending}
+      onClose={onClose}
+    >
+      {editing && !person.data ? (
+        <p className="py-8 text-center text-ink-soft">{person.error?.message ?? 'Opening…'}</p>
+      ) : (
+        <PersonForm
+          formId={FORM_ID}
+          person={person.data}
+          saving={save.isPending}
+          error={save.error?.message}
+          onSubmit={(result) => save.mutate(result)}
+          onCancel={onClose}
+        />
+      )}
+    </FormDialog>
   )
 }

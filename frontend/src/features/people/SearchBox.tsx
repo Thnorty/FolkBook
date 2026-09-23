@@ -8,10 +8,11 @@ type SearchBoxProps = {
   value: string
   /** Called once typing pauses, not on every key. */
   onSearch: (text: string) => void
+  label?: string
 }
 
 /** The People search: names, notes, memory aids, spaces and tags. */
-export function SearchBox({ value, onSearch }: SearchBoxProps) {
+export function SearchBox({ value, onSearch, label = 'Search people' }: SearchBoxProps) {
   const [text, setText] = useState(value)
   const [lastValue, setLastValue] = useState(value)
 
@@ -35,8 +36,8 @@ export function SearchBox({ value, onSearch }: SearchBoxProps) {
       />
       <Input
         type="search"
-        aria-label="Search people"
-        placeholder="Search people, notes, memory aids"
+        aria-label={label}
+        placeholder={`${label}, notes, memory aids`}
         value={text}
         onChange={(event) => setText(event.target.value)}
         className="px-9 [&::-webkit-search-cancel-button]:hidden"

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import { peopleCountQuery } from '@/features/people/queries'
 import { spacesQuery } from '@/features/spaces/queries'
+import { useSpaceForm } from '@/features/spaces/useSpaceForm'
 import { cn } from '@/lib/utils'
 import { Logo } from './Logo'
 import { SECTIONS, SHORTCUTS } from './nav'
@@ -18,6 +19,7 @@ const COUNT = 'ml-auto type-meta text-ink-faint'
 export function Sidebar({ user, onSearch }: { user: CurrentUser; onSearch: () => void }) {
   const peopleCount = useQuery(peopleCountQuery).data
   const spaces = useQuery(spacesQuery).data?.items ?? []
+  const { openNew: openNewSpace } = useSpaceForm()
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-57 flex-none flex-col border-r border-line bg-chrome px-3 py-4 md:flex">
@@ -56,7 +58,11 @@ export function Sidebar({ user, onSearch }: { user: CurrentUser; onSearch: () =>
           ))}
         </ul>
 
-        <h2 className="px-2.5 pt-4.5 pb-2 type-label text-ink-faint">Spaces</h2>
+        <h2 className="px-2.5 pt-4.5 pb-2 type-label text-ink-faint">
+          <Link to="/spaces" className="hover:text-ink">
+            Spaces
+          </Link>
+        </h2>
         <ul className="flex min-h-0 flex-col gap-px overflow-y-auto">
           {spaces.map((space) => (
             <li key={space.id} data-space={space.color}>
@@ -83,13 +89,17 @@ export function Sidebar({ user, onSearch }: { user: CurrentUser; onSearch: () =>
             </li>
           ))}
           <li>
-            <Link
-              to="/spaces/new"
-              className={cn(ROW, 'gap-2 py-1.75 text-sm font-medium text-accent')}
+            <button
+              type="button"
+              onClick={openNewSpace}
+              className={cn(
+                ROW,
+                'w-full cursor-pointer gap-2 py-1.75 text-sm font-medium text-accent',
+              )}
             >
               <Plus aria-hidden className="size-3.5" />
               New space
-            </Link>
+            </button>
           </li>
         </ul>
       </nav>

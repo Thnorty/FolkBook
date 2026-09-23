@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate, type LinkProps } from '@tanstack/react-router'
 import { Command } from 'cmdk'
-import { Plus, Settings, UserPlus } from 'lucide-react'
+import { FolderPlus, Plus, Settings, UserPlus } from 'lucide-react'
 import { Dialog } from 'radix-ui'
 import type { ReactNode } from 'react'
 import { Kbd } from '@/components/ui/kbd'
 import { usePersonForm } from '@/features/person/usePersonForm'
 import { spacesQuery } from '@/features/spaces/queries'
+import { useSpaceForm } from '@/features/spaces/useSpaceForm'
 import type { Shortcut } from '@/lib/shortcuts'
 import { SECTIONS, SHORTCUTS } from './nav'
 
@@ -19,6 +20,7 @@ type PaletteProps = { open: boolean; onOpenChange: (open: boolean) => void }
 export function CommandPalette({ open, onOpenChange }: PaletteProps) {
   const navigate = useNavigate()
   const { openNew } = usePersonForm()
+  const { openNew: openNewSpace } = useSpaceForm()
   const spaces = useQuery({ ...spacesQuery, enabled: open }).data?.items ?? []
 
   const go = (to: LinkProps['to'], params?: LinkProps['params']) => () => {
@@ -50,6 +52,9 @@ export function CommandPalette({ open, onOpenChange }: PaletteProps) {
                     {label}
                   </Item>
                 ))}
+                <Item onSelect={go('/spaces')} icon={<FolderPlus className="size-4" />}>
+                  Spaces
+                </Item>
                 <Item onSelect={go('/settings')} icon={<Settings className="size-4" />}>
                   Settings
                 </Item>
@@ -90,6 +95,15 @@ export function CommandPalette({ open, onOpenChange }: PaletteProps) {
                   shortcut={SHORTCUTS.quickCapture}
                 >
                   Quick capture
+                </Item>
+                <Item
+                  onSelect={() => {
+                    onOpenChange(false)
+                    openNewSpace()
+                  }}
+                  icon={<FolderPlus className="size-4" />}
+                >
+                  New space
                 </Item>
               </Command.Group>
             </Command.List>

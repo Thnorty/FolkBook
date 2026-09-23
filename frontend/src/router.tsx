@@ -14,6 +14,8 @@ import { safeRedirect } from './lib/redirect'
 import { LoginPage } from './pages/LoginPage'
 import { PeoplePage } from './features/people/PeoplePage'
 import { ProfilePage } from './features/person/ProfilePage'
+import { SpacePage } from './features/spaces/SpacePage'
+import { SpacesPage } from './features/spaces/SpacesPage'
 import { validatePeopleSearch } from './features/people/search'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
@@ -75,8 +77,8 @@ const appPages = [
     component: ProfilePage,
   }),
   placeholder('graph', 'Graph', 'How everyone you know is connected.'),
-  placeholder('spaces/new', 'New space', 'Name a space and pick its color.'),
-  placeholder('spaces/$spaceId', 'Space', 'The people in this space, and who it is shared with.'),
+  createRoute({ getParentRoute: () => appRoute, path: 'spaces', component: SpacesPage }),
+  createRoute({ getParentRoute: () => appRoute, path: 'spaces/$spaceId', component: SpacePage }),
   placeholder(
     'capture',
     'Quick capture',
