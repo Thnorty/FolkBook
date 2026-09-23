@@ -53,7 +53,7 @@ These rules are the product. Breaking one is a critical bug.
 - **Shared spaces expose only:** basic profile (name, photo, birthday, tags) and that space's links. Contact details (phone, email) only when the space's "share contact details" toggle is on.
 - **Relationships are visible only if the viewer can see the space the relationship belongs to.** Seeing both people is not enough.
 - **Every person record has one owner.** Others see it by reference through shared spaces. Only the owner (or an editor of that space, for basic details) can change it.
-- **All visibility checks go through one backend permission layer.** Never filter "by hand" inside a view. Every endpoint, search, graph query, export and API-key request uses the same layer.
+- **All visibility checks go through one backend permission layer: `backend/access/policy.py`.** Never filter "by hand" inside a view. Every endpoint, search, graph query, export and API-key request uses the same layer: start from its `visible_*` querysets and ask its `can_*` checks before writing. New rules go there, with tests in `tests/access/`.
 - **API keys:** stored hashed, shown once, scoped (read-only / read-write, limited spaces, optional private-notes access, off by default).
 - **Secrets** (AI keys, SMTP passwords) are encrypted at rest and never logged, never returned by the API, never sent to the frontend after saving.
 - Links in emails must never change data on a plain GET (email scanners open links); use a confirmation page.
