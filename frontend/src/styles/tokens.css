@@ -12,7 +12,7 @@
   --paper: light-dark(#f6f1e7, #1e1b17);
   --card: light-dark(#fffcf6, #2a2621);
   --hover: light-dark(rgb(34 31 26 / 0.05), rgb(242 234 219 / 0.06));
-  --grain: light-dark(rgb(34 31 26 / 0.25), rgb(242 234 219 / 0.12)); /* paper-grain specks */
+  --grain: light-dark(rgb(34 31 26 / 0.15), rgb(242 234 219 / 0.08)); /* paper-grain specks */
 
   /* Ink */
   --ink: light-dark(#221f1a, #f2eadb);
