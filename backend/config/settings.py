@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "relationships",
     "interactions",
     "reminders",
+    "invites",
 ]
 
 AUTH_USER_MODEL = "accounts.User"

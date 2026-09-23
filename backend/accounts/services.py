@@ -6,10 +6,12 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.http import HttpRequest
 from django.utils import timezone
 
 from accounts.models import Device, FailedLogin, User
+from core.api import Conflict
 from core.http import client_ip
 
 # At most this many wrong passwords per email in the window, then wait.
@@ -49,6 +51,25 @@ def sign_in(request: HttpRequest, email: str, password: str, remember: bool) -> 
     return user
 
 
+def create_account(
+    request: HttpRequest, email: str, password: str, name: str, *, admin: bool = False
+) -> User:
+    """A new account (and its Me), logged in and remembered on this device."""
+    email = User.objects.normalize_email(email.strip())
+    try:
+        validate_email(email)
+    except ValidationError as error:
+        raise ValidationError({"email": "That doesn't look like an email address."}) from error
+    if User.objects.filter(email__iexact=email).exists():
+        raise Conflict("There's already an account with this email. Log in instead.")
+    _check_password_rules(password, User(email=email), field="password")
+    create = User.objects.create_superuser if admin else User.objects.create_user
+    user = create(email, password, name=name.strip())
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+    request.session.set_expiry(REMEMBER_FOR)
+    return user
+
+
 def sign_out(request: HttpRequest) -> None:
     logout(request)  # the user_logged_out signal forgets the device
 
@@ -58,11 +79,18 @@ def change_password(request: HttpRequest, current: str, new: str) -> None:
     user = request.user
     if not user.check_password(current):
         raise ValidationError({"current_password": "That's not your current password."})
-    validate_password(new, user)
+    _check_password_rules(new, user, field="new_password")
     user.set_password(new)
     user.save(update_fields=["password"])
     update_session_auth_hash(request, user)
     sign_out_other_devices(user, keep=request.session.session_key)
+
+
+def _check_password_rules(password: str, user: User, field: str) -> None:
+    try:
+        validate_password(password, user)
+    except ValidationError as error:
+        raise ValidationError({field: error.messages}) from error
 
 
 def active_devices(user: User):

@@ -17,6 +17,8 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 
 ## Users and spaces
 - Several users per server, **invite-only**. Admins create invite links; members can create links for spaces they own.
+- **First run:** while a server has no users, anyone who opens it can create the first account, which becomes the admin. After that, the only way in is an invite.
+- **Invite links:** expire after 1–30 days and allow 1–100 sign-ups. A link can also share a space (as viewer or editor), but only the space's owner can make one; it's deleted with the space. People who already have an account can use a space invite to join the space. Unknown, expired and used-up links all get the same answer, and tokens are long and random so links can't be guessed.
 - **Spaces** are groups of people (the old "contexts" merged into them). A person can be in many spaces. A space is private until shared.
 - Being **in** a space (as a person) is separate from having **access** to it (as a user). Access roles: owner / editor / viewer.
 - Every person record has **one owner**. Other users see it by reference through shared spaces (always the owner's latest version).

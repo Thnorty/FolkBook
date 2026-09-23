@@ -180,8 +180,8 @@ def test_change_password_signs_out_other_devices_but_not_this_one(client, ela):
     ("current", "new", "field"),
     [
         ("not my password", "a brand new passphrase", "current_password"),
-        (PASSWORD, "seven77", None),  # under 8 characters
-        (PASSWORD, "123456789012345", None),  # only numbers
+        (PASSWORD, "seven77", "new_password"),  # under 8 characters
+        (PASSWORD, "123456789012345", "new_password"),  # only numbers
     ],
 )
 def test_bad_password_changes_are_rejected(client, ela, current, new, field):
@@ -190,8 +190,7 @@ def test_bad_password_changes_are_rejected(client, ela, current, new, field):
     response = post(client, "/auth/password", {"current_password": current, "new_password": new})
 
     assert response.status_code == 422
-    if field:
-        assert response.json()["detail"][0]["loc"] == ["body", field]
+    assert response.json()["detail"][0]["loc"] == ["body", field]
     ela.refresh_from_db()
     assert ela.check_password(PASSWORD)
 

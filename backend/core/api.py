@@ -4,9 +4,10 @@ Every error response has the shape {"detail": ...}: a message string, or for
 422 validation errors a list of {"loc": [...], "msg": "..."}, like Ninja's own.
 """
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpRequest
 from ninja import Schema
+from ninja.utils import check_csrf
 
 from access.policy import Access
 
@@ -14,6 +15,15 @@ from access.policy import Access
 def access_for(request: HttpRequest) -> Access:
     """The Access for this request. API keys (#38) will plug in here."""
     return Access.for_user(request.auth)
+
+
+def require_csrf(request: HttpRequest) -> None:
+    """CSRF check for endpoints used before logging in (login, sign-up, first run).
+
+    Logged-in endpoints get this from Ninja's session auth already.
+    """
+    if check_csrf(request):
+        raise PermissionDenied("CSRF check failed. Reload the page and try again.")
 
 
 class Conflict(Exception):
