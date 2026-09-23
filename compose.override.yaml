@@ -1,0 +1,8 @@
+# Development only: merged automatically by `docker compose up`.
+# Exposes Postgres so the backend can also run locally with `uv run` (hot reload).
+# Production: `docker compose -f compose.yaml up -d`.
+
+services:
+  db:
+    ports:
+      - "5432:5432"

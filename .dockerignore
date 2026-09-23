@@ -1,0 +1,6 @@
+# Build context for caddy/Dockerfile is the repo root; only frontend/ and caddy/ are needed.
+**
+!frontend
+!caddy
+frontend/node_modules
+frontend/dist

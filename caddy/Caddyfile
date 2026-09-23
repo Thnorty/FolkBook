@@ -1,0 +1,21 @@
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	@backend path /api /api/* /admin /admin/*
+	handle @backend {
+		reverse_proxy backend:8000
+	}
+
+	# Django's own static files (the admin), collected by the backend container.
+	handle_path /django-static/* {
+		root * /srv/django-static
+		file_server
+	}
+
+	# The React app: serve built files, fall back to index.html for client-side routes.
+	handle {
+		root * /srv/frontend
+		try_files {path} /index.html
+		file_server
+	}
+}

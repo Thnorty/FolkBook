@@ -1,0 +1,34 @@
+[project]
+name = "folkbook-backend"
+version = "0.1.0"
+description = "FolkBook backend: Django + Django Ninja API"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.1.1",
+    "django-ninja>=1.7.1",
+    "gunicorn>=26.2.0",
+    "psycopg[binary]>=3.3.6",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+addopts = "--strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ", "SIM", "RUF"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-django>=4.14.0",
+    "ruff>=0.16.8",
+]

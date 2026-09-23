@@ -1,0 +1,5 @@
+/* Placeholder until the design system (tokens, fonts, Tailwind) is set up. */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
