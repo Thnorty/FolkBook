@@ -3,6 +3,8 @@ export type PeopleSearch = {
   space?: string
   needs?: boolean
   view?: 'grid'
+  /** A person shown in the side panel, on desktop. */
+  peek?: string
 }
 
 /** Reads the People page's URL (?q=…&space=…&needs=true&view=grid), ignoring anything odd. */
@@ -12,5 +14,6 @@ export function validatePeopleSearch(search: Record<string, unknown>): PeopleSea
     space: typeof search.space === 'string' && search.space ? search.space : undefined,
     needs: search.needs === true || search.needs === 'true' ? true : undefined,
     view: search.view === 'grid' ? 'grid' : undefined,
+    peek: typeof search.peek === 'string' && search.peek ? search.peek : undefined,
   }
 }

@@ -145,6 +145,11 @@
 }
 
 @layer base {
+  /* Always keep room for the scrollbar, so pages don't shift sideways when one appears. */
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply paper-grain min-h-dvh bg-paper type-body text-ink antialiased;
   }

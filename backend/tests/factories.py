@@ -51,7 +51,7 @@ class ContactMethodFactory(factory.django.DjangoModelFactory):
         model = ContactMethod
 
     person = factory.SubFactory(PersonFactory)
-    kind = ContactMethod.Kind.PHONE
+    kind = ContactMethod.ContactKind.PHONE
     value = "+90 532 000 00 00"
 
 
@@ -114,7 +114,7 @@ class InteractionFactory(factory.django.DjangoModelFactory):
 
     person = factory.SubFactory(PersonFactory)
     author = factory.SelfAttribute("person.owner")
-    kind = Interaction.Kind.MET
+    kind = Interaction.InteractionKind.MET
     occurred_on = datetime.date(2026, 9, 12)
 
 

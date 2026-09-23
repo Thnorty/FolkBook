@@ -29,3 +29,30 @@ function ymd(isoDate: string): [number, number, number] {
   const [year, month, day] = isoDate.split('-').map(Number)
   return [year, month - 1, day]
 }
+
+const birthdayFormat = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'UTC',
+})
+const birthdayWithYear = new Intl.DateTimeFormat(undefined, {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
+/** "12 March", or "12 March 1992" when the year is known. */
+export function formatBirthday({
+  day,
+  month,
+  year,
+}: {
+  day: number
+  month: number
+  year?: number | null
+}) {
+  // Year 2000 is a leap year, so 29 February still formats when the year is unknown.
+  const date = new Date(Date.UTC(year ?? 2000, month - 1, day))
+  return (year ? birthdayWithYear : birthdayFormat).format(date)
+}

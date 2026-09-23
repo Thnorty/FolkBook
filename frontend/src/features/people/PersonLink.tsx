@@ -2,7 +2,9 @@ import { Link } from '@tanstack/react-router'
 import { PersonCard } from '@/components/notebook/PersonCard'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { formatDaysAgo } from '@/lib/dates'
+import { isWideScreen } from '@/lib/media'
 import { cn } from '@/lib/utils'
+import type { FlyOrigin } from '@/motion/FlyFrom'
 import { Shared } from '@/motion/PageTurn'
 import { sharedPerson } from '@/motion/sharedIds'
 import type { Person } from './queries'
@@ -25,9 +27,32 @@ function Meta({ person }: { person: Person }) {
 }
 
 /** A person in the People list: their card, opening their profile. */
-export function PersonRow({ person }: { person: Person }) {
+type PersonRowProps = {
+  person: Person
+  /** Desktop: a plain click opens the person beside the list, from where their card is. */
+  onPeek?: (personId: string, from: FlyOrigin) => void
+}
+
+export function PersonRow({ person, onPeek }: PersonRowProps) {
   return (
-    <Link to="/people/$personId" params={{ personId: person.id }} className={LINK}>
+    <Link
+      to="/people/$personId"
+      params={{ personId: person.id }}
+      className={LINK}
+      onClick={(event) => {
+        // On desktop a plain click peeks in the side panel; Ctrl/⌘-click still opens the page.
+        const plain = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey
+        if (onPeek && plain && isWideScreen()) {
+          event.preventDefault()
+          const where = (id: string) =>
+            event.currentTarget.querySelector(`[data-shared="${id}"]`)?.getBoundingClientRect()
+          onPeek(person.id, {
+            photo: where(sharedPerson.photo(person.id)),
+            name: where(sharedPerson.name(person.id)),
+          })
+        }
+      }}
+    >
       <PersonCard
         id={person.id}
         name={person.name}
