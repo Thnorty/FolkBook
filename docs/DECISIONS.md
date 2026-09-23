@@ -86,6 +86,10 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - **Background jobs:** Django's built-in tasks API (`@task`, `.enqueue()`), stored in Postgres by `django-tasks-db`. A `worker` container runs them; a `scheduler` container enqueues periodic jobs (e.g. daily housekeeping, later the reminder digests) from `jobs/scheduler.py`. No Redis or Celery: two extra containers from the same image. Chosen over Celery (needs Redis plus a beat process) and Procrastinate (fine, but its own API instead of Django's standard one).
 - Reagraph notes: `labelFontUrl` needs .ttf/.woff (not .woff2); `clusterAttribute` works only with force layouts; animation turns off above 400 nodes+edges; folded-space bubbles are synthetic nodes (not `collapsedNodeIds`).
 
+## License
+- **AGPL-3.0-or-later** (`LICENSE`). Anyone may use, change and self-host FolkBook; whoever runs a modified version as a service must publish their changes, so nobody can sell a closed hosted copy. As the copyright holder, the author can still run the paid hosted version.
+- Outside contributions arrive under the AGPL too, so they couldn't be relicensed later without each contributor's permission. If dual licensing ever matters, ask contributors to agree to that (a CLA) before merging.
+
 ## Monetization ideas
 - Free, open-source self-hosted version.
 - Paid managed hosting for people who don't want to run Docker.
