@@ -15,9 +15,11 @@ def admin_client(client):
     return client
 
 
+# Our own apps' admin pages (Django's and libraries' pages are theirs to test).
 ADMIN_PAGES = [
     f"admin:{model._meta.app_label}_{model._meta.model_name}_{page}"
     for model in admin.site._registry
+    if not model.__module__.startswith("django")
     for page in ("changelist", "add")
 ]
 

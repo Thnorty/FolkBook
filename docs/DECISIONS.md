@@ -76,6 +76,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - **Backend:** Django + Django Ninja (auto OpenAPI), PostgreSQL, no separate graph database. The graph (`graph/queries.py`) loads the viewer's visible network in 5 queries and walks it in Python: personal books are small enough, and every query stays inside the permission layer. Revisit with recursive SQL only if big books get slow.
 - **Frontend:** Vite + React + TypeScript, Tailwind CSS + shadcn/ui, Motion, TanStack Query with a client generated from the OpenAPI spec, Reagraph for the graph (fallback: Sigma.js + graphology).
 - **Infra:** Docker Compose, Caddy.
+- **Background jobs:** Django's built-in tasks API (`@task`, `.enqueue()`), stored in Postgres by `django-tasks-db`. A `worker` container runs them; a `scheduler` container enqueues periodic jobs (e.g. daily housekeeping, later the reminder digests) from `jobs/scheduler.py`. No Redis or Celery: two extra containers from the same image. Chosen over Celery (needs Redis plus a beat process) and Procrastinate (fine, but its own API instead of Django's standard one).
 - Reagraph notes: `labelFontUrl` needs .ttf/.woff (not .woff2); `clusterAttribute` works only with force layouts; animation turns off above 400 nodes+edges; folded-space bubbles are synthetic nodes (not `collapsedNodeIds`).
 
 ## Monetization ideas

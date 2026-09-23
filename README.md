@@ -48,6 +48,16 @@ cd frontend && npm install && npm run dev
 
 Open <http://localhost:5173>. Vite forwards `/api` to the backend on port 8000.
 
+Background jobs (emails, reminders, housekeeping) need the worker, and periodic ones the scheduler. Run them when you work on jobs, or use `docker compose up -d worker scheduler`:
+
+```bash
+cd backend && uv run --env-file ../.env python manage.py db_worker
+```
+
+```bash
+cd backend && uv run --env-file ../.env python manage.py run_scheduler
+```
+
 ### Checks
 
 Backend (Postgres must be running):
@@ -69,7 +79,7 @@ cd frontend && npm test && npm run typecheck && npm run lint && npm run format:c
 | `backend/` | Django + Django Ninja API |
 | `frontend/` | Vite + React + TypeScript app |
 | `caddy/` | Web server: serves the frontend, proxies the API, handles HTTPS |
-| `compose.yaml` | The full stack; `compose.override.yaml` adds development-only settings |
+| `compose.yaml` | The full stack: `db`, `backend` (API), `worker` and `scheduler` (background jobs), `web` (Caddy); `compose.override.yaml` adds development-only settings |
 | `design/` | The UI design (open `FolkBook.dc.html` in a browser) |
 | `docs/` | Product docs: decisions, UI flows |
 | `AGENTS.md` | Conventions for contributors and AI agents |
