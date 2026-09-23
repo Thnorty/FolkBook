@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { ApiError } from '@/api/errors'
 import { cn } from '@/lib/utils'
+import type { FlyOrigin } from '@/motion/FlyFrom'
 import { usePageTitle } from '@/lib/usePageTitle'
 import { PageFade } from '@/motion/PageTurn'
 import { ConnectionsSection } from './ConnectionsSection'
@@ -15,10 +16,12 @@ type ProfileViewProps = {
   personId: string
   /** One narrow column, for the peek panel beside the People list. */
   compact?: boolean
+  /** In the peek panel: where the clicked card's photo and name were. */
+  flyFrom?: FlyOrigin | null
 }
 
 /** Everything about one person: the profile page and the desktop peek panel. */
-export function ProfileView({ personId, compact = false }: ProfileViewProps) {
+export function ProfileView({ personId, compact = false, flyFrom }: ProfileViewProps) {
   const person = useQuery(personQuery(personId))
   usePageTitle(person.data?.name ?? 'Person')
 
@@ -50,7 +53,7 @@ export function ProfileView({ personId, compact = false }: ProfileViewProps) {
       )}
     >
       <div className={cn('flex flex-col gap-8', !compact && 'lg:sticky lg:top-6')}>
-        <ProfileHeader person={data} pageTurn={!compact} />
+        <ProfileHeader person={data} pageTurn={!compact} flyFrom={flyFrom} />
         {!data.is_me && (
           <PageFade afterTurn={!compact}>
             <KeepInTouch personId={personId} />

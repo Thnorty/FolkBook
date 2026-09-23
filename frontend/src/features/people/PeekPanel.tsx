@@ -2,11 +2,17 @@ import { Link } from '@tanstack/react-router'
 import { Maximize2, X } from 'lucide-react'
 import { useEffect } from 'react'
 import { ProfileView } from '@/features/person/ProfileView'
+import type { FlyOrigin } from '@/motion/FlyFrom'
 
-type PeekPanelProps = { personId: string; onClose: () => void }
+type PeekPanelProps = {
+  personId: string
+  /** Where the clicked card's photo and name were, so they glide in from there. */
+  flyFrom?: FlyOrigin | null
+  onClose: () => void
+}
 
 /** A person's profile beside the People list, on desktop (screen 1c). */
-export function PeekPanel({ personId, onClose }: PeekPanelProps) {
+export function PeekPanel({ personId, flyFrom, onClose }: PeekPanelProps) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKeyDown)
@@ -38,7 +44,7 @@ export function PeekPanel({ personId, onClose }: PeekPanelProps) {
         </button>
       </div>
       <div className="p-5">
-        <ProfileView personId={personId} compact />
+        <ProfileView personId={personId} compact flyFrom={flyFrom} />
       </div>
     </aside>
   )

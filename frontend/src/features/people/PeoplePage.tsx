@@ -1,13 +1,14 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { LayoutGrid, List, UserPlus } from 'lucide-react'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import { SHORTCUTS } from '@/app/nav'
 import { spacesQuery } from '@/features/spaces/queries'
 import { cn } from '@/lib/utils'
+import type { FlyOrigin } from '@/motion/FlyFrom'
 import { EmptyBook } from './EmptyBook'
 import { PeekPanel } from './PeekPanel'
 import { FilterChips, SpaceBanner } from './Filters'
@@ -27,6 +28,12 @@ export function PeoplePage() {
   )
   const search = useCallback((text: string) => setSearch({ q: text || undefined }), [setSearch])
   const closePeek = useCallback(() => setSearch({ peek: undefined }), [setSearch])
+  // Where the clicked card was, so the panel's photo and name glide in from it.
+  const [peekFrom, setPeekFrom] = useState<FlyOrigin | null>(null)
+  const openPeek = (personId: string, from: FlyOrigin) => {
+    setPeekFrom(from)
+    setSearch({ peek: personId })
+  }
 
   const total = useQuery(peopleCountQuery).data
   const needsCount = useQuery(needsDetailsCountQuery).data
@@ -136,7 +143,7 @@ export function PeoplePage() {
                     {grid ? (
                       <PersonTile person={person} />
                     ) : (
-                      <PersonRow person={person} onPeek={(id) => setSearch({ peek: id })} />
+                      <PersonRow person={person} onPeek={openPeek} />
                     )}
                   </li>
                 ))}
@@ -156,7 +163,7 @@ export function PeoplePage() {
           )}
         </section>
       </div>
-      {peek && <PeekPanel personId={peek} onClose={closePeek} />}
+      {peek && <PeekPanel personId={peek} flyFrom={peekFrom} onClose={closePeek} />}
     </div>
   )
 }
