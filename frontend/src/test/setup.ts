@@ -8,6 +8,9 @@ Element.prototype.setPointerCapture ??= () => {}
 Element.prototype.releasePointerCapture ??= () => {}
 Element.prototype.hasPointerCapture ??= () => false
 Element.prototype.scrollIntoView ??= () => {}
+// …and object URLs for picked photos (Vitest's own can't read jsdom's File).
+URL.createObjectURL = () => 'blob:test'
+URL.revokeObjectURL = () => {}
 globalThis.ResizeObserver ??= class {
   observe() {}
   unobserve() {}

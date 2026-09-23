@@ -15,8 +15,8 @@
     "preview": "vite preview",
     "api:generate": "npm run api:spec && npm run api:types",
     "api:spec": "cd ../backend && uv run --env-file ../.env python manage.py export_openapi_schema --api config.api.api --indent 2 --output ../frontend/openapi.json",
-    "api:types": "openapi-typescript openapi.json -o src/api/schema.d.ts",
-    "api:check": "openapi-typescript openapi.json -o src/api/schema.d.ts --check",
+    "api:types": "openapi-typescript openapi.json -o src/api/schema.d.ts --default-non-nullable false",
+    "api:check": "openapi-typescript openapi.json -o src/api/schema.d.ts --default-non-nullable false --check",
     "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
@@ -34,6 +34,7 @@
     "radix-ui": "^1.6.7",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-easy-crop": "^6.2.3",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0"
   },

@@ -1,11 +1,12 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { LayoutGrid, List, UserPlus } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import { SHORTCUTS } from '@/app/nav'
+import { usePersonForm } from '@/features/person/usePersonForm'
 import { spacesQuery } from '@/features/spaces/queries'
 import { cn } from '@/lib/utils'
 import type { FlyOrigin } from '@/motion/FlyFrom'
@@ -21,6 +22,7 @@ import type { PeopleSearch } from './search'
 export function PeoplePage() {
   const { q = '', space, needs = false, view, peek } = useSearch({ from: '/app/people' })
   const navigate = useNavigate({ from: '/people' })
+  const { openNew } = usePersonForm()
   const setSearch = useCallback(
     (change: Partial<PeopleSearch>) =>
       void navigate({ search: (current) => ({ ...current, ...change }), replace: true }),
@@ -79,12 +81,10 @@ export function PeoplePage() {
                   <LayoutGrid aria-hidden />
                 </Button>
               </div>
-              <Button asChild variant="secondary">
-                <Link to="/people/new">
-                  <UserPlus aria-hidden />
-                  Add person
-                  <Kbd shortcut={SHORTCUTS.addPerson} className="hidden text-ink-faint md:inline" />
-                </Link>
+              <Button variant="secondary" onClick={openNew}>
+                <UserPlus aria-hidden />
+                Add person
+                <Kbd shortcut={SHORTCUTS.addPerson} className="hidden text-ink-faint md:inline" />
               </Button>
             </>
           }

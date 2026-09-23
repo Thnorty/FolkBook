@@ -853,6 +853,146 @@
         ]
       }
     },
+    "/api/people/{person_id}/photo": {
+      "get": {
+        "operationId": "people_api_get_photo",
+        "summary": "Get Photo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": "full",
+              "enum": [
+                "full",
+                "thumbnail"
+              ],
+              "title": "Size",
+              "type": "string"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "description": "The person's photo (WebP), for anyone who can see them.",
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "people_api_upload_photo",
+        "summary": "Upload Photo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Replace the photo. Any image the server can read; it's cropped to 4:5.",
+        "tags": [
+          "people"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "people_api_delete_photo",
+        "summary": "Delete Photo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/people/{person_id}/family": {
       "get": {
         "operationId": "people_api_get_family",
@@ -2794,6 +2934,16 @@
               }
             ]
           },
+          "photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "needs_details": {
             "title": "Needs Details",
             "type": "boolean"
@@ -2822,10 +2972,34 @@
           "is_me",
           "is_mine",
           "owner",
+          "photo",
           "needs_details",
           "last_talked_on"
         ],
         "title": "PersonOut",
+        "type": "object"
+      },
+      "PhotoOut": {
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "thumbnail_url": {
+            "title": "Thumbnail Url",
+            "type": "string"
+          },
+          "caption": {
+            "title": "Caption",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "thumbnail_url",
+          "caption"
+        ],
+        "title": "PhotoOut",
         "type": "object"
       },
       "ContactKind": {
@@ -2930,6 +3104,16 @@
               }
             ]
           },
+          "photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "needs_details": {
             "title": "Needs Details",
             "type": "boolean"
@@ -2973,6 +3157,7 @@
           "is_me",
           "is_mine",
           "owner",
+          "photo",
           "needs_details",
           "last_talked_on",
           "contact_methods",
@@ -3061,6 +3246,12 @@
             },
             "title": "Space Ids",
             "type": "array"
+          },
+          "photo_caption": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Photo Caption",
+            "type": "string"
           }
         },
         "required": [
@@ -3146,6 +3337,33 @@
               }
             ],
             "title": "Contact Methods"
+          },
+          "space_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space Ids"
+          },
+          "photo_caption": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Caption"
           }
         },
         "title": "PersonPatch",

@@ -1,9 +1,12 @@
 """Creating and changing people. Every write checks the permission layer first."""
 
+import secrets
 from collections.abc import Iterable
 from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 
 from access.policy import (
@@ -14,10 +17,12 @@ from access.policy import (
     can_write_private,
     visible_spaces,
 )
+from people import photos
 from people.models import ContactMethod, MemoryAid, Note, Person, Tag
+from spaces import services as spaces
 from spaces.models import Space
 
-BASIC_FIELDS = ("name", "how_we_met", "work")
+BASIC_FIELDS = ("name", "how_we_met", "work", "photo_caption")
 OWNER_ONLY_FIELDS = ("tags", "contact_methods")
 
 
@@ -58,13 +63,56 @@ def update_person(access: Access, person: Person, changes: dict[str, Any]) -> Pe
         _set_tags(person, changes["tags"])
     if "contact_methods" in changes:
         _set_contact_methods(person, changes["contact_methods"])
+    if "space_ids" in changes:
+        _set_spaces(access, person, changes["space_ids"])
     return person
 
 
 def delete_person(access: Access, person: Person) -> None:
     if not can_delete_person(access, person):
         raise PermissionDenied("Only the owner can delete this person.")
+    files = _photo_files(person)
     person.delete()
+    _delete_after_commit(files)
+
+
+# ---------------------------------------------------------------- photos
+
+
+@transaction.atomic
+def set_photo(access: Access, person: Person, upload: UploadedFile) -> Person:
+    """Replace the person's photo with `upload`, cropped and re-encoded."""
+    if not can_edit_person(access, person):
+        raise PermissionDenied("You can't change this person's photo.")
+    full, thumbnail = photos.prepare(upload)
+    old_files = _photo_files(person)
+    # A new name for every photo, so its URL changes and browsers never show the old one.
+    name = secrets.token_hex(8)
+    person.photo.save(f"{name}.webp", full, save=False)
+    person.photo_thumbnail.save(f"{name}-thumbnail.webp", thumbnail, save=False)
+    person.save(update_fields=["photo", "photo_thumbnail", "updated_at"])
+    _delete_after_commit(old_files)
+    return person
+
+
+@transaction.atomic
+def remove_photo(access: Access, person: Person) -> Person:
+    if not can_edit_person(access, person):
+        raise PermissionDenied("You can't change this person's photo.")
+    old_files = _photo_files(person)
+    person.photo = person.photo_thumbnail = ""
+    person.save(update_fields=["photo", "photo_thumbnail", "updated_at"])
+    _delete_after_commit(old_files)
+    return person
+
+
+def _photo_files(person: Person) -> list[str]:
+    return [f.name for f in (person.photo, person.photo_thumbnail) if f]
+
+
+def _delete_after_commit(names: list[str]) -> None:
+    # Only once the database agrees, so a failed save never loses the old photo.
+    transaction.on_commit(lambda: [default_storage.delete(name) for name in names])
 
 
 def _apply_basic(person: Person, data: dict[str, Any]) -> None:
@@ -93,6 +141,19 @@ def _set_contact_methods(person: Person, methods: Iterable[dict[str, Any]]) -> N
         ContactMethod(person=person, position=position, **method)
         for position, method in enumerate(methods)
     )
+
+
+def _set_spaces(access: Access, person: Person, ids: Iterable) -> None:
+    """Make the person's spaces, among those you can see, exactly `ids`.
+
+    Spaces you can't see keep the person; adding and removing check your rights.
+    """
+    wanted = {space.pk: space for space in _spaces(access, ids)}
+    current = {space.pk: space for space in person.spaces.filter(pk__in=visible_spaces(access))}
+    for pk in wanted.keys() - current.keys():
+        spaces.add_person(access, wanted[pk], person)
+    for pk in current.keys() - wanted.keys():
+        spaces.remove_person(access, current[pk], person)
 
 
 def _spaces(access: Access, ids: Iterable) -> list[Space]:

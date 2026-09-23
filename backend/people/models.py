@@ -30,6 +30,10 @@ class Tag(BaseModel):
         return self.name
 
 
+def photo_path(person: "Person", filename: str) -> str:
+    return f"photos/{person.pk}/{filename}"
+
+
 class Person(BaseModel):
     """Someone in a user's book. Owned by exactly one user.
 
@@ -59,6 +63,11 @@ class Person(BaseModel):
     birth_month = models.PositiveSmallIntegerField(null=True, blank=True)
     birth_year = models.PositiveSmallIntegerField(null=True, blank=True)
     tags = models.ManyToManyField(Tag, blank=True, related_name="people")
+    # The polaroid: a 4:5 photo and a small copy for lists, re-encoded on upload
+    # (people/photos.py), plus the name written under it.
+    photo = models.FileField(upload_to=photo_path, blank=True)
+    photo_thumbnail = models.FileField(upload_to=photo_path, blank=True)
+    photo_caption = models.CharField(max_length=40, blank=True)
 
     class Meta:
         verbose_name_plural = "people"

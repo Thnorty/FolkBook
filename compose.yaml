@@ -33,6 +33,7 @@ services:
         condition: service_healthy
     volumes:
       - django_static:/app/staticfiles
+      - media_data:/app/media
     healthcheck:
       test:
         - CMD
@@ -79,6 +80,7 @@ services:
 
 volumes:
   db_data:
+  media_data: # profile photos; back up together with db_data
   django_static:
   caddy_data:
   caddy_config:

@@ -12,6 +12,8 @@ export type MemoryAid = components['schemas']['MemoryAidOut']
 export type Interaction = components['schemas']['InteractionOut']
 export type Relationship = components['schemas']['RelationshipOut']
 export type FamilyRelation = components['schemas']['FamilyRelationOut']
+export type PersonInput = components['schemas']['PersonIn']
+export type PersonChanges = components['schemas']['PersonPatch']
 
 const path = (personId: string) => ({ params: { path: { person_id: personId } } })
 
@@ -99,4 +101,20 @@ export async function addMemoryAid(queryClient: QueryClient, personId: string, t
 export async function removeMemoryAid(queryClient: QueryClient, personId: string, aidId: string) {
   await unwrap(api.DELETE('/api/memory-aids/{aid_id}', { params: { path: { aid_id: aidId } } }))
   await queryClient.invalidateQueries({ queryKey: memoryAidsQuery(personId).queryKey })
+}
+
+export function createPerson(input: PersonInput) {
+  return unwrap(api.POST('/api/people', { body: input }))
+}
+
+export function updatePerson(personId: string, changes: PersonChanges) {
+  return unwrap(api.PATCH('/api/people/{person_id}', { ...path(personId), body: changes }))
+}
+
+/** After adding or changing someone: everything about people, and space counts. */
+export async function refreshPeople(queryClient: QueryClient) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: ['people'] }),
+    queryClient.invalidateQueries({ queryKey: ['spaces'] }),
+  ])
 }

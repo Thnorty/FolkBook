@@ -121,6 +121,10 @@ USE_TZ = True
 STATIC_URL = "django-static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Uploaded files (profile photos). Never served as public files: the API checks who may
+# see each one. In Docker this folder is the media_data volume; back it up with the database.
+MEDIA_ROOT = Path(os.environ.get("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
+
 # Background jobs: Django's tasks API, stored in Postgres (django-tasks-db).
 # `worker` runs them (manage.py db_worker); `scheduler` enqueues the periodic ones.
 TASKS = {

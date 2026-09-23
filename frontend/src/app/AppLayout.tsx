@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { Outlet, useNavigate, useRouter, useRouterState } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
-import { currentUserQuery } from '@/api/session'
+import { currentUserQuery, type CurrentUser } from '@/api/session'
+import { PersonFormProvider } from '@/features/person/PersonFormProvider'
+import { usePersonForm } from '@/features/person/usePersonForm'
 import { useShortcut } from '@/lib/shortcuts'
 import { PageFade } from '@/motion/PageTurn'
 import { BottomTabs } from './BottomTabs'
@@ -13,9 +15,6 @@ import { Sidebar } from './Sidebar'
 export function AppLayout() {
   const user = useQuery(currentUserQuery).data
   const router = useRouter()
-  const navigate = useNavigate()
-  const [paletteOpen, setPaletteOpen] = useState(false)
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
 
   // The session ended (logged out here or elsewhere): run the route guard again,
   // which sends you to the login page and back here afterwards.
@@ -23,20 +22,29 @@ export function AppLayout() {
     if (user === null) void router.invalidate()
   }, [user, router])
 
+  if (!user) return null
+  return (
+    <PersonFormProvider>
+      <Shell user={user} />
+    </PersonFormProvider>
+  )
+}
+
+function Shell({ user }: { user: CurrentUser }) {
+  const navigate = useNavigate()
+  const { openNew } = usePersonForm()
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+
   useShortcut(
     SHORTCUTS.palette,
     useCallback(() => setPaletteOpen((open) => !open), []),
   )
-  useShortcut(
-    SHORTCUTS.addPerson,
-    useCallback(() => void navigate({ to: '/people/new' }), [navigate]),
-  )
+  useShortcut(SHORTCUTS.addPerson, openNew)
   useShortcut(
     SHORTCUTS.quickCapture,
     useCallback(() => void navigate({ to: '/capture' }), [navigate]),
   )
-
-  if (!user) return null
 
   return (
     <div className="md:flex">

@@ -12,7 +12,8 @@ export function isApplePlatform(nav: Navigator = navigator): boolean {
 
 /** How to show a shortcut: "⌘K" and "⇧N" on Apple devices, "Ctrl+K" and "Shift+N" elsewhere. */
 export function shortcutLabel({ key, mod, shift }: Shortcut, apple = isApplePlatform()): string {
-  const parts = [mod && (apple ? '⌘' : 'Ctrl'), shift && (apple ? '⇧' : 'Shift'), key.toUpperCase()]
+  const name = key.length === 1 ? key.toUpperCase() : key // "N", but "Enter"
+  const parts = [mod && (apple ? '⌘' : 'Ctrl'), shift && (apple ? '⇧' : 'Shift'), name]
   return parts.filter(Boolean).join(apple ? '' : '+')
 }
 

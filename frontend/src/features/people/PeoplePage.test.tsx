@@ -153,7 +153,8 @@ describe('People list', () => {
     renderApp('/people')
 
     expect(await screen.findByRole('heading', { name: 'Your book is empty' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Add someone' })).toHaveAttribute('href', '/people/new')
+    await userEvent.click(screen.getByRole('button', { name: 'Add someone' }))
+    expect(await screen.findByRole('dialog', { name: 'Add someone' })).toBeInTheDocument()
   })
 
   it('loads 50 at a time', async () => {

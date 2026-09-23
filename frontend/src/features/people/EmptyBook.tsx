@@ -1,10 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
+import { usePersonForm } from '@/features/person/usePersonForm'
 
 const PROMPTS = ['mum?', 'best friend?', 'neighbour?']
 
 /** Nobody in the notebook yet but you (screen 6h). */
 export function EmptyBook() {
+  const { openNew } = usePersonForm()
   return (
     <div className="flex flex-col items-center px-4 py-12 text-center">
       <div aria-hidden className="flex gap-2">
@@ -22,9 +24,7 @@ export function EmptyBook() {
         Start with three people you&apos;d hate to forget something about.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2.5">
-        <Button asChild>
-          <Link to="/people/new">Add someone</Link>
-        </Button>
+        <Button onClick={openNew}>Add someone</Button>
         <Button asChild variant="secondary">
           <Link to="/capture">Quick capture</Link>
         </Button>
