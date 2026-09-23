@@ -12,9 +12,15 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "api:generate": "npm run api:spec && npm run api:types",
+    "api:spec": "cd ../backend && uv run --env-file ../.env python manage.py export_openapi_schema --api config.api.api --indent 2 --output ../frontend/openapi.json",
+    "api:types": "openapi-typescript openapi.json -o src/api/schema.d.ts",
+    "api:check": "openapi-typescript openapi.json -o src/api/schema.d.ts --check"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.103.2",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -28,10 +34,16 @@
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.1",
     "jsdom": "^30.1.1",
+    "openapi-typescript": "^7.13.0",
     "oxlint": "^1.81.0",
     "prettier": "^3.9.9",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
   }
 }

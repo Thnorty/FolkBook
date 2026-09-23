@@ -84,6 +84,7 @@ These rules are the product. Breaking one is a critical bug.
 
 - TypeScript `strict`. No `any` unless unavoidable, and then explain why.
 - Server state through TanStack Query hooks built on the generated API client. No ad-hoc `fetch` calls in components.
+- **API client** (`src/api/`): `api` from `client.ts` is typed from `schema.d.ts`, which `npm run api:generate` builds from the backend's OpenAPI spec. Never edit the generated files; regenerate and commit them with the backend change. The client adds the CSRF header and rejects every failed call with an `ApiError` (`status`, `detail`, a readable `message`). Write query options next to the feature with TanStack's `queryOptions` and `unwrap(api.GET(...))`; keys start with the resource (`['people', ...]`) so related queries can be invalidated together. A 401 anywhere clears the current user (`currentUserQuery`).
 - Build every screen for **mobile and desktop** as designed (bottom tab bar on mobile, sidebar on desktop). Check both before calling a screen done.
 - **Light and dark mode** ("notebook at night") for every screen, using the tokens.
 - **Accessibility:** semantic HTML, keyboard navigation, visible focus, labels on inputs, WCAG AA contrast.
@@ -126,6 +127,7 @@ Postgres must be running for backend tests: `docker compose up -d db`.
 | Frontend dev server | `cd frontend && npm run dev` |
 | Frontend tests | `cd frontend && npm test` |
 | Frontend checks | `cd frontend && npm run typecheck && npm run lint && npm run format:check` |
+| Regenerate API types | `cd frontend && npm run api:generate` (after any API change) |
 
 ## Commits
 

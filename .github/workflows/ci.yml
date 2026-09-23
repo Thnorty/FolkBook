@@ -69,6 +69,8 @@ jobs:
         run: npm run format:check
       - name: Lint
         run: npm run lint
+      - name: API types up to date
+        run: npm run api:check
       - name: Type check
         run: npm run typecheck
       - name: Tests

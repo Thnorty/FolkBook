@@ -58,6 +58,14 @@ cd backend && uv run --env-file ../.env python manage.py db_worker
 cd backend && uv run --env-file ../.env python manage.py run_scheduler
 ```
 
+### API types
+
+The frontend's API types are generated from the backend. After changing an endpoint or schema, regenerate them and commit both files (`frontend/openapi.json` and `frontend/src/api/schema.d.ts`); a backend test and a CI check fail until you do:
+
+```bash
+cd frontend && npm run api:generate
+```
+
 ### Checks
 
 Backend (Postgres must be running):
@@ -69,7 +77,7 @@ cd backend && uv run --env-file ../.env pytest && uv run ruff check . && uv run 
 Frontend:
 
 ```bash
-cd frontend && npm test && npm run typecheck && npm run lint && npm run format:check
+cd frontend && npm test && npm run typecheck && npm run lint && npm run format:check && npm run api:check
 ```
 
 ## Project layout
