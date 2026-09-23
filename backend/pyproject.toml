@@ -26,7 +26,10 @@ extend-exclude = ["*/migrations/*"]
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "DJ", "SIM", "RUF"]
 ignore = [
-    "RUF001", # names like "Yılmaz" are real data, not look-alike characters
+    # Names like "Yılmaz" and typographic dashes are real text, not look-alike characters.
+    "RUF001",
+    "RUF002",
+    "RUF003",
     "RUF012", # Django's class attributes (Meta, admin options) are lists by convention
 ]
 

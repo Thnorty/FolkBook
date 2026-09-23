@@ -28,6 +28,12 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - Accounts log in with **email** (case-insensitive, stored lowercase). Server admins are users with `is_staff`.
 - Records exposed by the API use **UUID** primary keys, so IDs can't be guessed or counted.
 - Paths can cross shared spaces (Me → Defne → people in Defne's space).
+- Everyone who can see a space sees the Me of its owner and of every member.
+- A link is shown only when the viewer can see its space **and** both people. A link inside a space can only be made between people in that space.
+- Only the owner deletes a person. Editors of a space can fix the basic details of people in it, but nobody edits another user's Me.
+- A person can only be added to a space if their **owner takes part in that space** (owns it or is a member). Nobody can pass someone else's people on to users the owner never shared them with.
+- Private data about someone you can no longer see is hidden (kept copies come with #31).
+- Narrowed access (for API keys) can be limited to some spaces, exclude private data, or be read-only. With a space limit, only people in those spaces are visible, and private links are hidden.
 
 ## Relationships
 - Stored family links: **parent** (biological / adoptive / step) and **partner**. Siblings, cousins, grandparents, in-laws are **derived**, never stored, relative to the viewer's "Me".
