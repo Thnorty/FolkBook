@@ -2828,10 +2828,20 @@
         "title": "PersonOut",
         "type": "object"
       },
+      "ContactKind": {
+        "enum": [
+          "phone",
+          "email",
+          "social",
+          "other"
+        ],
+        "title": "ContactKind",
+        "type": "string"
+      },
       "ContactMethodOut": {
         "properties": {
           "kind": {
-            "$ref": "#/components/schemas/Kind"
+            "$ref": "#/components/schemas/ContactKind"
           },
           "label": {
             "default": "",
@@ -2858,17 +2868,6 @@
         ],
         "title": "ContactMethodOut",
         "type": "object"
-      },
-      "Kind": {
-        "enum": [
-          "met",
-          "call",
-          "message",
-          "event",
-          "custom"
-        ],
-        "title": "Kind",
-        "type": "string"
       },
       "PersonDetailOut": {
         "properties": {
@@ -2986,7 +2985,7 @@
       "ContactMethodIn": {
         "properties": {
           "kind": {
-            "$ref": "#/components/schemas/Kind"
+            "$ref": "#/components/schemas/ContactKind"
           },
           "label": {
             "default": "",
@@ -4038,6 +4037,17 @@
         "title": "MemoryAidPatch",
         "type": "object"
       },
+      "InteractionKind": {
+        "enum": [
+          "met",
+          "call",
+          "message",
+          "event",
+          "custom"
+        ],
+        "title": "InteractionKind",
+        "type": "string"
+      },
       "InteractionOut": {
         "properties": {
           "id": {
@@ -4051,7 +4061,7 @@
             "type": "string"
           },
           "kind": {
-            "$ref": "#/components/schemas/Kind"
+            "$ref": "#/components/schemas/InteractionKind"
           },
           "label": {
             "title": "Label",
@@ -4107,7 +4117,7 @@
             "type": "string"
           },
           "kind": {
-            "$ref": "#/components/schemas/Kind"
+            "$ref": "#/components/schemas/InteractionKind"
           },
           "label": {
             "default": "",
@@ -4140,7 +4150,7 @@
           "kind": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Kind"
+                "$ref": "#/components/schemas/InteractionKind"
               },
               {
                 "type": "null"

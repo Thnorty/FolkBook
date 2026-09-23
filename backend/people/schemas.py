@@ -25,7 +25,7 @@ class SpaceRef(Schema):
 
 
 class ContactMethodIn(Schema):
-    kind: ContactMethod.Kind
+    kind: ContactMethod.ContactKind
     label: str = Field("", max_length=50)
     value: str = Field(min_length=1, max_length=255)
 

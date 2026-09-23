@@ -8,7 +8,7 @@ from people.models import Person
 class Interaction(BaseModel):
     """A timeline entry: you met, called or messaged someone. Private to the author."""
 
-    class Kind(models.TextChoices):
+    class InteractionKind(models.TextChoices):
         MET = "met"
         CALL = "call"
         MESSAGE = "message"
@@ -17,7 +17,7 @@ class Interaction(BaseModel):
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
     person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="interactions")
-    kind = models.CharField(max_length=10, choices=Kind.choices)
+    kind = models.CharField(max_length=10, choices=InteractionKind.choices)
     label = models.CharField(max_length=100, blank=True, help_text="Title, e.g. “Coffee”.")
     occurred_on = models.DateField()
     note = models.TextField(blank=True)

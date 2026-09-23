@@ -936,9 +936,14 @@ export interface components {
             /** Last Talked On */
             last_talked_on: string | null;
         };
+        /**
+         * ContactKind
+         * @enum {string}
+         */
+        ContactKind: "phone" | "email" | "social" | "other";
         /** ContactMethodOut */
         ContactMethodOut: {
-            kind: components["schemas"]["Kind"];
+            kind: components["schemas"]["ContactKind"];
             /**
              * Label
              * @default
@@ -952,11 +957,6 @@ export interface components {
              */
             id: string;
         };
-        /**
-         * Kind
-         * @enum {string}
-         */
-        Kind: "met" | "call" | "message" | "event" | "custom";
         /** PersonDetailOut */
         PersonDetailOut: {
             /**
@@ -993,7 +993,7 @@ export interface components {
         };
         /** ContactMethodIn */
         ContactMethodIn: {
-            kind: components["schemas"]["Kind"];
+            kind: components["schemas"]["ContactKind"];
             /**
              * Label
              * @default
@@ -1362,6 +1362,11 @@ export interface components {
             /** Position */
             position?: number | null;
         };
+        /**
+         * InteractionKind
+         * @enum {string}
+         */
+        InteractionKind: "met" | "call" | "message" | "event" | "custom";
         /** InteractionOut */
         InteractionOut: {
             /**
@@ -1374,7 +1379,7 @@ export interface components {
              * Format: uuid
              */
             person_id: string;
-            kind: components["schemas"]["Kind"];
+            kind: components["schemas"]["InteractionKind"];
             /** Label */
             label: string;
             /**
@@ -1399,7 +1404,7 @@ export interface components {
              * Format: uuid
              */
             person_id: string;
-            kind: components["schemas"]["Kind"];
+            kind: components["schemas"]["InteractionKind"];
             /**
              * Label
              * @default
@@ -1418,7 +1423,7 @@ export interface components {
         };
         /** InteractionPatch */
         InteractionPatch: {
-            kind?: components["schemas"]["Kind"] | null;
+            kind?: components["schemas"]["InteractionKind"] | null;
             /** Label */
             label?: string | null;
             /** Occurred On */

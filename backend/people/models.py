@@ -105,14 +105,14 @@ class Person(BaseModel):
 class ContactMethod(BaseModel):
     """A phone number, email address or social handle. Shared only if a space allows it."""
 
-    class Kind(models.TextChoices):
+    class ContactKind(models.TextChoices):
         PHONE = "phone"
         EMAIL = "email"
         SOCIAL = "social"
         OTHER = "other"
 
     person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="contact_methods")
-    kind = models.CharField(max_length=10, choices=Kind.choices)
+    kind = models.CharField(max_length=10, choices=ContactKind.choices)
     label = models.CharField(max_length=50, blank=True)
     value = models.CharField(max_length=255)
     position = models.PositiveSmallIntegerField(default=0)
