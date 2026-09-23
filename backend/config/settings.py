@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     "interactions",
     "reminders",
     "invites",
+    "jobs",
+    "django_tasks_db",
 ]
 
 AUTH_USER_MODEL = "accounts.User"
@@ -116,6 +118,15 @@ USE_TZ = True
 # The frontend owns `/assets/`; Django's own static files (admin) live under their own prefix.
 STATIC_URL = "django-static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Background jobs: Django's tasks API, stored in Postgres (django-tasks-db).
+# `worker` runs them (manage.py db_worker); `scheduler` enqueues the periodic ones.
+TASKS = {
+    "default": {
+        "BACKEND": "django_tasks_db.DatabaseBackend",
+        "QUEUES": ["default"],
+    }
+}
 
 MAILERS = {
     "default": {

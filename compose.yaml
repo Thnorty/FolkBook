@@ -1,5 +1,14 @@
 name: folkbook
 
+# Settings shared by everything that runs the backend image.
+x-backend: &backend
+  build: ./backend
+  image: folkbook-backend
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    POSTGRES_HOST: db
+
 services:
   db:
     image: postgres:18-alpine
@@ -16,17 +25,41 @@ services:
       timeout: 5s
       retries: 10
 
+  # The API. Runs migrations on start; healthy once it answers.
   backend:
-    build: ./backend
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      POSTGRES_HOST: db
+    <<: *backend
     depends_on:
       db:
         condition: service_healthy
     volumes:
       - django_static:/app/staticfiles
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # Runs background jobs (emails, reminders, housekeeping).
+  worker:
+    <<: *backend
+    entrypoint: ["python", "manage.py"]
+    command: ["db_worker"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Queues the periodic jobs when they're due.
+  scheduler:
+    <<: *backend
+    entrypoint: ["python", "manage.py"]
+    command: ["run_scheduler"]
+    depends_on:
+      backend:
+        condition: service_healthy
 
   web:
     build:
