@@ -20,6 +20,12 @@ docker compose up --build -d
 
 FolkBook is now at <http://localhost:8080> (or the `FOLKBOOK_PORT` you set). The API docs are at `/api/docs`.
 
+Until the first-run setup screen exists, create the admin account from the command line:
+
+```bash
+docker compose exec backend python manage.py createsuperuser
+```
+
 For a real server, set `SITE_ADDRESS` to your domain (e.g. `folk.example.com`) and Caddy gets an HTTPS certificate automatically. Use `docker compose -f compose.yaml up -d` there so the development overrides aren't applied.
 
 ## Develop
