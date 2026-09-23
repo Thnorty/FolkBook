@@ -1,4 +1,4 @@
-"""A small shared world for the privacy tests, modelled on the design's sample data.
+"""A small shared world for privacy and graph tests, modelled on the design's sample data.
 
 Users
 - Ela: owns the "Climbing club" space, shared with Deniz (editor) and Kaan (viewer).
