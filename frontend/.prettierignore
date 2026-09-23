@@ -1,0 +1,4 @@
+# Built and generated files
+dist
+openapi.json
+src/api/schema.d.ts

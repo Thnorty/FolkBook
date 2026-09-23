@@ -1,0 +1,4202 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FolkBook API",
+    "version": "0.1.0",
+    "description": ""
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "config_api_health",
+        "summary": "Health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Report whether the API is up and can reach the database.",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/setup": {
+      "get": {
+        "operationId": "invites_api_setup_status",
+        "summary": "Setup Status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStatusOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Whether this server still needs its first account (the app shows setup).",
+        "tags": [
+          "setup"
+        ]
+      },
+      "post": {
+        "operationId": "invites_api_first_run",
+        "summary": "First Run",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create the first account, as the server's admin, and log in.",
+        "tags": [
+          "setup"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/auth/csrf": {
+      "get": {
+        "operationId": "accounts_api_csrf",
+        "summary": "Csrf",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Sets the `csrftoken` cookie. Send it back as the X-CSRFToken header on writes.",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "accounts_api_login",
+        "summary": "Login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "accounts_api_logout",
+        "summary": "Logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "accounts_api_me",
+        "summary": "Me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "operationId": "accounts_api_change_password",
+        "summary": "Change Password",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "description": "Change your password. Signs you out on every other device.",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/devices": {
+      "get": {
+        "operationId": "accounts_api_list_devices",
+        "summary": "List Devices",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedDeviceOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Where you're signed in, most recently used first.",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/devices/{device_id}": {
+      "delete": {
+        "operationId": "accounts_api_sign_out_device",
+        "summary": "Sign Out Device",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "device_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Device Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/devices/sign-out-others": {
+      "post": {
+        "operationId": "accounts_api_sign_out_other_devices",
+        "summary": "Sign Out Other Devices",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invites": {
+      "get": {
+        "operationId": "invites_api_list_invites",
+        "summary": "List Invites",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedInviteOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Your invites; admins see every invite on the server.",
+        "tags": [
+          "invites"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "invites_api_create_invite",
+        "summary": "Create Invite",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Admins can invite anyone; anyone can invite people into a space they own.",
+        "tags": [
+          "invites"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invites/{invite_id}": {
+      "delete": {
+        "operationId": "invites_api_revoke_invite",
+        "summary": "Revoke Invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invite_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Invite Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "invites"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invites/by-token/{token}": {
+      "get": {
+        "operationId": "invites_api_preview_invite",
+        "summary": "Preview Invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitePreviewOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "invites"
+        ]
+      }
+    },
+    "/api/invites/by-token/{token}/accept": {
+      "post": {
+        "operationId": "invites_api_accept_invite",
+        "summary": "Accept Invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Create an account with the invite and log in.",
+        "tags": [
+          "invites"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/invites/by-token/{token}/join": {
+      "post": {
+        "operationId": "invites_api_join_with_invite",
+        "summary": "Join With Invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceRef"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Already have an account? Join the invite's space with it.",
+        "tags": [
+          "invites"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/people": {
+      "get": {
+        "operationId": "people_api_list_people",
+        "summary": "List People",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "space",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Space"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "needs_details",
+            "schema": {
+              "default": false,
+              "title": "Needs Details",
+              "type": "boolean"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "default": "",
+              "title": "Search",
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedPersonOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.",
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "people_api_create_person",
+        "summary": "Create Person",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "people"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/people/{person_id}": {
+      "get": {
+        "operationId": "people_api_get_person",
+        "summary": "Get Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "people_api_update_person",
+        "summary": "Update Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "people"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "people_api_delete_person",
+        "summary": "Delete Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/people/{person_id}/family": {
+      "get": {
+        "operationId": "people_api_get_family",
+        "summary": "Get Family",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FamilyRelationOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Parents, siblings, cousins, in-laws, …, from the links the user can see.",
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/people/{person_id}/note": {
+      "get": {
+        "operationId": "people_api_get_note",
+        "summary": "Get Note",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The user's own notes on this person (empty if none).",
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "people_api_save_note",
+        "summary": "Save Note",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Replace the user's notes on this person. Empty text removes them.",
+        "tags": [
+          "people"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces": {
+      "get": {
+        "operationId": "spaces_api_list_spaces",
+        "summary": "List Spaces",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedSpaceOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "spaces_api_create_space",
+        "summary": "Create Space",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "spaces"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpaceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}": {
+      "get": {
+        "operationId": "spaces_api_get_space",
+        "summary": "Get Space",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "spaces_api_update_space",
+        "summary": "Update Space",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "spaces"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpacePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "spaces_api_delete_space",
+        "summary": "Delete Space",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}/people": {
+      "post": {
+        "operationId": "spaces_api_add_person",
+        "summary": "Add Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "description": "Put a person in a space. Adding someone who's already there does nothing.",
+        "tags": [
+          "spaces"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpacePersonIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}/people/{person_id}": {
+      "delete": {
+        "operationId": "spaces_api_remove_person",
+        "summary": "Remove Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/relationships": {
+      "get": {
+        "operationId": "relationships_api_list_relationships",
+        "summary": "List Relationships",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "person",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Person"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "family",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Family"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedRelationshipOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Stored links the user can see; `person` narrows to that person's links.",
+        "tags": [
+          "relationships"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "relationships_api_create_relationship",
+        "summary": "Create Relationship",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "relationships"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/relationships/{link_id}": {
+      "get": {
+        "operationId": "relationships_api_get_relationship",
+        "summary": "Get Relationship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "link_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Link Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "relationships"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "relationships_api_update_relationship",
+        "summary": "Update Relationship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "link_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Link Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "relationships"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RelationshipPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "relationships_api_delete_relationship",
+        "summary": "Delete Relationship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "link_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Link Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "relationships"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/relationships/{link_id}/end": {
+      "post": {
+        "operationId": "relationships_api_end_relationship",
+        "summary": "End Relationship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "link_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Link Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Mark a link as former (e.g. a divorce). Parent links never end.",
+        "tags": [
+          "relationships"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EndIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/relationships/{link_id}/reopen": {
+      "post": {
+        "operationId": "relationships_api_reopen_relationship",
+        "summary": "Reopen Relationship",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "link_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Link Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "relationships"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/graph": {
+      "get": {
+        "operationId": "graph_api_get_graph",
+        "summary": "Get Graph",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Everyone the user can see and how they're connected.",
+        "tags": [
+          "graph"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/graph/neighborhood/{person_id}": {
+      "get": {
+        "operationId": "graph_api_get_neighborhood",
+        "summary": "Get Neighborhood",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "hops",
+            "schema": {
+              "default": 1,
+              "maximum": 2,
+              "minimum": 1,
+              "title": "Hops",
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Focus mode: a person and everyone within 1 or 2 steps.",
+        "tags": [
+          "graph"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/graph/paths/{person_id}": {
+      "get": {
+        "operationId": "graph_api_get_paths",
+        "summary": "Get Paths",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "alternatives",
+            "schema": {
+              "default": 2,
+              "maximum": 5,
+              "minimum": 0,
+              "title": "Alternatives",
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PathsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "How do I know …? Routes from the user's Me to this person.",
+        "tags": [
+          "graph"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/memory-aids": {
+      "get": {
+        "operationId": "people_api_list_memory_aids",
+        "summary": "List Memory Aids",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "person",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Person"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedMemoryAidOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The user's own sticky notes, pinned first; `person` narrows to one person.",
+        "tags": [
+          "memory aids"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "people_api_create_memory_aid",
+        "summary": "Create Memory Aid",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryAidOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "memory aids"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryAidIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/memory-aids/{aid_id}": {
+      "patch": {
+        "operationId": "people_api_update_memory_aid",
+        "summary": "Update Memory Aid",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "aid_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Aid Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemoryAidOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "memory aids"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoryAidPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "people_api_delete_memory_aid",
+        "summary": "Delete Memory Aid",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "aid_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Aid Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "memory aids"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/interactions": {
+      "get": {
+        "operationId": "interactions_api_list_interactions",
+        "summary": "List Interactions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "person",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Person"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedInteractionOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The user's own timeline, newest first; `person` narrows to one person.",
+        "tags": [
+          "timeline"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "interactions_api_log_interaction",
+        "summary": "Log Interaction",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InteractionOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "timeline"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InteractionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/interactions/{interaction_id}": {
+      "patch": {
+        "operationId": "interactions_api_update_interaction",
+        "summary": "Update Interaction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "interaction_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Interaction Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InteractionOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "timeline"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InteractionPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "interactions_api_delete_interaction",
+        "summary": "Delete Interaction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "interaction_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Interaction Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "timeline"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/keep-in-touch/{person_id}": {
+      "get": {
+        "operationId": "reminders_api_get_keep_in_touch",
+        "summary": "Get Keep In Touch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeepInTouchSchema"
+                }
+              }
+            }
+          }
+        },
+        "description": "The user's own setting; defaults when there is none yet.",
+        "tags": [
+          "reminders"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "reminders_api_save_keep_in_touch",
+        "summary": "Save Keep In Touch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeepInTouchSchema"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "reminders"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeepInTouchSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthOut": {
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "database": {
+            "title": "Database",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "database"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "SetupStatusOut": {
+        "properties": {
+          "needed": {
+            "title": "Needed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "needed"
+        ],
+        "title": "SetupStatusOut",
+        "type": "object"
+      },
+      "CurrentUserOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "is_admin": {
+            "title": "Is Admin",
+            "type": "boolean"
+          },
+          "me": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "is_admin",
+          "me"
+        ],
+        "title": "CurrentUserOut",
+        "type": "object"
+      },
+      "PersonRef": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PersonRef",
+        "type": "object"
+      },
+      "SignUpIn": {
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 4096,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "title": "SignUpIn",
+        "type": "object"
+      },
+      "CsrfOut": {
+        "properties": {
+          "csrf_token": {
+            "title": "Csrf Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "csrf_token"
+        ],
+        "title": "CsrfOut",
+        "type": "object"
+      },
+      "ErrorOut": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "ErrorOut",
+        "type": "object"
+      },
+      "LoginIn": {
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 4096,
+            "title": "Password",
+            "type": "string"
+          },
+          "remember": {
+            "default": true,
+            "title": "Remember",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginIn",
+        "type": "object"
+      },
+      "PasswordIn": {
+        "properties": {
+          "current_password": {
+            "maxLength": 4096,
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 4096,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordIn",
+        "type": "object"
+      },
+      "Input": {
+        "properties": {
+          "page": {
+            "default": 1,
+            "minimum": 1,
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Size"
+          }
+        },
+        "title": "Input",
+        "type": "object"
+      },
+      "DeviceOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "device": {
+            "title": "Device",
+            "type": "string"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "last_seen": {
+            "format": "date-time",
+            "title": "Last Seen",
+            "type": "string"
+          },
+          "is_current": {
+            "title": "Is Current",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "device",
+          "ip",
+          "last_seen",
+          "is_current"
+        ],
+        "title": "DeviceOut",
+        "type": "object"
+      },
+      "PagedDeviceOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DeviceOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedDeviceOut",
+        "type": "object"
+      },
+      "InviteOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "max_uses": {
+            "title": "Max Uses",
+            "type": "integer"
+          },
+          "uses": {
+            "title": "Uses",
+            "type": "integer"
+          },
+          "is_usable": {
+            "title": "Is Usable",
+            "type": "boolean"
+          },
+          "space": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpaceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "path",
+          "created_by",
+          "expires_at",
+          "max_uses",
+          "uses",
+          "is_usable",
+          "space",
+          "role"
+        ],
+        "title": "InviteOut",
+        "type": "object"
+      },
+      "PagedInviteOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InviteOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedInviteOut",
+        "type": "object"
+      },
+      "Role": {
+        "enum": [
+          "editor",
+          "viewer"
+        ],
+        "title": "Role",
+        "type": "string"
+      },
+      "SpaceRef": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "color": {
+            "title": "Color",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color"
+        ],
+        "title": "SpaceRef",
+        "type": "object"
+      },
+      "InviteIn": {
+        "properties": {
+          "expires_in_days": {
+            "default": 7,
+            "maximum": 30,
+            "minimum": 1,
+            "title": "Expires In Days",
+            "type": "integer"
+          },
+          "max_uses": {
+            "default": 1,
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Max Uses",
+            "type": "integer"
+          },
+          "space_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space Id"
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              }
+            ],
+            "default": "viewer"
+          }
+        },
+        "title": "InviteIn",
+        "type": "object"
+      },
+      "InvitePreviewOut": {
+        "description": "What someone opening an invite link sees before signing up.",
+        "properties": {
+          "invited_by": {
+            "title": "Invited By",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "space": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpaceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "space_people_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space People Count"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "invited_by",
+          "expires_at",
+          "space",
+          "space_people_count",
+          "role"
+        ],
+        "title": "InvitePreviewOut",
+        "type": "object"
+      },
+      "Birthday": {
+        "properties": {
+          "day": {
+            "maximum": 31,
+            "minimum": 1,
+            "title": "Day",
+            "type": "integer"
+          },
+          "month": {
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Month",
+            "type": "integer"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "maximum": 2200,
+                "minimum": 1800,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "day",
+          "month"
+        ],
+        "title": "Birthday",
+        "type": "object"
+      },
+      "PagedPersonOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PersonOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedPersonOut",
+        "type": "object"
+      },
+      "PersonOut": {
+        "description": "The basic profile, as the viewer is allowed to see it.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "how_we_met": {
+            "title": "How We Met",
+            "type": "string"
+          },
+          "work": {
+            "title": "Work",
+            "type": "string"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceRef"
+            },
+            "title": "Spaces",
+            "type": "array"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "is_mine": {
+            "title": "Is Mine",
+            "type": "boolean"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "how_we_met",
+          "work",
+          "birthday",
+          "tags",
+          "spaces",
+          "is_me",
+          "is_mine",
+          "owner"
+        ],
+        "title": "PersonOut",
+        "type": "object"
+      },
+      "ContactMethodOut": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "label": {
+            "default": "",
+            "maxLength": 50,
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "value",
+          "id"
+        ],
+        "title": "ContactMethodOut",
+        "type": "object"
+      },
+      "Kind": {
+        "enum": [
+          "met",
+          "call",
+          "message",
+          "event",
+          "custom"
+        ],
+        "title": "Kind",
+        "type": "string"
+      },
+      "PersonDetailOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "how_we_met": {
+            "title": "How We Met",
+            "type": "string"
+          },
+          "work": {
+            "title": "Work",
+            "type": "string"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceRef"
+            },
+            "title": "Spaces",
+            "type": "array"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "is_mine": {
+            "title": "Is Mine",
+            "type": "boolean"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_methods": {
+            "items": {
+              "$ref": "#/components/schemas/ContactMethodOut"
+            },
+            "title": "Contact Methods",
+            "type": "array"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "can_delete": {
+            "title": "Can Delete",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "how_we_met",
+          "work",
+          "birthday",
+          "tags",
+          "spaces",
+          "is_me",
+          "is_mine",
+          "owner",
+          "contact_methods",
+          "can_edit",
+          "can_delete"
+        ],
+        "title": "PersonDetailOut",
+        "type": "object"
+      },
+      "ContactMethodIn": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "label": {
+            "default": "",
+            "maxLength": 50,
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "value"
+        ],
+        "title": "ContactMethodIn",
+        "type": "object"
+      },
+      "PersonIn": {
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "how_we_met": {
+            "default": "",
+            "maxLength": 300,
+            "title": "How We Met",
+            "type": "string"
+          },
+          "work": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Work",
+            "type": "string"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "contact_methods": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ContactMethodIn"
+            },
+            "title": "Contact Methods",
+            "type": "array"
+          },
+          "space_ids": {
+            "default": [],
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Space Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "PersonIn",
+        "type": "object"
+      },
+      "PersonPatch": {
+        "description": "Only the fields sent are changed. Tags and contact details: owner only.",
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "how_we_met": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "How We Met"
+          },
+          "work": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "contact_methods": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ContactMethodIn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Methods"
+          }
+        },
+        "title": "PersonPatch",
+        "type": "object"
+      },
+      "FamilyRelationOut": {
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "relation": {
+            "title": "Relation",
+            "type": "string"
+          },
+          "derived": {
+            "title": "Derived",
+            "type": "boolean"
+          },
+          "former": {
+            "title": "Former",
+            "type": "boolean"
+          },
+          "parent_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "direct_link_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direct Link Id"
+          }
+        },
+        "required": [
+          "person",
+          "relation",
+          "derived",
+          "former",
+          "parent_type",
+          "direct_link_id"
+        ],
+        "title": "FamilyRelationOut",
+        "type": "object"
+      },
+      "ParentType": {
+        "enum": [
+          "biological",
+          "adoptive",
+          "step"
+        ],
+        "title": "ParentType",
+        "type": "string"
+      },
+      "NoteOut": {
+        "description": "The user's own notes on a person; never anyone else's.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "body",
+          "updated_at"
+        ],
+        "title": "NoteOut",
+        "type": "object"
+      },
+      "NoteIn": {
+        "properties": {
+          "body": {
+            "maxLength": 20000,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "NoteIn",
+        "type": "object"
+      },
+      "Color": {
+        "enum": [
+          "sage",
+          "ochre",
+          "clay",
+          "plum",
+          "teal",
+          "slate"
+        ],
+        "title": "Color",
+        "type": "string"
+      },
+      "PagedSpaceOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedSpaceOut",
+        "type": "object"
+      },
+      "SpaceOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "color": {
+            "$ref": "#/components/schemas/Color"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "share_contact_details": {
+            "title": "Share Contact Details",
+            "type": "boolean"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "people_count": {
+            "title": "People Count",
+            "type": "integer"
+          },
+          "member_count": {
+            "title": "Member Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "color",
+          "description",
+          "share_contact_details",
+          "role",
+          "owner",
+          "people_count",
+          "member_count"
+        ],
+        "title": "SpaceOut",
+        "type": "object"
+      },
+      "SpaceIn": {
+        "properties": {
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "color": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Color"
+              }
+            ],
+            "default": "sage"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "SpaceIn",
+        "type": "object"
+      },
+      "SpacePatch": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Color"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "share_contact_details": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Contact Details"
+          }
+        },
+        "title": "SpacePatch",
+        "type": "object"
+      },
+      "SpacePersonIn": {
+        "properties": {
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id"
+        ],
+        "title": "SpacePersonIn",
+        "type": "object"
+      },
+      "PagedRelationshipOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RelationshipOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedRelationshipOut",
+        "type": "object"
+      },
+      "RelationshipOut": {
+        "description": "A stored link. Directional types read \"person_a is the <type> of person_b\".",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "person_a": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "person_b": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RelationshipType"
+          },
+          "parent_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started On"
+          },
+          "ended_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended On"
+          },
+          "is_former": {
+            "title": "Is Former",
+            "type": "boolean"
+          },
+          "space": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpaceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_mine": {
+            "title": "Is Mine",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "person_a",
+          "person_b",
+          "type",
+          "parent_type",
+          "label",
+          "started_on",
+          "ended_on",
+          "is_former",
+          "space",
+          "is_mine"
+        ],
+        "title": "RelationshipOut",
+        "type": "object"
+      },
+      "RelationshipType": {
+        "enum": [
+          "parent",
+          "partner",
+          "sibling",
+          "cousin",
+          "grandparent",
+          "aunt_uncle",
+          "friend",
+          "colleague",
+          "classmate",
+          "met_at",
+          "custom"
+        ],
+        "title": "RelationshipType",
+        "type": "string"
+      },
+      "RelationshipIn": {
+        "description": "For directional types, `person_a` is the parent / grandparent / aunt or uncle.",
+        "properties": {
+          "person_a_id": {
+            "format": "uuid",
+            "title": "Person A Id",
+            "type": "string"
+          },
+          "person_b_id": {
+            "format": "uuid",
+            "title": "Person B Id",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RelationshipType"
+          },
+          "parent_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Label",
+            "type": "string"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started On"
+          },
+          "space_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space Id"
+          }
+        },
+        "required": [
+          "person_a_id",
+          "person_b_id",
+          "type"
+        ],
+        "title": "RelationshipIn",
+        "type": "object"
+      },
+      "RelationshipPatch": {
+        "properties": {
+          "parent_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "started_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started On"
+          }
+        },
+        "title": "RelationshipPatch",
+        "type": "object"
+      },
+      "EndIn": {
+        "properties": {
+          "ended_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ended On"
+          }
+        },
+        "title": "EndIn",
+        "type": "object"
+      },
+      "EdgeKind": {
+        "enum": [
+          "relationship",
+          "space",
+          "member"
+        ],
+        "title": "EdgeKind",
+        "type": "string"
+      },
+      "GraphEdgeOut": {
+        "description": "A connection. `type`/`label` are set for stored links, `space` for space edges.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "format": "uuid",
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "format": "uuid",
+            "title": "Target",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EdgeKind"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "former": {
+            "title": "Former",
+            "type": "boolean"
+          },
+          "space": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpaceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "target",
+          "kind",
+          "type",
+          "label",
+          "former",
+          "space"
+        ],
+        "title": "GraphEdgeOut",
+        "type": "object"
+      },
+      "GraphNodeOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceRef"
+            },
+            "title": "Spaces",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "is_me",
+          "spaces"
+        ],
+        "title": "GraphNodeOut",
+        "type": "object"
+      },
+      "GraphOut": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/GraphNodeOut"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/GraphEdgeOut"
+            },
+            "title": "Edges",
+            "type": "array"
+          }
+        },
+        "required": [
+          "nodes",
+          "edges"
+        ],
+        "title": "GraphOut",
+        "type": "object"
+      },
+      "NeighborhoodParams": {
+        "properties": {
+          "hops": {
+            "default": 1,
+            "maximum": 2,
+            "minimum": 1,
+            "title": "Hops",
+            "type": "integer"
+          }
+        },
+        "title": "NeighborhoodParams",
+        "type": "object"
+      },
+      "PathParams": {
+        "properties": {
+          "alternatives": {
+            "default": 2,
+            "maximum": 5,
+            "minimum": 0,
+            "title": "Alternatives",
+            "type": "integer"
+          }
+        },
+        "title": "PathParams",
+        "type": "object"
+      },
+      "HopOut": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "target": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EdgeKind"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "space": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpaceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "kind",
+          "type",
+          "label",
+          "space"
+        ],
+        "title": "HopOut",
+        "type": "object"
+      },
+      "PathOut": {
+        "properties": {
+          "hops": {
+            "items": {
+              "$ref": "#/components/schemas/HopOut"
+            },
+            "title": "Hops",
+            "type": "array"
+          }
+        },
+        "required": [
+          "hops"
+        ],
+        "title": "PathOut",
+        "type": "object"
+      },
+      "PathsOut": {
+        "description": "The shortest route first, then alternatives with a different first step.",
+        "properties": {
+          "paths": {
+            "items": {
+              "$ref": "#/components/schemas/PathOut"
+            },
+            "title": "Paths",
+            "type": "array"
+          }
+        },
+        "required": [
+          "paths"
+        ],
+        "title": "PathsOut",
+        "type": "object"
+      },
+      "MemoryAidOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "pinned": {
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "person_id",
+          "text",
+          "pinned",
+          "position"
+        ],
+        "title": "MemoryAidOut",
+        "type": "object"
+      },
+      "PagedMemoryAidOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MemoryAidOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedMemoryAidOut",
+        "type": "object"
+      },
+      "MemoryAidIn": {
+        "properties": {
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "pinned": {
+            "default": false,
+            "title": "Pinned",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "person_id",
+          "text"
+        ],
+        "title": "MemoryAidIn",
+        "type": "object"
+      },
+      "MemoryAidPatch": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "pinned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinned"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "title": "MemoryAidPatch",
+        "type": "object"
+      },
+      "InteractionOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "occurred_on": {
+            "format": "date",
+            "title": "Occurred On",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "person_id",
+          "kind",
+          "label",
+          "occurred_on",
+          "note"
+        ],
+        "title": "InteractionOut",
+        "type": "object"
+      },
+      "PagedInteractionOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InteractionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedInteractionOut",
+        "type": "object"
+      },
+      "InteractionIn": {
+        "properties": {
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/Kind"
+          },
+          "label": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Label",
+            "type": "string"
+          },
+          "occurred_on": {
+            "format": "date",
+            "title": "Occurred On",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 5000,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person_id",
+          "kind",
+          "occurred_on"
+        ],
+        "title": "InteractionIn",
+        "type": "object"
+      },
+      "InteractionPatch": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Kind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred On"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "InteractionPatch",
+        "type": "object"
+      },
+      "KeepInTouchSchema": {
+        "description": "The user's keep-in-touch setting for one person.",
+        "properties": {
+          "interval_days": {
+            "anyOf": [
+              {
+                "maximum": 3650,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Days"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
+          "stopped": {
+            "default": false,
+            "title": "Stopped",
+            "type": "boolean"
+          }
+        },
+        "title": "KeepInTouchSchema",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "SessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionid"
+      }
+    }
+  },
+  "servers": []
+}

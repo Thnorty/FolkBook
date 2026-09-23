@@ -7,8 +7,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     // In development the API runs on its own port; the browser only talks to Vite.
+    // Keep the browser's Host header, or Django's CSRF check rejects the Origin.
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/api': { target: 'http://localhost:8000', changeOrigin: false },
     },
   },
   test: {

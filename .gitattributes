@@ -1,5 +1,9 @@
 * text=auto eol=lf
 
+# Generated from the backend's OpenAPI spec (npm run api:generate)
+frontend/openapi.json linguist-generated
+frontend/src/api/schema.d.ts linguist-generated
+
 *.png binary
 *.jpg binary
 *.ico binary
