@@ -19,6 +19,9 @@ class ApiClient:
     def post(self, path: str, data=None):
         return self._send("post", path, data)
 
+    def put(self, path: str, data=None):
+        return self._send("put", path, data)
+
     def patch(self, path: str, data=None):
         return self._send("patch", path, data)
 
