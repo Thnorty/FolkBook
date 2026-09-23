@@ -28,6 +28,10 @@ docker compose exec backend python manage.py createsuperuser
 
 For a real server, set `SITE_ADDRESS` to your domain (e.g. `folk.example.com`) and Caddy gets an HTTPS certificate automatically. Also set `DJANGO_SECURE_COOKIES=true`, and add your domain to `DJANGO_ALLOWED_HOSTS` and `DJANGO_CSRF_TRUSTED_ORIGINS` (e.g. `https://folk.example.com`). Use `docker compose -f compose.yaml up -d` there so the development overrides aren't applied.
 
+### Backups
+
+Everything FolkBook knows is in two Docker volumes: `db_data` (the database) and `media_data` (profile photos). Back up both, together.
+
 ### Install as an app
 
 FolkBook can be added to the home screen (Android, iOS) or installed on the desktop (Chrome, Edge). Browsers only offer this on HTTPS (or `localhost`), so set up your domain as above. When the server can't be reached, the app shows an offline page; nothing from your notebook is stored on the device.

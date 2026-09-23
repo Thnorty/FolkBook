@@ -173,11 +173,11 @@ describe('keyboard shortcuts', () => {
     renderApp('/')
     await heading('Today')
 
-    fireEvent.keyDown(window, { key: 'n' })
-    await heading('Add person')
-
     fireEvent.keyDown(window, { key: 'N', shiftKey: true })
     await heading('Quick capture')
+
+    fireEvent.keyDown(window, { key: 'n' })
+    expect(await screen.findByRole('dialog', { name: 'Add someone' })).toBeInTheDocument()
   })
 
   it('Ctrl+K opens the palette, which jumps to what you pick', async () => {

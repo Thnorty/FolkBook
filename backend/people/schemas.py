@@ -1,4 +1,5 @@
 import datetime
+from pathlib import Path
 from uuid import UUID
 
 from ninja import Field, Schema
@@ -34,6 +35,12 @@ class ContactMethodOut(ContactMethodIn):
     id: UUID
 
 
+class PhotoOut(Schema):
+    url: str
+    thumbnail_url: str
+    caption: str
+
+
 class PersonOut(Schema):
     """The basic profile, as the viewer is allowed to see it."""
 
@@ -47,6 +54,7 @@ class PersonOut(Schema):
     is_me: bool  # the viewer's own Me
     is_mine: bool  # owned by the viewer
     owner: PersonRef | None  # the owner's Me, e.g. "Shared by Defne"
+    photo: PhotoOut | None
     needs_details: bool  # nobody wrote down how you know them yet
     last_talked_on: datetime.date | None  # latest entry on your own timeline with them
 
@@ -55,6 +63,14 @@ class PersonOut(Schema):
         if obj.birth_day is None:
             return None
         return {"day": obj.birth_day, "month": obj.birth_month, "year": obj.birth_year}
+
+    @staticmethod
+    def resolve_photo(obj):
+        if not obj.photo:
+            return None
+        # The file name changes with every new photo, so the URL can be cached for good.
+        url = f"/api/people/{obj.pk}/photo?v={Path(obj.photo.name).stem}"
+        return {"url": url, "thumbnail_url": f"{url}&size=thumbnail", "caption": obj.photo_caption}
 
     @staticmethod
     def resolve_tags(obj):
@@ -96,6 +112,7 @@ class PersonIn(Schema):
     tags: list[str] = []
     contact_methods: list[ContactMethodIn] = []
     space_ids: list[UUID] = []
+    photo_caption: str = Field("", max_length=40)
 
 
 class PersonPatch(Schema):
@@ -107,6 +124,8 @@ class PersonPatch(Schema):
     birthday: Birthday | None = None
     tags: list[str] | None = None
     contact_methods: list[ContactMethodIn] | None = None
+    space_ids: list[UUID] | None = None  # the spaces you can see; others are left alone
+    photo_caption: str | None = Field(None, max_length=40)
 
 
 # ---------------------------------------------------------------- private data

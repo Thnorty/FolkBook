@@ -148,7 +148,7 @@ describe('profile page', () => {
       'tel:+90 555 000',
     )
     expect(screen.getByText('Galatasaray')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', '/people/emma/edit')
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
     await waitFor(() => expect(document.title).toBe('Emma Yılmaz · FolkBook'))
   })
 

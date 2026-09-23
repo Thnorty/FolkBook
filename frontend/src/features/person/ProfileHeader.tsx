@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { Mail, Phone, Pencil } from 'lucide-react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { SpaceChip } from '@/components/notebook/spaces'
@@ -9,6 +8,7 @@ import { FlyFrom, type FlyOrigin } from '@/motion/FlyFrom'
 import { Shared } from '@/motion/PageTurn'
 import { sharedPerson } from '@/motion/sharedIds'
 import type { PersonDetail } from './queries'
+import { usePersonForm } from './usePersonForm'
 
 const CONTACT_LINKS = { phone: 'tel:', email: 'mailto:' } as const
 
@@ -22,6 +22,7 @@ type ProfileHeaderProps = {
 }
 
 export function ProfileHeader({ person, pageTurn = true, flyFrom }: ProfileHeaderProps) {
+  const { openEdit } = usePersonForm()
   const travel = (id: string, from: DOMRect | undefined, content: ReactNode) =>
     pageTurn ? <Shared id={id}>{content}</Shared> : <FlyFrom from={from}>{content}</FlyFrom>
 
@@ -36,14 +37,18 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom }: ProfileHeade
         {travel(
           sharedPerson.photo(person.id),
           flyFrom?.photo,
-          <Polaroid seed={person.id} size="lg" />,
+          <Polaroid
+            seed={person.id}
+            size="lg"
+            photoUrl={person.photo?.url}
+            caption={person.photo?.caption}
+            alt={person.name}
+          />,
         )}
         {person.can_edit && (
-          <Button asChild variant="secondary" className="ml-auto">
-            <Link to="/people/$personId/edit" params={{ personId: person.id }}>
-              <Pencil aria-hidden />
-              Edit
-            </Link>
+          <Button variant="secondary" className="ml-auto" onClick={() => openEdit(person.id)}>
+            <Pencil aria-hidden />
+            Edit
           </Button>
         )}
       </div>

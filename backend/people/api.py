@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from django.db.models import (
@@ -9,8 +10,9 @@ from django.db.models import (
     QuerySet,
     Subquery,
 )
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
-from ninja import Router, Status
+from ninja import File, Router, Status, UploadedFile
 from ninja.pagination import PageNumberPagination, paginate
 
 from access.policy import (
@@ -104,6 +106,36 @@ def list_people(request, space: UUID | None = None, needs_details: bool = False,
 @router.get("/{person_id}", response=PersonDetailOut)
 def get_person(request, person_id: UUID):
     return detail(access_for(request), person_id)
+
+
+@router.get("/{person_id}/photo", response={200: None}, url_name="person_photo")
+def get_photo(request, person_id: UUID, size: Literal["full", "thumbnail"] = "full"):
+    """The person's photo (WebP), for anyone who can see them."""
+    person = get_object_or_404(visible_people(access_for(request)), pk=person_id)
+    photo = person.photo if size == "full" else person.photo_thumbnail
+    if not photo:
+        raise Http404("No photo.")
+    response = FileResponse(photo.open("rb"), content_type="image/webp")
+    # Private: only this browser may keep it. The URL changes with each new photo.
+    response["Cache-Control"] = "private, max-age=31536000, immutable"
+    return response
+
+
+@router.post("/{person_id}/photo", response=PersonDetailOut)
+def upload_photo(request, person_id: UUID, file: File[UploadedFile]):
+    """Replace the photo. Any image the server can read; it's cropped to 4:5."""
+    access = access_for(request)
+    person = get_object_or_404(visible_people(access), pk=person_id)
+    services.set_photo(access, person, file)
+    return detail(access, person.pk)
+
+
+@router.delete("/{person_id}/photo", response=PersonDetailOut)
+def delete_photo(request, person_id: UUID):
+    access = access_for(request)
+    person = get_object_or_404(visible_people(access), pk=person_id)
+    services.remove_photo(access, person)
+    return detail(access, person.pk)
 
 
 @router.get("/{person_id}/family", response=list[FamilyRelationOut])

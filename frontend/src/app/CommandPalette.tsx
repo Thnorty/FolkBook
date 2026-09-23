@@ -5,6 +5,7 @@ import { Plus, Settings, UserPlus } from 'lucide-react'
 import { Dialog } from 'radix-ui'
 import type { ReactNode } from 'react'
 import { Kbd } from '@/components/ui/kbd'
+import { usePersonForm } from '@/features/person/usePersonForm'
 import { spacesQuery } from '@/features/spaces/queries'
 import type { Shortcut } from '@/lib/shortcuts'
 import { SECTIONS, SHORTCUTS } from './nav'
@@ -17,6 +18,7 @@ type PaletteProps = { open: boolean; onOpenChange: (open: boolean) => void }
 /** Ctrl/⌘+K: jump anywhere or start an action. Searching people comes with #27. */
 export function CommandPalette({ open, onOpenChange }: PaletteProps) {
   const navigate = useNavigate()
+  const { openNew } = usePersonForm()
   const spaces = useQuery({ ...spacesQuery, enabled: open }).data?.items ?? []
 
   const go = (to: LinkProps['to'], params?: LinkProps['params']) => () => {
@@ -73,7 +75,10 @@ export function CommandPalette({ open, onOpenChange }: PaletteProps) {
               )}
               <Command.Group heading="Actions" className={GROUP}>
                 <Item
-                  onSelect={go('/people/new')}
+                  onSelect={() => {
+                    onOpenChange(false)
+                    openNew()
+                  }}
                   icon={<UserPlus className="size-4" />}
                   shortcut={SHORTCUTS.addPerson}
                 >

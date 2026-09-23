@@ -58,6 +58,7 @@ export function PersonRow({ person, onPeek }: PersonRowProps) {
         name={person.name}
         detail={detail(person)}
         spaces={person.spaces}
+        photoUrl={person.photo?.thumbnail_url}
         meta={person.is_me ? undefined : <Meta person={person} />}
         className={cn(
           'transition-shadow hover:shadow-float',
@@ -77,7 +78,7 @@ export function PersonTile({ person }: { person: Person }) {
       className={cn(LINK, 'flex flex-col items-center gap-3 p-3 text-center hover:bg-hover')}
     >
       <Shared id={sharedPerson.photo(person.id)}>
-        <Polaroid seed={person.id} size="lg" />
+        <Polaroid seed={person.id} size="lg" photoUrl={person.photo?.thumbnail_url} />
       </Shared>
       <span className="min-w-0">
         <Shared id={sharedPerson.name(person.id)}>

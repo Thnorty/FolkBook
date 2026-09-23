@@ -334,6 +334,31 @@ export interface paths {
         patch: operations["people_api_update_person"];
         trace?: never;
     };
+    "/api/people/{person_id}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Photo
+         * @description The person's photo (WebP), for anyone who can see them.
+         */
+        get: operations["people_api_get_photo"];
+        put?: never;
+        /**
+         * Upload Photo
+         * @description Replace the photo. Any image the server can read; it's cropped to 4:5.
+         */
+        post: operations["people_api_upload_photo"];
+        /** Delete Photo */
+        delete: operations["people_api_delete_photo"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/people/{person_id}/family": {
         parameters: {
             query?: never;
@@ -756,7 +781,7 @@ export interface components {
              * Remember
              * @default true
              */
-            remember: boolean;
+            remember?: boolean;
         };
         /** PasswordIn */
         PasswordIn: {
@@ -771,7 +796,7 @@ export interface components {
              * Page
              * @default 1
              */
-            page: number;
+            page?: number;
             /** Page Size */
             page_size?: number | null;
         };
@@ -861,16 +886,16 @@ export interface components {
              * Expires In Days
              * @default 7
              */
-            expires_in_days: number;
+            expires_in_days?: number;
             /**
              * Max Uses
              * @default 1
              */
-            max_uses: number;
+            max_uses?: number;
             /** Space Id */
             space_id?: string | null;
             /** @default viewer */
-            role: components["schemas"]["Role"];
+            role?: components["schemas"]["Role"];
         };
         /**
          * InvitePreviewOut
@@ -931,10 +956,20 @@ export interface components {
             /** Is Mine */
             is_mine: boolean;
             owner: components["schemas"]["PersonRef"] | null;
+            photo: components["schemas"]["PhotoOut"] | null;
             /** Needs Details */
             needs_details: boolean;
             /** Last Talked On */
             last_talked_on: string | null;
+        };
+        /** PhotoOut */
+        PhotoOut: {
+            /** Url */
+            url: string;
+            /** Thumbnail Url */
+            thumbnail_url: string;
+            /** Caption */
+            caption: string;
         };
         /**
          * ContactKind
@@ -948,7 +983,7 @@ export interface components {
              * Label
              * @default
              */
-            label: string;
+            label?: string;
             /** Value */
             value: string;
             /**
@@ -980,6 +1015,7 @@ export interface components {
             /** Is Mine */
             is_mine: boolean;
             owner: components["schemas"]["PersonRef"] | null;
+            photo: components["schemas"]["PhotoOut"] | null;
             /** Needs Details */
             needs_details: boolean;
             /** Last Talked On */
@@ -998,7 +1034,7 @@ export interface components {
              * Label
              * @default
              */
-            label: string;
+            label?: string;
             /** Value */
             value: string;
         };
@@ -1010,28 +1046,33 @@ export interface components {
              * How We Met
              * @default
              */
-            how_we_met: string;
+            how_we_met?: string;
             /**
              * Work
              * @default
              */
-            work: string;
+            work?: string;
             birthday?: components["schemas"]["Birthday"] | null;
             /**
              * Tags
              * @default []
              */
-            tags: string[];
+            tags?: string[];
             /**
              * Contact Methods
              * @default []
              */
-            contact_methods: components["schemas"]["ContactMethodIn"][];
+            contact_methods?: components["schemas"]["ContactMethodIn"][];
             /**
              * Space Ids
              * @default []
              */
-            space_ids: string[];
+            space_ids?: string[];
+            /**
+             * Photo Caption
+             * @default
+             */
+            photo_caption?: string;
         };
         /**
          * PersonPatch
@@ -1049,6 +1090,10 @@ export interface components {
             tags?: string[] | null;
             /** Contact Methods */
             contact_methods?: components["schemas"]["ContactMethodIn"][] | null;
+            /** Space Ids */
+            space_ids?: string[] | null;
+            /** Photo Caption */
+            photo_caption?: string | null;
         };
         /** FamilyRelationOut */
         FamilyRelationOut: {
@@ -1117,12 +1162,12 @@ export interface components {
             /** Name */
             name: string;
             /** @default sage */
-            color: components["schemas"]["Color"];
+            color?: components["schemas"]["Color"];
             /**
              * Description
              * @default
              */
-            description: string;
+            description?: string;
         };
         /** SpacePatch */
         SpacePatch: {
@@ -1201,7 +1246,7 @@ export interface components {
              * Label
              * @default
              */
-            label: string;
+            label?: string;
             /** Started On */
             started_on?: string | null;
             /** Space Id */
@@ -1278,7 +1323,7 @@ export interface components {
              * Hops
              * @default 1
              */
-            hops: number;
+            hops?: number;
         };
         /** PathParams */
         PathParams: {
@@ -1286,7 +1331,7 @@ export interface components {
              * Alternatives
              * @default 2
              */
-            alternatives: number;
+            alternatives?: number;
         };
         /** HopOut */
         HopOut: {
@@ -1351,7 +1396,7 @@ export interface components {
              * Pinned
              * @default false
              */
-            pinned: boolean;
+            pinned?: boolean;
         };
         /** MemoryAidPatch */
         MemoryAidPatch: {
@@ -1409,7 +1454,7 @@ export interface components {
              * Label
              * @default
              */
-            label: string;
+            label?: string;
             /**
              * Occurred On
              * Format: date
@@ -1419,7 +1464,7 @@ export interface components {
              * Note
              * @default
              */
-            note: string;
+            note?: string;
         };
         /** InteractionPatch */
         InteractionPatch: {
@@ -1444,7 +1489,7 @@ export interface components {
              * Stopped
              * @default false
              */
-            stopped: boolean;
+            stopped?: boolean;
         };
     };
     responses: never;
@@ -1972,6 +2017,82 @@ export interface operations {
                 "application/json": components["schemas"]["PersonPatch"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailOut"];
+                };
+            };
+        };
+    };
+    people_api_get_photo: {
+        parameters: {
+            query?: {
+                size?: "full" | "thumbnail";
+            };
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    people_api_upload_photo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * File
+                     * Format: binary
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailOut"];
+                };
+            };
+        };
+    };
+    people_api_delete_photo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
