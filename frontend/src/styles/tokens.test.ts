@@ -59,12 +59,20 @@ function contrast(foreground: Rgba, background: Rgba): number {
 const SPACES = ['sage', 'ochre', 'clay', 'plum', 'teal', 'slate']
 const NOTES = ['yellow', 'pink', 'green', 'blue']
 const TAB_TINT = 0.24 // bg-space/24 in SpaceTab
+// The paper-grain mask covers the page with --grain at this average strength
+// (measured from the mask in src/index.css), so text is checked on grained paper.
+const GRAIN_COVERAGE = 0.13
+
+function paper(mode: Mode): Rgba {
+  const grain = color('grain', mode)
+  return over(grain, color('paper', mode), grain[3] * GRAIN_COVERAGE)
+}
 
 type Check = [label: string, fg: (m: Mode) => Rgba, bg: (m: Mode) => Rgba, min: number]
 const on = (fg: string, bg: string, min = TEXT): Check => [
   `${fg} on ${bg}`,
   (m) => color(fg, m),
-  (m) => color(bg, m),
+  (m) => (bg === 'paper' ? paper(m) : color(bg, m)),
   min,
 ]
 
@@ -85,7 +93,7 @@ const checks: Check[] = [
   ...SPACES.map((space): Check => [
     `space-${space}-ink on its tinted tab`,
     (m) => color(`space-${space}-ink`, m),
-    (m) => over(color(`space-${space}`, m), color('paper', m), TAB_TINT),
+    (m) => over(color(`space-${space}`, m), paper(m), TAB_TINT),
     TEXT,
   ]),
   ...NOTES.map((note) => on('note-ink', `note-${note}`)),
@@ -93,7 +101,7 @@ const checks: Check[] = [
 
 describe.each<Mode>(['light', 'dark'])('%s theme contrast', (mode) => {
   it.each(checks)('%s', (_, fg, bg, min) => {
-    const background = over(bg(mode), color('paper', mode))
+    const background = over(bg(mode), paper(mode))
     expect(contrast(fg(mode), background)).toBeGreaterThanOrEqual(min)
   })
 })

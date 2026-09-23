@@ -12,11 +12,12 @@
   --paper: light-dark(#f6f1e7, #1e1b17);
   --card: light-dark(#fffcf6, #2a2621);
   --hover: light-dark(rgb(34 31 26 / 0.05), rgb(242 234 219 / 0.06));
+  --grain: light-dark(rgb(34 31 26 / 0.25), rgb(242 234 219 / 0.12)); /* paper-grain specks */
 
   /* Ink */
   --ink: light-dark(#221f1a, #f2eadb);
   --ink-soft: light-dark(#5a544b, #b4ab9a);
-  --ink-faint: light-dark(#736c62, #978e7e); /* design: #8D8579, 3.2:1 on paper */
+  --ink-faint: light-dark(#6f685f, #978e7e); /* design: #8D8579, 3.2:1 on paper */
   --line: light-dark(rgb(34 31 26 / 0.14), rgb(242 234 219 / 0.12));
   --line-strong: light-dark(rgb(34 31 26 / 0.28), rgb(242 234 219 / 0.28));
   --line-input: light-dark(rgb(34 31 26 / 0.5), rgb(242 234 219 / 0.4)); /* 3:1 for inputs */
@@ -38,7 +39,7 @@
   /* Space tabs: muted in light, lifted one step at night. -ink is text on the tinted fill. */
   --on-space: light-dark(#fffcf6, #1b1814);
   --space-sage: light-dark(#697859, #8fa27a); /* design: #7D8F6A, 3.4:1 with white text */
-  --space-sage-ink: light-dark(#4f5e40, #c6d5b6);
+  --space-sage-ink: light-dark(#4d5c3f, #c6d5b6);
   --space-ochre: light-dark(#9b6825, #c28a3e); /* design: #B0762A, 3.8:1 with white text */
   --space-ochre-ink: light-dark(#6b4715, #e8c58f);
   --space-clay: light-dark(#a85a42, #bd6e55);
