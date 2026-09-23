@@ -4,6 +4,7 @@ from uuid import UUID
 from ninja import Field, Schema
 
 from people.models import ContactMethod
+from spaces.models import Space
 
 
 class Birthday(Schema):
@@ -20,7 +21,7 @@ class PersonRef(Schema):
 class SpaceRef(Schema):
     id: UUID
     name: str
-    color: str
+    color: Space.Color
 
 
 class ContactMethodIn(Schema):
@@ -46,6 +47,8 @@ class PersonOut(Schema):
     is_me: bool  # the viewer's own Me
     is_mine: bool  # owned by the viewer
     owner: PersonRef | None  # the owner's Me, e.g. "Shared by Defne"
+    needs_details: bool  # nobody wrote down how you know them yet
+    last_talked_on: datetime.date | None  # latest entry on your own timeline with them
 
     @staticmethod
     def resolve_birthday(obj):

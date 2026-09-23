@@ -1,6 +1,14 @@
 from uuid import UUID
 
-from django.db.models import Prefetch, QuerySet
+from django.db.models import (
+    BooleanField,
+    ExpressionWrapper,
+    OuterRef,
+    Prefetch,
+    Q,
+    QuerySet,
+    Subquery,
+)
 from django.shortcuts import get_object_or_404
 from ninja import Router, Status
 from ninja.pagination import PageNumberPagination, paginate
@@ -10,6 +18,7 @@ from access.policy import (
     can_delete_person,
     can_edit_person,
     visible_contact_methods,
+    visible_interactions,
     visible_memory_aids,
     visible_notes,
     visible_people,
@@ -30,6 +39,7 @@ from people.schemas import (
     PersonOut,
     PersonPatch,
 )
+from people.search import search_people
 from relationships.family import family_of
 from relationships.schemas import FamilyRelationOut
 
@@ -37,10 +47,21 @@ router = Router(tags=["people"])
 memory_aids_router = Router(tags=["memory aids"])
 
 
+# Imported or added in a hurry: nobody wrote down how you know them. Not your own Me.
+NEEDS_DETAILS = ExpressionWrapper(Q(how_we_met="", account__isnull=True), BooleanField())
+
+
 def people_for(access: Access) -> QuerySet[Person]:
     """Visible people with what PersonOut needs, in name order."""
+    last_talked = (
+        visible_interactions(access).filter(person=OuterRef("pk")).order_by("-occurred_on")
+    )
     return (
         visible_people(access)
+        .annotate(
+            needs_details=NEEDS_DETAILS,
+            last_talked_on=Subquery(last_talked.values("occurred_on")[:1]),
+        )
         .select_related("owner__me")
         .prefetch_related(
             "tags",
@@ -66,16 +87,18 @@ def detail(access: Access, person_id: UUID) -> Person:
 @router.get("", response=list[PersonOut])
 @paginate(PageNumberPagination, page_size=50)
 def list_people(request, space: UUID | None = None, needs_details: bool = False, search: str = ""):
-    """Everyone the user can see, by name. `needs_details`: no "how we met" yet."""
+    """Everyone the user can see, by name. `needs_details`: no "how we met" yet.
+
+    `search` matches names, how you met, work, tags, spaces and your own notes and
+    memory aids, ignoring case and accents.
+    """
     access = access_for(request)
     people = people_for(access)
     if space:
         people = people.filter(spaces__in=visible_spaces(access).filter(pk=space))
     if needs_details:
-        people = people.filter(how_we_met="", account__isnull=True)
-    if search.strip():
-        people = people.filter(name__icontains=search.strip())
-    return people
+        people = people.filter(needs_details=True)
+    return search_people(access, people, search)
 
 
 @router.get("/{person_id}", response=PersonDetailOut)
