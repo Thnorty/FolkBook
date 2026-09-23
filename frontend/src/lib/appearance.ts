@@ -39,6 +39,13 @@ function apply({ theme, motion }: Appearance) {
   else root.theme = theme
   if (motion === 'reduce') root.motion = 'reduce'
   else delete root.motion
+
+  // The status bar color (index.html has one per scheme): follow the OS, or the picked theme.
+  document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((meta) => {
+    const scheme = meta.dataset.scheme
+    if (theme === 'system') meta.media = `(prefers-color-scheme: ${scheme})`
+    else meta.media = scheme === theme ? 'all' : 'not all'
+  })
 }
 
 let current = load()

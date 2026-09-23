@@ -2,8 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>FolkBook</title>
+    <meta name="description" content="Remember the people you know, and how you know them." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icons/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="FolkBook" />
+    <!-- Browser and phone status bar color: the paper, by day and at night.
+         src/lib/appearance.ts switches them when a theme is picked in the app. -->
+    <meta
+      name="theme-color"
+      content="#f6f1e7"
+      media="(prefers-color-scheme: light)"
+      data-scheme="light"
+    />
+    <meta
+      name="theme-color"
+      content="#1e1b17"
+      media="(prefers-color-scheme: dark)"
+      data-scheme="dark"
+    />
   </head>
   <body>
     <div id="root"></div>

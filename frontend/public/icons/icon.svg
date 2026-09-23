@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>FolkBook</title>
+  <rect width="512" height="512" rx="112" fill="#253C6B"/>
+  <g id="notebook">
+    <rect x="364" y="140" width="46" height="84" rx="10" fill="#BD6E55"/>
+    <rect x="364" y="236" width="46" height="72" rx="10" fill="#8FA27A"/>
+    <rect x="138" y="96" width="226" height="320" rx="18" fill="#F6F1E7"/>
+    <path d="M156 96h12v320h-12a18 18 0 0 1-18-18V114a18 18 0 0 1 18-18z" fill="#E6DECD"/>
+    <g stroke="#B4AB9A" stroke-width="10" stroke-linecap="round">
+      <line x1="196" y1="176" x2="330" y2="176"/>
+      <line x1="196" y1="226" x2="330" y2="226"/>
+      <line x1="196" y1="276" x2="290" y2="276"/>
+    </g>
+  </g>
+</svg>

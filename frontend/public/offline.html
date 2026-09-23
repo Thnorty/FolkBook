@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Can't reach FolkBook</title>
+    <!-- Shown by the service worker when the server can't be reached. Self-contained:
+         nothing else is available offline. Colors are the paper and ink tokens. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+        --paper: light-dark(#f6f1e7, #1e1b17);
+        --ink: light-dark(#221f1a, #f2eadb);
+        --ink-soft: light-dark(#5a544b, #b4ab9a);
+        --accent: light-dark(#253c6b, #a8bee8);
+        --on-accent: light-dark(#fffcf6, #1b1814);
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        box-sizing: border-box;
+        background: var(--paper);
+        color: var(--ink);
+        font:
+          400 15px/1.55 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 360px;
+        text-align: center;
+      }
+      img {
+        width: 56px;
+        height: 56px;
+      }
+      h1 {
+        font:
+          500 26px/1.2 Georgia,
+          serif;
+        margin: 20px 0 8px;
+      }
+      p {
+        color: var(--ink-soft);
+        margin: 0 0 24px;
+      }
+      button {
+        font:
+          500 14px system-ui,
+          sans-serif;
+        color: var(--on-accent);
+        background: var(--accent);
+        border: 0;
+        border-radius: 6px;
+        min-height: 44px;
+        padding: 0 20px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon.svg" alt="" />
+      <h1>Can't reach your FolkBook</h1>
+      <p>
+        Check your connection, or whether the server is running. Your notebook stays on the server;
+        nothing is stored on this device.
+      </p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>
