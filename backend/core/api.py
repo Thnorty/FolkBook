@@ -6,6 +6,7 @@ Every error response has the shape {"detail": ...}: a message string, or for
 
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest
+from ninja import Schema
 
 from access.policy import Access
 
@@ -27,3 +28,7 @@ def validation_detail(error: ValidationError) -> list[dict]:
             for message in messages
         ]
     return [{"loc": ["body"], "msg": message} for message in error.messages]
+
+
+class ErrorOut(Schema):
+    detail: str
