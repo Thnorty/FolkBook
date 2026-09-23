@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { PersonCard } from '@/components/notebook/PersonCard'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { formatDaysAgo } from '@/lib/dates'
+import { isWideScreen } from '@/lib/media'
 import { cn } from '@/lib/utils'
 import { Shared } from '@/motion/PageTurn'
 import { sharedPerson } from '@/motion/sharedIds'
@@ -25,9 +26,21 @@ function Meta({ person }: { person: Person }) {
 }
 
 /** A person in the People list: their card, opening their profile. */
-export function PersonRow({ person }: { person: Person }) {
+export function PersonRow({ person, onPeek }: { person: Person; onPeek?: (id: string) => void }) {
   return (
-    <Link to="/people/$personId" params={{ personId: person.id }} className={LINK}>
+    <Link
+      to="/people/$personId"
+      params={{ personId: person.id }}
+      className={LINK}
+      onClick={(event) => {
+        // On desktop a plain click peeks in the side panel; Ctrl/⌘-click still opens the page.
+        const plain = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey
+        if (onPeek && plain && isWideScreen()) {
+          event.preventDefault()
+          onPeek(person.id)
+        }
+      }}
+    >
       <PersonCard
         id={person.id}
         name={person.name}

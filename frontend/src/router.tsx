@@ -13,6 +13,7 @@ import { AppLayout } from './app/AppLayout'
 import { safeRedirect } from './lib/redirect'
 import { LoginPage } from './pages/LoginPage'
 import { PeoplePage } from './features/people/PeoplePage'
+import { ProfilePage } from './features/person/ProfilePage'
 import { validatePeopleSearch } from './features/people/search'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
@@ -69,10 +70,15 @@ const appPages = [
     component: PeoplePage,
   }),
   placeholder('people/new', 'Add person', 'A short form: name, how you met, a photo.'),
+  createRoute({
+    getParentRoute: () => appRoute,
+    path: 'people/$personId',
+    component: ProfilePage,
+  }),
   placeholder(
-    'people/$personId',
-    'Person',
-    'Their profile: details, memory aids, connections and timeline.',
+    'people/$personId/edit',
+    'Edit person',
+    'Change their name, how you met, photo and details.',
   ),
   placeholder('graph', 'Graph', 'How everyone you know is connected.'),
   placeholder('spaces/new', 'New space', 'Name a space and pick its color.'),
