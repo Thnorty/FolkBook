@@ -71,6 +71,8 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - Profile on desktop: peek side panel from lists/graph + expand to full page. Mobile: always full page.
 - Graph default: everyone for small notebooks (~300 people or fewer); otherwise Me + 2 hops with other spaces folded into bubbles.
 - Keyboard: `N` add person, `Shift+N` quick capture, `Ctrl/Cmd+K` command palette.
+- **Fonts are self-hosted** (Fontsource packages bundled into the app, with Latin Extended for Turkish and other names): opening a private notebook never contacts Google Fonts.
+- **Contrast beats the mockups:** every text/background pair meets WCAG AA in both themes (checked by `src/styles/tokens.test.ts`). The design colors that fell short were shifted as little as possible, keeping their hue: faint ink in light mode #8D8579 → #736C62; light sage #7D8F6A → #697859 and ochre #B0762A → #9B6825 (white chip text); night plum #8A6E9C → #9379A3, teal #52877F → #558C84, slate #6782A6 → #6A84A8 (dark tab text). Input borders are 50% ink (not 22%) so fields stand out at 3:1.
 
 ## Tech stack
 - **Backend:** Django + Django Ninja (auto OpenAPI), PostgreSQL, no separate graph database. The graph (`graph/queries.py`) loads the viewer's visible network in 5 queries and walks it in Python: personal books are small enough, and every query stays inside the permission layer. Revisit with recursive SQL only if big books get slow.

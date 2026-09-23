@@ -1,0 +1,103 @@
+/*
+ * Design tokens: the one place colors are defined (design/FolkBook.dc.html, screens 1a and 6f).
+ * Each color is light-dark(paper, notebook at night). The theme follows the OS unless
+ * <html data-theme="light|dark"> picks one. src/styles/tokens.test.ts checks the contrast
+ * of every text/background pair; a few design colors were darkened or lifted to pass AA.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Surfaces */
+  --paper: light-dark(#f6f1e7, #1e1b17);
+  --card: light-dark(#fffcf6, #2a2621);
+  --hover: light-dark(rgb(34 31 26 / 0.05), rgb(242 234 219 / 0.06));
+
+  /* Ink */
+  --ink: light-dark(#221f1a, #f2eadb);
+  --ink-soft: light-dark(#5a544b, #b4ab9a);
+  --ink-faint: light-dark(#736c62, #978e7e); /* design: #8D8579, 3.2:1 on paper */
+  --line: light-dark(rgb(34 31 26 / 0.14), rgb(242 234 219 / 0.12));
+  --line-strong: light-dark(rgb(34 31 26 / 0.28), rgb(242 234 219 / 0.28));
+  --line-input: light-dark(rgb(34 31 26 / 0.5), rgb(242 234 219 / 0.4)); /* 3:1 for inputs */
+
+  /* Accent ink and danger */
+  --accent: light-dark(#253c6b, #a8bee8);
+  --accent-hover: light-dark(#1a2c51, #c0d0ef);
+  --on-accent: light-dark(#fffcf6, #1b1814);
+  --focus-glow: light-dark(rgb(37 60 107 / 0.14), rgb(168 190 232 / 0.22));
+  --danger: light-dark(#8a3324, #e2a08e);
+  --danger-hover: light-dark(rgb(138 51 36 / 0.08), rgb(226 160 142 / 0.1));
+
+  /* Inverse surface (toasts): dark on paper, light at night */
+  --inverse: light-dark(#2a2621, #f2eadb);
+  --on-inverse: light-dark(#f2eadb, #221f1a);
+  --on-inverse-soft: light-dark(#b4ab9a, #5a544b);
+  --inverse-accent: light-dark(#a8bee8, #253c6b);
+
+  /* Space tabs: muted in light, lifted one step at night. -ink is text on the tinted fill. */
+  --on-space: light-dark(#fffcf6, #1b1814);
+  --space-sage: light-dark(#697859, #8fa27a); /* design: #7D8F6A, 3.4:1 with white text */
+  --space-sage-ink: light-dark(#4f5e40, #c6d5b6);
+  --space-ochre: light-dark(#9b6825, #c28a3e); /* design: #B0762A, 3.8:1 with white text */
+  --space-ochre-ink: light-dark(#6b4715, #e8c58f);
+  --space-clay: light-dark(#a85a42, #bd6e55);
+  --space-clay-ink: light-dark(#814533, #e8b3a0);
+  --space-plum: light-dark(#6f5580, #9379a3); /* design: #8A6E9C at night, 4.0:1 */
+  --space-plum-ink: light-dark(#4e3a5c, #cdb8db);
+  --space-teal: light-dark(#3f736e, #558c84); /* design: #52877F at night, 4.3:1 */
+  --space-teal-ink: light-dark(#2c534f, #a2ccc4);
+  --space-slate: light-dark(#4e6a8c, #6a84a8); /* design: #6782A6 at night, 4.5:1 */
+  --space-slate-ink: light-dark(#3a5478, #b4c6e0);
+
+  /* Sticky notes (memory aids): dimmed ~12% at night, ink stays dark */
+  --note-ink: #2b2620;
+  --note-yellow: light-dark(#f3e3a6, #d8c57e);
+  --note-pink: light-dark(#f2d6cf, #d4aea4);
+  --note-green: light-dark(#d9e7ce, #afc4a1);
+  --note-blue: light-dark(#d7e2f0, #a9bbd3);
+
+  /* Polaroid photos */
+  --photo-frame: light-dark(#fffcf6, #d9d0bf);
+  --photo-empty: light-dark(#e6decd, #3a342d);
+  --photo-empty-stripe: light-dark(#dcd2be, #332e28);
+  --photo-caption: #3a342c;
+
+  /* Shadows */
+  --shadow-color: light-dark(rgb(34 31 26 / 0.1), rgb(0 0 0 / 0.45));
+  --shadow-color-tight: light-dark(rgb(34 31 26 / 0.1), rgb(0 0 0 / 0.3));
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* <… data-space="sage"> sets --space and --space-ink for space tabs and chips. */
+[data-space='sage'] {
+  --space: var(--space-sage);
+  --space-ink: var(--space-sage-ink);
+}
+[data-space='ochre'] {
+  --space: var(--space-ochre);
+  --space-ink: var(--space-ochre-ink);
+}
+[data-space='clay'] {
+  --space: var(--space-clay);
+  --space-ink: var(--space-clay-ink);
+}
+[data-space='plum'] {
+  --space: var(--space-plum);
+  --space-ink: var(--space-plum-ink);
+}
+[data-space='teal'] {
+  --space: var(--space-teal);
+  --space-ink: var(--space-teal-ink);
+}
+[data-space='slate'] {
+  --space: var(--space-slate);
+  --space-ink: var(--space-slate-ink);
+}
