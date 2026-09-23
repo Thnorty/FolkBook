@@ -1,15 +1,13 @@
 from uuid import UUID
 
-from django.core.exceptions import PermissionDenied
 from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404
 from ninja import Router, Status
 from ninja.pagination import PageNumberPagination, paginate
-from ninja.utils import check_csrf
 
 from accounts import services
 from accounts.schemas import CsrfOut, CurrentUserOut, DeviceOut, LoginIn, PasswordIn
-from core.api import ErrorOut
+from core.api import ErrorOut, require_csrf
 
 router = Router(tags=["auth"])
 
@@ -22,9 +20,7 @@ def csrf(request):
 
 @router.post("/login", response={200: CurrentUserOut, 401: ErrorOut, 429: ErrorOut}, auth=None)
 def login(request, payload: LoginIn):
-    # Logging in has no session yet, so check CSRF here (it stops login forgery).
-    if check_csrf(request):
-        raise PermissionDenied("CSRF check failed. Reload the page and try again.")
+    require_csrf(request)  # stops login forgery
     try:
         return services.sign_in(request, payload.email, payload.password, payload.remember)
     except services.WrongCredentials:
