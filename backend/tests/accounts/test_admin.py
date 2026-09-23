@@ -1,11 +1,11 @@
 import pytest
+from django.contrib import admin
 from django.urls import reverse
 
 from accounts.models import User
+from tests.factories import PASSWORD
 
 pytestmark = pytest.mark.django_db
-
-PASSWORD = "a long enough passphrase"
 
 
 @pytest.fixture
@@ -15,11 +15,15 @@ def admin_client(client):
     return client
 
 
-@pytest.mark.parametrize(
-    "url_name",
-    ["admin:accounts_user_changelist", "admin:accounts_user_add", "admin:people_person_changelist"],
-)
-def test_admin_pages_render(admin_client, url_name):
+ADMIN_PAGES = [
+    f"admin:{model._meta.app_label}_{model._meta.model_name}_{page}"
+    for model in admin.site._registry
+    for page in ("changelist", "add")
+]
+
+
+@pytest.mark.parametrize("url_name", ADMIN_PAGES)
+def test_every_admin_list_and_add_page_renders(admin_client, url_name):
     response = admin_client.get(reverse(url_name))
 
     assert response.status_code == 200
