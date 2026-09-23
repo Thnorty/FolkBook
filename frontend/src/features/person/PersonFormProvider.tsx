@@ -61,6 +61,13 @@ function PersonFormDialog({ personId, onClose }: { personId?: string; onClose: (
         <Dialog.Overlay className="fixed inset-0 z-30 bg-ink/25" />
         <Dialog.Content
           aria-describedby={undefined}
+          // Ctrl/⌘+Enter saves from anywhere in the dialog, not just from inside the form.
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+              event.preventDefault()
+              document.querySelector<HTMLFormElement>(`#${FORM_ID}`)?.requestSubmit()
+            }
+          }}
           className="fixed inset-0 z-30 flex flex-col overflow-hidden bg-paper md:inset-auto md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:max-w-xl md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float"
         >
           {/* Phones: Cancel · title · Save across the top (screen 2b). Desktop: title and ✕. */}

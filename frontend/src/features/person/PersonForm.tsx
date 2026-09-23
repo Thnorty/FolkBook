@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, ImagePlus, Trash2 } from 'lucide-react'
-import { useEffect, useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
@@ -71,6 +71,16 @@ export function PersonForm({ person, onSubmit, onCancel, saving, error, formId }
   const preview = cropped?.preview
   useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview])
 
+  // After the crop step, put focus back on the photo button (its old place is gone).
+  const photoInput = useRef<HTMLInputElement>(null)
+  const focusPhotoButton = useRef(false)
+  useEffect(() => {
+    if (!picked && focusPhotoButton.current) {
+      focusPhotoButton.current = false
+      photoInput.current?.focus()
+    }
+  }, [picked])
+
   const photoUrl = cropped?.preview ?? (removed ? null : (person?.photo?.url ?? null))
 
   const pickFile = (file: File | undefined) => {
@@ -107,11 +117,15 @@ export function PersonForm({ person, onSubmit, onCancel, saving, error, formId }
     return (
       <PhotoCropper
         src={picked}
-        onCancel={() => setPicked(null)}
+        onCancel={() => {
+          setPicked(null)
+          focusPhotoButton.current = true
+        }}
         onDone={(area, rotation) => {
           const blob = cropToBlob(picked, area, rotation)
           blob.then((result) => setCropped({ preview: URL.createObjectURL(result), blob }))
           setPicked(null)
+          focusPhotoButton.current = true
           setRemoved(false)
           if (!caption) setCaption(name.split(' ')[0])
         }}
@@ -120,17 +134,7 @@ export function PersonForm({ person, onSubmit, onCancel, saving, error, formId }
   }
 
   return (
-    <form
-      id={formId}
-      onSubmit={submit}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-          event.preventDefault()
-          event.currentTarget.requestSubmit()
-        }
-      }}
-      className="flex flex-col gap-5"
-    >
+    <form id={formId} onSubmit={submit} className="flex flex-col gap-5">
       {/* Photo: drop or pick a file, then crop it. */}
       <div
         className="flex items-center gap-4"
@@ -148,10 +152,11 @@ export function PersonForm({ person, onSubmit, onCancel, saving, error, formId }
         />
         <div className="flex flex-col items-start gap-1.5">
           <Button asChild variant="secondary">
-            <label className="cursor-pointer">
+            <label className="cursor-pointer has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
               <ImagePlus aria-hidden />
               {photoUrl ? 'Replace photo' : 'Add photo'}
               <input
+                ref={photoInput}
                 type="file"
                 accept="image/*"
                 className="sr-only"

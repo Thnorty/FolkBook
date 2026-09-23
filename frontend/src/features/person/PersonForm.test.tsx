@@ -164,6 +164,25 @@ describe('adding someone', () => {
     expect(writes[0]).toMatchObject({ path: '/api/people', body: { photo_caption: 'Tom' } })
   })
 
+  it('still saves with Ctrl+Enter after adding a photo', async () => {
+    const writes = server()
+    renderApp('/people')
+    await userEvent.click(await screen.findByRole('button', { name: /Add person/ }))
+    const form = await dialog('Add someone')
+    await userEvent.type(within(form).getByLabelText('Name'), 'Tom Bergqvist')
+    const file = new File(['raw'], 'IMG_2841.jpg', { type: 'image/jpeg' })
+    await userEvent.upload(within(form).getByLabelText('Add photo'), file)
+    await userEvent.click(await within(form).findByRole('button', { name: 'Use photo' }))
+
+    // Focus comes back to the photo button, not lost with the crop step…
+    await waitFor(() => expect(within(form).getByLabelText('Replace photo')).toHaveFocus())
+    // …and the shortcut works from anywhere in the dialog, even outside the form.
+    fireEvent.keyDown(form, { key: 'Enter', ctrlKey: true })
+
+    await waitFor(() => expect(writes).toHaveLength(1))
+    expect(writes[0]).toMatchObject({ method: 'POST', path: '/api/people' })
+  })
+
   it('saves with Ctrl+Enter and shows what went wrong', async () => {
     server()
     fakeServer({
