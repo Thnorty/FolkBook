@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Button } from './button'
@@ -53,5 +53,18 @@ describe('notify', () => {
     expect(screen.getByText('1 connection went with him.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Undo' }))
     expect(undo).toHaveBeenCalledOnce()
+  })
+
+  it('closes with the X button without running the action', async () => {
+    const undo = vi.fn()
+    render(<Toaster />)
+
+    act(() => {
+      notify({ title: 'Saved', action: { label: 'Undo', onClick: undo } })
+    })
+    await userEvent.click(await screen.findByRole('button', { name: 'Close' }))
+
+    await waitFor(() => expect(screen.queryByText('Saved')).not.toBeInTheDocument())
+    expect(undo).not.toHaveBeenCalled()
   })
 })

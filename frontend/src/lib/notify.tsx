@@ -19,6 +19,7 @@ export function notify({ title, description, action, duration = DEFAULT_DURATION
         title={title}
         description={description}
         duration={duration}
+        onClose={() => toast.dismiss(id)}
         action={
           action && {
             label: action.label,
