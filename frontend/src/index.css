@@ -36,6 +36,7 @@
 @theme inline {
   --color-paper: var(--paper);
   --color-card: var(--card);
+  --color-chrome: var(--chrome);
   --color-hover: var(--hover);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
@@ -68,6 +69,7 @@
   --shadow-note: 0 3px 8px var(--shadow-color), 0 1px 1px var(--shadow-color-tight);
   --shadow-photo: 0 1px 4px var(--shadow-color);
   --shadow-float: 0 10px 30px var(--shadow-color);
+  --shadow-marker: inset 2px 0 0 var(--accent); /* the current page in the sidebar */
 }
 
 /* Type scale (screen 1a). One utility per role, so sizes aren't picked ad hoc. */

@@ -26,7 +26,8 @@ FolkBook should feel like a **personal address book**, not a corporate CRM.
 | **People** | ✓ | ✓ |
 | **Graph** | ✓ | ✓ |
 | **Spaces** | inside People (filter chips) | ✓ own section |
-| **Quick capture** | center "+" button | "+" button + `N` shortcut |
+| **Quick capture** | center "+" button | "Quick capture" button + `Shift+N` |
+| **Add person** | from People | `N` shortcut, command palette |
 | **Search** | top of People | `Ctrl/Cmd + K` command palette |
 | **Settings** | avatar menu | avatar menu |
 

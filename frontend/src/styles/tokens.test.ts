@@ -81,6 +81,7 @@ const checks: Check[] = [
     on(fg, 'paper'),
     on(fg, 'card'),
   ]),
+  ...['ink', 'ink-soft', 'ink-faint', 'accent'].map((fg) => on(fg, 'chrome')),
   on('on-accent', 'accent'),
   on('on-inverse', 'inverse'),
   on('on-inverse-soft', 'inverse'),
