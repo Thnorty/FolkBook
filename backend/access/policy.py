@@ -13,7 +13,17 @@ from dataclasses import dataclass
 from typing import Literal
 from uuid import UUID
 
-from django.db.models import Exists, OuterRef, Q, QuerySet
+from django.db.models import (
+    Case,
+    CharField,
+    Exists,
+    OuterRef,
+    Q,
+    QuerySet,
+    Subquery,
+    Value,
+    When,
+)
 
 from accounts.models import User
 from interactions.models import Interaction
@@ -72,6 +82,20 @@ def visible_spaces(access: Access) -> QuerySet[Space]:
     if access.is_space_limited:
         spaces = spaces.filter(pk__in=access.space_ids)
     return spaces
+
+
+def visible_spaces_with_role(access: Access) -> QuerySet[Space]:
+    """`visible_spaces`, each annotated with the user's `role` in it (one query)."""
+    member_role = SpaceMembership.objects.filter(space=OuterRef("pk"), user=access.user).values(
+        "role"
+    )[:1]
+    return visible_spaces(access).annotate(
+        role=Case(
+            When(owner=access.user, then=Value("owner")),
+            default=Subquery(member_role),
+            output_field=CharField(),
+        )
+    )
 
 
 def editable_spaces(access: Access) -> QuerySet[Space]:

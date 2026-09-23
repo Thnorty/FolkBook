@@ -67,6 +67,13 @@ These rules are the product. Breaking one is a critical bug.
 - Every model change ships with a migration. Never edit a migration that has been committed; add a new one.
 - Use the ORM; raw SQL only for things like recursive graph queries, kept in one module and covered by tests.
 - Avoid N+1 queries (`select_related` / `prefetch_related`); list endpoints are paginated.
+- **API layout:** each app has `api.py` (a Ninja `Router`, added in `config/api.py`), `schemas.py` (request/response schemas) and `services.py` (writes). Endpoints get their `Access` from `core.api.access_for(request)`.
+- **API behavior:**
+  - Something the user can't see is **404**, never 403, so its existence isn't revealed. Visible but not allowed is **403**; a clash with existing data is **409** (`core.api.Conflict`); invalid input is **422**.
+  - Errors always look like `{"detail": ...}`.
+  - Lists are paginated: `{"items": [...], "count": N}`, 50 per page. Their query count must not grow with the number of rows (there's a test for each list).
+  - Order names with `core.db.by_name()` (ICU collation), never plain `order_by("name")`.
+  - A schema field that must hide data (e.g. contact details) gets an explicit resolver that returns the filtered value.
 - Timestamps in UTC; format dates for the user on the frontend.
 - Names are Unicode (Yılmaz, Şen, Ayşe). Search and sorting must handle this correctly.
 
