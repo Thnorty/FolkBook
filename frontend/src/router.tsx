@@ -12,6 +12,8 @@ import { currentUserQuery } from './api/session'
 import { AppLayout } from './app/AppLayout'
 import { safeRedirect } from './lib/redirect'
 import { LoginPage } from './pages/LoginPage'
+import { PeoplePage } from './features/people/PeoplePage'
+import { validatePeopleSearch } from './features/people/search'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
@@ -60,7 +62,12 @@ const appPages = [
     'Today',
     'Birthdays, people to get back in touch with, and a memory to refresh.',
   ),
-  placeholder('people', 'People', 'Everyone in your notebook, with search and space filters.'),
+  createRoute({
+    getParentRoute: () => appRoute,
+    path: 'people',
+    validateSearch: validatePeopleSearch,
+    component: PeoplePage,
+  }),
   placeholder('people/new', 'Add person', 'A short form: name, how you met, a photo.'),
   placeholder(
     'people/$personId',

@@ -694,7 +694,7 @@
             }
           }
         },
-        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.",
+        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.\n\n`search` matches names, how you met, work, tags, spaces and your own notes and\nmemory aids, ignoring case and accents.",
         "tags": [
           "people"
         ],
@@ -2454,6 +2454,18 @@
         "title": "PagedDeviceOut",
         "type": "object"
       },
+      "Color": {
+        "enum": [
+          "sage",
+          "ochre",
+          "clay",
+          "plum",
+          "teal",
+          "slate"
+        ],
+        "title": "Color",
+        "type": "string"
+      },
       "InviteOut": {
         "properties": {
           "id": {
@@ -2566,8 +2578,7 @@
             "type": "string"
           },
           "color": {
-            "title": "Color",
-            "type": "string"
+            "$ref": "#/components/schemas/Color"
           }
         },
         "required": [
@@ -2782,6 +2793,22 @@
                 "type": "null"
               }
             ]
+          },
+          "needs_details": {
+            "title": "Needs Details",
+            "type": "boolean"
+          },
+          "last_talked_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Talked On"
           }
         },
         "required": [
@@ -2794,7 +2821,9 @@
           "spaces",
           "is_me",
           "is_mine",
-          "owner"
+          "owner",
+          "needs_details",
+          "last_talked_on"
         ],
         "title": "PersonOut",
         "type": "object"
@@ -2902,6 +2931,22 @@
               }
             ]
           },
+          "needs_details": {
+            "title": "Needs Details",
+            "type": "boolean"
+          },
+          "last_talked_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Talked On"
+          },
           "contact_methods": {
             "items": {
               "$ref": "#/components/schemas/ContactMethodOut"
@@ -2929,6 +2974,8 @@
           "is_me",
           "is_mine",
           "owner",
+          "needs_details",
+          "last_talked_on",
           "contact_methods",
           "can_edit",
           "can_delete"
@@ -3205,18 +3252,6 @@
         ],
         "title": "NoteIn",
         "type": "object"
-      },
-      "Color": {
-        "enum": [
-          "sage",
-          "ochre",
-          "clay",
-          "plum",
-          "teal",
-          "slate"
-        ],
-        "title": "Color",
-        "type": "string"
       },
       "PagedSpaceOut": {
         "properties": {

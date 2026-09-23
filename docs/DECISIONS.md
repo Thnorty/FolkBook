@@ -67,6 +67,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - Personal API keys: shown once, stored hashed, expiry, revocable; scopes read-only / read-write, limited to chosen spaces; access to private notes, memory aids and timeline is **opt-in per key** (off by default).
 
 ## UI
+- **People search** matches every word you type against names, how you met, work, tags, the spaces you can see, and your own notes and memory aids (never anyone else's). It ignores case and accents (Postgres `unaccent`), so "yilmaz" finds Yılmaz.
 - Visual direction: **warm notebook** (see `design/FolkBook.dc.html` and `docs/UI_FLOWS.md`).
 - Profile on desktop: peek side panel from lists/graph + expand to full page. Mobile: always full page.
 - Graph default: everyone for small notebooks (~300 people or fewer); otherwise Me + 2 hops with other spaces folded into bubbles.

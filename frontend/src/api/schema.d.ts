@@ -301,6 +301,9 @@ export interface paths {
         /**
          * List People
          * @description Everyone the user can see, by name. `needs_details`: no "how we met" yet.
+         *
+         *     `search` matches names, how you met, work, tags, spaces and your own notes and
+         *     memory aids, ignoring case and accents.
          */
         get: operations["people_api_list_people"];
         put?: never;
@@ -798,6 +801,11 @@ export interface components {
             /** Count */
             count: number;
         };
+        /**
+         * Color
+         * @enum {string}
+         */
+        Color: "sage" | "ochre" | "clay" | "plum" | "teal" | "slate";
         /** InviteOut */
         InviteOut: {
             /**
@@ -845,8 +853,7 @@ export interface components {
             id: string;
             /** Name */
             name: string;
-            /** Color */
-            color: string;
+            color: components["schemas"]["Color"];
         };
         /** InviteIn */
         InviteIn: {
@@ -924,6 +931,10 @@ export interface components {
             /** Is Mine */
             is_mine: boolean;
             owner: components["schemas"]["PersonRef"] | null;
+            /** Needs Details */
+            needs_details: boolean;
+            /** Last Talked On */
+            last_talked_on: string | null;
         };
         /** ContactMethodOut */
         ContactMethodOut: {
@@ -969,6 +980,10 @@ export interface components {
             /** Is Mine */
             is_mine: boolean;
             owner: components["schemas"]["PersonRef"] | null;
+            /** Needs Details */
+            needs_details: boolean;
+            /** Last Talked On */
+            last_talked_on: string | null;
             /** Contact Methods */
             contact_methods: components["schemas"]["ContactMethodOut"][];
             /** Can Edit */
@@ -1068,11 +1083,6 @@ export interface components {
             /** Body */
             body: string;
         };
-        /**
-         * Color
-         * @enum {string}
-         */
-        Color: "sage" | "ochre" | "clay" | "plum" | "teal" | "slate";
         /** PagedSpaceOut */
         PagedSpaceOut: {
             /** Items */

@@ -1,11 +1,8 @@
-import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
-import { createQueryClient } from '@/api/query'
-import { Providers } from '@/app/Providers'
-import { createAppRouter } from '@/router'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
+import { renderApp } from '@/test/renderApp'
 
 /* The whole app (router, guards, shell) against a fake API. */
 
@@ -37,17 +34,6 @@ function loggedInServer(overrides = {}) {
     'GET /api/auth/csrf': noContent,
     ...overrides,
   })
-}
-
-function renderApp(path: string) {
-  const queryClient = createQueryClient()
-  const router = createAppRouter(queryClient, createMemoryHistory({ initialEntries: [path] }))
-  render(
-    <Providers queryClient={queryClient}>
-      <RouterProvider router={router} />
-    </Providers>,
-  )
-  return router
 }
 
 const heading = (name: string) => screen.findByRole('heading', { level: 1, name })
