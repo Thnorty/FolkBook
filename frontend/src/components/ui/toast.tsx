@@ -42,7 +42,7 @@ export function ToastCard({ title, description, action, onClose, duration }: Toa
       </button>
       <div
         aria-hidden
-        className="toast-countdown absolute bottom-0 left-0 h-0.5 w-full origin-left bg-inverse-accent motion-reduce:hidden"
+        className="toast-countdown absolute bottom-0 left-0 h-0.5 w-full origin-left bg-inverse-accent reduced:hidden"
         style={{ animationDuration: `${duration}ms` }}
       />
     </div>

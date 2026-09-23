@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { Shared } from '@/motion/PageTurn'
+import { sharedPerson } from '@/motion/sharedIds'
 import { Polaroid } from './Polaroid'
 import { SpaceChip, SpaceRibbon, type SpaceColor } from './spaces'
 
@@ -32,9 +34,14 @@ export function PersonCard({
         className,
       )}
     >
-      <Polaroid seed={id} photoUrl={photoUrl} />
+      {/* Photo and name travel into the profile when the card opens ("page turn"). */}
+      <Shared id={sharedPerson.photo(id)}>
+        <Polaroid seed={id} photoUrl={photoUrl} />
+      </Shared>
       <div className="min-w-0 flex-1">
-        <p className="truncate type-heading">{name}</p>
+        <Shared id={sharedPerson.name(id)}>
+          <p className="truncate type-heading">{name}</p>
+        </Shared>
         {detail && <p className="mt-0.5 truncate text-sm text-ink-soft">{detail}</p>}
       </div>
       {/* Phones: ribbons stacked over the meta (screen 4c). Wider: chips beside it (1a). */}

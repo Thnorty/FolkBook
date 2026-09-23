@@ -4,6 +4,16 @@
 @import '@fontsource-variable/caveat';
 @import './styles/tokens.css';
 
+/* reduced:… applies when the device or the in-app setting (data-motion) asks for less motion. */
+@custom-variant reduced {
+  @media (prefers-reduced-motion: reduce) {
+    @slot;
+  }
+  &:where([data-motion='reduce'] *) {
+    @slot;
+  }
+}
+
 /* Only our tokens exist as Tailwind colors, so components can't reach for a stray palette. */
 @theme {
   --color-*: initial;
@@ -28,6 +38,10 @@
   --text-xl: 22px;
   --text-2xl: 34px;
   --text-hand: 19px;
+
+  /* Motion (src/motion/tokens.ts is the source; a test keeps them equal). */
+  --ease-notebook: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --default-transition-timing-function: var(--ease-notebook);
 
   --radius-tab: 3px;
   --radius-card: 6px;
@@ -154,4 +168,10 @@
 }
 [data-sonner-toast][data-expanded='true'] .toast-countdown {
   animation-play-state: paused;
+}
+
+/* Sonner turns its slide off for the device setting; do the same for the in-app one. */
+:root[data-motion='reduce'] :is([data-sonner-toast], [data-sonner-toast] > *) {
+  transition: none !important;
+  animation: none !important;
 }

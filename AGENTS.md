@@ -96,6 +96,10 @@ These rules are the product. Breaking one is a critical bug.
 - **Design system page:** `npm run dev`, then open `/design` to see every token and component in light and dark. It exists only in development; add new core components to it.
 - **Accessibility:** semantic HTML, keyboard navigation, visible focus, labels on inputs, WCAG AA contrast.
 - **Motion:** follow the motion spec in the design file (UI transitions ≤ 450ms, decorative ink/paper effects ≤ 700ms). Every animation has a reduced-motion fallback (simple fade) that respects both the OS setting and the in-app setting.
+  - Durations and the ease live in `src/motion/tokens.ts` (the CSS copy `ease-notebook` is kept equal by a test). Animate with `m` components from `motion/react-m`: the app loads Motion lazily in strict mode, so `motion.div` throws.
+  - Primitives in `src/motion/`: `<Shared id>` elements travel between screens (the "page turn"; person ids come from `sharedPerson` so a card and a profile always match), `<PageFade>` fades a page in, `<InkUnderline>` draws under something just saved.
+  - Ask `useReducedMotion()` from `src/motion/` (it combines the device and the in-app setting); in CSS use the `reduced:` variant, not Tailwind's `motion-reduce:`. With reduced motion nothing moves or tilts; things fade in over 150ms (`REDUCED_TRANSITION`).
+- **Appearance settings** (theme, reduced motion) belong to the device: `src/lib/appearance.ts` keeps them in localStorage and sets `data-theme` / `data-motion` on `<html>`. Read them with `useAppearance()`, change them with `setAppearance()`.
 - Keyboard shortcuts: `N` add person, `Shift+N` quick capture, `Ctrl/Cmd+K` command palette. Show `Ctrl` on Windows/Linux and `⌘` on macOS.
 - Components from shadcn/ui are restyled to the notebook design; don't ship default shadcn looks.
 

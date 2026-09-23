@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Outlet, useNavigate, useRouter } from '@tanstack/react-router'
+import { Outlet, useNavigate, useRouter, useRouterState } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { currentUserQuery } from '@/api/session'
 import { useShortcut } from '@/lib/shortcuts'
+import { PageFade } from '@/motion/PageTurn'
 import { BottomTabs } from './BottomTabs'
 import { CommandPalette } from './CommandPalette'
 import { SHORTCUTS } from './nav'
@@ -14,6 +15,7 @@ export function AppLayout() {
   const router = useRouter()
   const navigate = useNavigate()
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
 
   // The session ended (logged out here or elsewhere): run the route guard again,
   // which sends you to the login page and back here afterwards.
@@ -46,7 +48,9 @@ export function AppLayout() {
       </a>
       <Sidebar user={user} onSearch={() => setPaletteOpen(true)} />
       <main id="main" tabIndex={-1} className="min-w-0 flex-1 pb-28 outline-none md:pb-0">
-        <Outlet />
+        <PageFade key={pathname}>
+          <Outlet />
+        </PageFade>
       </main>
       <BottomTabs />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
