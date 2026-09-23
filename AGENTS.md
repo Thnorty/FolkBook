@@ -10,7 +10,8 @@ A self-hosted personal CRM for keeping track of the people you know, with a grap
 
 | What | Where |
 |---|---|
-| Product decisions, backlog | `TODO.md` |
+| Product decisions | `docs/DECISIONS.md` |
+| Work items and priorities | [GitHub Issues](https://github.com/Thnorty/FolkBook/issues), grouped by milestone |
 | Screens, flows, interaction ideas | `docs/UI_FLOWS.md` |
 | Visual design (all screens, tokens, motion spec) | `design/FolkBook.dc.html` (exported from Claude Design; open in a browser) |
 | How to run and develop | `README.md` |
@@ -153,4 +154,5 @@ test(api): cover read-only API keys writing to a space
 - [ ] No duplicated logic, types or tokens introduced
 - [ ] Privacy rules respected and tested
 - [ ] UI checked on mobile and desktop, light and dark, with reduced motion
-- [ ] `TODO.md` / `docs/UI_FLOWS.md` updated if a decision or flow changed
+- [ ] `docs/DECISIONS.md` / `docs/UI_FLOWS.md` updated if a decision or flow changed
+- [ ] The commit or PR references its issue (`Closes #12`)

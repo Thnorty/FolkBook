@@ -65,7 +65,7 @@ cd frontend && npm test && npm run typecheck && npm run lint && npm run format:c
 | `caddy/` | Web server: serves the frontend, proxies the API, handles HTTPS |
 | `compose.yaml` | The full stack; `compose.override.yaml` adds development-only settings |
 | `design/` | The UI design (open `FolkBook.dc.html` in a browser) |
-| `docs/` | Product docs: UI flows |
+| `docs/` | Product docs: decisions, UI flows |
 | `AGENTS.md` | Conventions for contributors and AI agents |
 
 ## Troubleshooting
