@@ -1,7 +1,7 @@
 import pytest
 
-# Shared fixtures: `world`, the multi-user sample data used by privacy and graph tests.
-pytest_plugins = ["tests.worlds"]
+# Shared fixtures: `world` (multi-user sample data) and `api` (JSON client for the API).
+pytest_plugins = ["tests.worlds", "tests.api_client"]
 
 
 @pytest.fixture(autouse=True)

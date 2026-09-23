@@ -17,6 +17,8 @@ package = false
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
 addopts = "--strict-markers --import-mode=importlib"
+# Fix deprecations when they appear, not when the next upgrade breaks something.
+filterwarnings = ["error::DeprecationWarning"]
 
 [tool.ruff]
 line-length = 100
