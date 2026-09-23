@@ -107,3 +107,7 @@ cd frontend && npm test && npm run typecheck && npm run lint && npm run format:c
 ## Troubleshooting
 
 **"ports are not available … access permissions" on Windows.** Windows reserves some port ranges (check with `netsh interface ipv4 show excludedportrange protocol=tcp`). Pick a port outside them for `FOLKBOOK_PORT` in `.env`, and update `DJANGO_CSRF_TRUSTED_ORIGINS` to match.
+
+## License
+
+FolkBook is free software under the [GNU Affero General Public License v3.0 or later](LICENSE). You can use, change and share it; if you run a changed version as a service for others, you have to offer them your changed source code too.
