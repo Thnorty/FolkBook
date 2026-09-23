@@ -18,6 +18,8 @@ from core.db import by_name
 from people import services
 from people.models import Person
 from people.schemas import PersonDetailOut, PersonIn, PersonOut, PersonPatch
+from relationships.family import family_of
+from relationships.schemas import FamilyRelationOut
 
 router = Router(tags=["people"])
 
@@ -66,6 +68,13 @@ def list_people(request, space: UUID | None = None, needs_details: bool = False,
 @router.get("/{person_id}", response=PersonDetailOut)
 def get_person(request, person_id: UUID):
     return detail(access_for(request), person_id)
+
+
+@router.get("/{person_id}/family", response=list[FamilyRelationOut])
+def get_family(request, person_id: UUID):
+    """Parents, siblings, cousins, in-laws, …, from the links the user can see."""
+    access = access_for(request)
+    return family_of(access, get_object_or_404(visible_people(access), pk=person_id))
 
 
 @router.post("", response={201: PersonDetailOut})

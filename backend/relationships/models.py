@@ -82,6 +82,7 @@ class Relationship(BaseModel):
             models.CheckConstraint(
                 condition=~models.Q(person_a=models.F("person_b")),
                 name="relationships_not_with_self",
+                violation_error_message="A person can't be linked to themselves.",
             ),
             models.CheckConstraint(
                 condition=models.Q(type__in=_values(DIRECTIONAL_TYPES))
@@ -92,23 +93,31 @@ class Relationship(BaseModel):
                 condition=models.Q(type="parent", parent_type__in=ParentType.values)
                 | (~models.Q(type="parent") & models.Q(parent_type="")),
                 name="relationships_parent_type_only_on_parents",
+                violation_error_message=(
+                    "Parent links need a parent type (biological, adoptive or step), "
+                    "and only parent links have one."
+                ),
             ),
             models.CheckConstraint(
                 condition=~models.Q(type__in=_values(LABELLED_TYPES)) | ~models.Q(label=""),
                 name="relationships_label_required",
+                violation_error_message="“Met at” and custom links need a label.",
             ),
             models.CheckConstraint(
                 condition=~models.Q(type="parent", is_former=True),
                 name="relationships_parent_links_never_end",
+                violation_error_message="Parent links never end.",
             ),
             models.CheckConstraint(
                 condition=models.Q(ended_on__isnull=True) | models.Q(is_former=True),
                 name="relationships_end_date_means_former",
+                violation_error_message="Only ended links have an end date.",
             ),
             models.UniqueConstraint(
                 fields=["owner", "person_a", "person_b", "type"],
                 condition=models.Q(is_former=False),
                 name="relationships_one_current_link_per_type",
+                violation_error_message="This link already exists.",
             ),
         ]
 

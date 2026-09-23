@@ -194,14 +194,17 @@ def neighborhood(access: Access, person: Person, hops: int = 1) -> Graph:
     return graph.subgraph(included)
 
 
-def paths_to(access: Access, target: Person, alternatives: int = 2) -> list[Path]:
+def paths_to(
+    access: Access, target: Person, alternatives: int = 2, graph: Graph | None = None
+) -> list[Path]:
     """How do I know …? The shortest path from the viewer's Me to `target`.
 
     Also returns up to `alternatives` other routes, each starting with a
     different first step (e.g. "also via Emma"), shortest first. Empty when
-    the target can't be reached or is the viewer themselves.
+    the target can't be reached or is the viewer themselves. Pass `graph` to
+    reuse one that's already loaded for `access`.
     """
-    graph = visible_graph(access)
+    graph = graph or visible_graph(access)
     source = access.user.me.pk
     if target.pk not in graph.people or target.pk == source:
         return []
