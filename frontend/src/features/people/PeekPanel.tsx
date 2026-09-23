@@ -16,7 +16,7 @@ export function PeekPanel({ personId, onClose }: PeekPanelProps) {
   return (
     <aside
       aria-label="Peek"
-      className="sticky top-4 hidden max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-card border border-line bg-paper shadow-float md:block"
+      className="sticky top-4 hidden max-h-[calc(100dvh-2rem)] overflow-y-auto [scrollbar-gutter:stable] rounded-card border border-line bg-paper shadow-float md:block"
     >
       <div className="sticky top-0 z-10 flex items-center gap-1 border-b border-line bg-paper px-3 py-2">
         <span className="px-2 type-meta text-ink-faint">Peek</span>

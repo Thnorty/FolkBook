@@ -11,7 +11,12 @@ import { useReducedMotion } from './useReducedMotion'
  * motion nothing moves: the new page simply fades in.
  */
 
-type SharedProps = { id: string; children: ReactNode; className?: string }
+type SharedProps = {
+  /** The same id on both screens. Without one it's a plain box (e.g. where both show at once). */
+  id?: string
+  children: ReactNode
+  className?: string
+}
 
 /** An element that travels between two screens showing the same thing. */
 export function Shared({ id, children, className }: SharedProps) {
@@ -19,6 +24,7 @@ export function Shared({ id, children, className }: SharedProps) {
   return (
     <m.div
       layoutId={reduced ? undefined : id}
+      data-shared={id}
       transition={{ duration: DURATION.pageTurn, ease: EASE }}
       className={className}
     >

@@ -295,6 +295,27 @@ describe('peek panel', () => {
   })
 })
 
+describe('peek panel and the list', () => {
+  it("keeps the card's photo and name in the list while the panel shows them", async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('min-width'),
+      media: query,
+    }))
+    server({ 'GET /api/people': () => json({ items: [{ ...EMMA, spaces: [] }], count: 1 }) })
+    renderApp('/people')
+    const list = await screen.findByRole('region', { name: 'People' })
+    await userEvent.click(await within(list).findByRole('link', { name: /Emma Yılmaz/ }))
+    const panel = await screen.findByRole('complementary', { name: 'Peek' })
+    await within(panel).findByRole('heading', { name: 'Emma Yılmaz' })
+
+    // Two elements with the same shared id compete for the page turn and one gets hidden.
+    const ids = [...document.querySelectorAll('[data-shared]')].map((el) =>
+      el.getAttribute('data-shared'),
+    )
+    expect(ids).toEqual(['person-emma-photo', 'person-emma-name']) // only the card's
+  })
+})
+
 describe('labels', () => {
   it('names relations and intervals in words', () => {
     expect(relationLabel('half_sibling')).toBe('half-sibling')

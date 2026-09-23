@@ -11,7 +11,13 @@ import type { PersonDetail } from './queries'
 const CONTACT_LINKS = { phone: 'tel:', email: 'mailto:' } as const
 
 /** Photo, name, how you met and the basics (screens 1b, 1d). */
-export function ProfileHeader({ person }: { person: PersonDetail }) {
+type ProfileHeaderProps = {
+  person: PersonDetail
+  /** Photo and name travel from the card. Not in the peek panel, where the card stays in view. */
+  pageTurn?: boolean
+}
+
+export function ProfileHeader({ person, pageTurn = true }: ProfileHeaderProps) {
   const facts = [
     person.work,
     person.birthday && `Birthday ${formatBirthday(person.birthday)}`,
@@ -20,7 +26,7 @@ export function ProfileHeader({ person }: { person: PersonDetail }) {
   return (
     <header className="flex flex-col gap-4">
       <div className="flex items-end gap-5">
-        <Shared id={sharedPerson.photo(person.id)}>
+        <Shared id={pageTurn ? sharedPerson.photo(person.id) : undefined}>
           <Polaroid seed={person.id} size="lg" />
         </Shared>
         {person.can_edit && (
@@ -34,7 +40,7 @@ export function ProfileHeader({ person }: { person: PersonDetail }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Shared id={sharedPerson.name(person.id)}>
+        <Shared id={pageTurn ? sharedPerson.name(person.id) : undefined}>
           <h1 className="type-display">{person.name}</h1>
         </Shared>
         {person.how_we_met && <p className="text-ink-soft">{person.how_we_met}</p>}

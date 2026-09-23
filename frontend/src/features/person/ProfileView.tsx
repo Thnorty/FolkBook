@@ -50,14 +50,14 @@ export function ProfileView({ personId, compact = false }: ProfileViewProps) {
       )}
     >
       <div className={cn('flex flex-col gap-8', !compact && 'lg:sticky lg:top-6')}>
-        <ProfileHeader person={data} />
+        <ProfileHeader person={data} pageTurn={!compact} />
         {!data.is_me && (
-          <PageFade afterTurn>
+          <PageFade afterTurn={!compact}>
             <KeepInTouch personId={personId} />
           </PageFade>
         )}
       </div>
-      <PageFade afterTurn className="flex flex-col gap-9">
+      <PageFade afterTurn={!compact} className="flex flex-col gap-9">
         <RememberSection personId={personId} />
         <NotesSection personId={personId} firstName={firstName} />
         <ConnectionsSection personId={personId} />
