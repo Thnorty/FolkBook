@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { PersonCard } from '@/components/notebook/PersonCard'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { SpaceChip, SpaceTab, type SpaceColor } from '@/components/notebook/spaces'
@@ -7,7 +7,11 @@ import { TimelineItem } from '@/components/notebook/TimelineItem'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { setAppearance, useAppearance, type Appearance } from '@/lib/appearance'
 import { notify } from '@/lib/notify'
+import { InkUnderline } from '@/motion/InkUnderline'
+import { PageFade, Shared } from '@/motion/PageTurn'
+import { sharedPerson } from '@/motion/sharedIds'
 
 /*
  * Development-only page (/design) showing every token and core component, in the
@@ -17,7 +21,6 @@ import { notify } from '@/lib/notify'
 const SURFACES = ['paper', 'card', 'ink', 'ink-soft', 'ink-faint', 'accent', 'danger', 'inverse']
 const SPACE_COLORS: SpaceColor[] = ['sage', 'ochre', 'clay', 'plum', 'teal', 'slate']
 const NOTE_COLORS: NoteColor[] = ['yellow', 'pink', 'green', 'blue']
-const THEMES = ['system', 'light', 'dark'] as const
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -28,25 +31,76 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-function ThemeSwitch() {
-  const [theme, setTheme] = useState<(typeof THEMES)[number]>('system')
-  useEffect(() => {
-    const root = document.documentElement
-    if (theme === 'system') delete root.dataset.theme
-    else root.dataset.theme = theme
-  }, [theme])
+function Choice<K extends keyof Appearance>({
+  setting,
+  label,
+  options,
+}: {
+  setting: K
+  label: string
+  options: Appearance[K][]
+}) {
+  const current = useAppearance()[setting]
   return (
-    <div role="group" aria-label="Theme" className="flex gap-1">
-      {THEMES.map((option) => (
+    <div role="group" aria-label={label} className="flex gap-1">
+      {options.map((option) => (
         <Button
           key={option}
-          variant={theme === option ? 'primary' : 'secondary'}
-          aria-pressed={theme === option}
-          onClick={() => setTheme(option)}
+          variant={current === option ? 'primary' : 'secondary'}
+          aria-pressed={current === option}
+          onClick={() => setAppearance({ [setting]: option })}
         >
           {option[0].toUpperCase() + option.slice(1)}
         </Button>
       ))}
+    </div>
+  )
+}
+
+/** Tap the card: photo and name travel into the "profile"; the rest fades in after. */
+function PageTurnDemo() {
+  const [open, setOpen] = useState(false)
+  const id = 'demo-emma'
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="block w-full text-left">
+        <PersonCard id={id} name="Emma Yılmaz" detail="University, Istanbul · 2015" />
+      </button>
+    )
+  }
+  return (
+    <div className="rounded-card border border-line bg-card p-6 shadow-paper">
+      <div className="flex items-end gap-5">
+        <Shared id={sharedPerson.photo(id)}>
+          <Polaroid seed={id} size="lg" />
+        </Shared>
+        <Shared id={sharedPerson.name(id)}>
+          <p className="type-display">Emma Yılmaz</p>
+        </Shared>
+      </div>
+      <PageFade afterTurn className="mt-5">
+        <p className="text-ink-soft">
+          Met at university in Istanbul, 2015. Her kid Arda is 6 and allergic to peanuts.
+        </p>
+        <Button variant="secondary" className="mt-4" onClick={() => setOpen(false)}>
+          Back to the card
+        </Button>
+      </PageFade>
+    </div>
+  )
+}
+
+function InkDemo() {
+  const [saves, setSaves] = useState(0)
+  return (
+    <div className="flex items-end gap-6">
+      <div className="inline-flex flex-col gap-1">
+        <span className="type-title">Saved</span>
+        <InkUnderline key={saves} />
+      </div>
+      <Button variant="secondary" onClick={() => setSaves((n) => n + 1)}>
+        Save again
+      </Button>
     </div>
   )
 }
@@ -61,7 +115,10 @@ export default function DesignSystem() {
           <h1 className="type-display">Warm notebook</h1>
           <p className="mt-1 type-meta text-ink-faint">tokens · type · components</p>
         </div>
-        <ThemeSwitch />
+        <div className="flex flex-col gap-2">
+          <Choice setting="theme" label="Theme" options={['system', 'light', 'dark']} />
+          <Choice setting="motion" label="Motion" options={['system', 'reduce']} />
+        </div>
       </header>
 
       <Section title="Colors">
@@ -186,6 +243,17 @@ export default function DesignSystem() {
           </TimelineItem>
           <TimelineItem date="2026-08-02" kind="Call" title="Birthday call" />
         </ol>
+      </Section>
+
+      <Section title="Motion">
+        <p className="mb-4 type-small text-ink-soft">
+          Page turn: tap the card. Ink underline: save again. With Motion on Reduce (or your device
+          set to reduce motion) nothing moves; things just fade in.
+        </p>
+        <div className="flex flex-col gap-6">
+          <PageTurnDemo />
+          <InkDemo />
+        </div>
       </Section>
 
       <Section title="Toast">

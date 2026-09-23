@@ -71,6 +71,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - Profile on desktop: peek side panel from lists/graph + expand to full page. Mobile: always full page.
 - Graph default: everyone for small notebooks (~300 people or fewer); otherwise Me + 2 hops with other spaces folded into bubbles.
 - Keyboard: `N` add person, `Shift+N` quick capture, `Ctrl/Cmd+K` command palette.
+- **Appearance is per device:** light / dark / system and reduce motion are saved in the browser, not the account, like the OS settings they override. A phone can be dark while the laptop is light.
 - **Fonts are self-hosted** (Fontsource packages bundled into the app, with Latin Extended for Turkish and other names): opening a private notebook never contacts Google Fonts.
 - **Contrast beats the mockups:** every text/background pair meets WCAG AA in both themes (checked by `src/styles/tokens.test.ts`). The design colors that fell short were shifted as little as possible, keeping their hue: faint ink in light mode #8D8579 → #6F685F; light sage tab text #4F5E40 → #4D5C3F; light sage #7D8F6A → #697859 and ochre #B0762A → #9B6825 (white chip text); night plum #8A6E9C → #9379A3, teal #52877F → #558C84, slate #6782A6 → #6A84A8 (dark tab text). Input borders are 50% ink (not 22%) so fields stand out at 3:1. Text on the page is checked against paper with its grain, which darkens it slightly.
 
