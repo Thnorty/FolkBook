@@ -38,7 +38,7 @@ jobs:
       POSTGRES_HOST: localhost
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0
         with:
           working-directory: backend
           enable-cache: true
