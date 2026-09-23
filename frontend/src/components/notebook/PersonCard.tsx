@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Polaroid } from './Polaroid'
-import { SpaceChip, type SpaceColor } from './spaces'
+import { SpaceChip, SpaceRibbon, type SpaceColor } from './spaces'
 
 type PersonCardProps = {
   id: string
@@ -37,16 +37,24 @@ export function PersonCard({
         <p className="truncate type-heading">{name}</p>
         {detail && <p className="mt-0.5 truncate text-sm text-ink-soft">{detail}</p>}
       </div>
-      {spaces.length > 0 && (
-        <ul aria-label="Spaces" className="hidden flex-none gap-1.5 sm:flex">
-          {spaces.map((space) => (
-            <li key={space.id}>
-              <SpaceChip {...space} />
-            </li>
-          ))}
-        </ul>
-      )}
-      {meta && <div className="flex-none text-right type-meta text-ink-faint">{meta}</div>}
+      {/* Phones: ribbons stacked over the meta (screen 4c). Wider: chips beside it (1a). */}
+      <div className="flex flex-none flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+        {spaces.length > 0 && (
+          <ul aria-label="Spaces" className="flex gap-0.5 sm:gap-1.5">
+            {spaces.map((space) => (
+              <li key={space.id}>
+                <span className="sm:hidden">
+                  <SpaceRibbon {...space} />
+                </span>
+                <span className="max-sm:hidden">
+                  <SpaceChip {...space} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {meta && <div className="text-right type-meta text-ink-faint">{meta}</div>}
+      </div>
     </article>
   )
 }

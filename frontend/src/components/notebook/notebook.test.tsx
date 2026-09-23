@@ -24,10 +24,12 @@ describe('PersonCard', () => {
     const card = screen.getByRole('article', { name: 'Emma Yılmaz' })
     expect(within(card).getByText('University, Istanbul · 2015')).toBeInTheDocument()
     expect(within(card).getByText('10 days ago')).toBeInTheDocument()
-    const spaces = within(card)
-      .getAllByRole('listitem')
-      .map((item) => item.textContent)
-    expect(spaces).toEqual(['Friends', 'Hackathon 2026(shared)'])
+    // Each space is there twice: a ribbon for phones and a chip for wider screens.
+    // CSS shows one of them (jsdom renders both).
+    const [friends, hackathon] = within(card).getAllByRole('listitem')
+    expect(within(friends).getAllByText('Friends')).toHaveLength(2)
+    expect(within(hackathon).getAllByText(/Hackathon 2026/)).toHaveLength(2)
+    expect(within(hackathon).getAllByText(/shared/)).toHaveLength(2)
   })
 
   it('leaves out what it has no data for', () => {

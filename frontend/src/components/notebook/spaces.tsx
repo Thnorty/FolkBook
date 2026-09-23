@@ -33,6 +33,18 @@ export function SpaceChip({ name, color, shared }: SpaceLabelProps) {
   )
 }
 
+/** A space as a thin colored ribbon, where a chip won't fit (person cards on phones). */
+export function SpaceRibbon({ name, color, shared }: SpaceLabelProps) {
+  return (
+    <span data-space={color} className="block h-3.25 w-0.75 rounded-full bg-space">
+      <span className="sr-only">
+        {name}
+        {shared && ' (shared)'}
+      </span>
+    </span>
+  )
+}
+
 type SpaceTabProps = SpaceLabelProps & {
   active?: boolean
   onSelect?: () => void
