@@ -5,10 +5,9 @@ from django.db import IntegrityError
 from accounts.admin import UserCreationForm
 from accounts.models import User
 from people.models import Person
+from tests.factories import PASSWORD
 
 pytestmark = pytest.mark.django_db
-
-PASSWORD = "a long enough passphrase"
 
 
 def test_create_user_also_creates_their_me_person():

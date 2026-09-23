@@ -32,7 +32,15 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 ## Relationships
 - Stored family links: **parent** (biological / adoptive / step) and **partner**. Siblings, cousins, grandparents, in-laws are **derived**, never stored, relative to the viewer's "Me".
 - **"Other family"** direct links (sibling, cousin, grandparent, grandchild, aunt/uncle, niece/nephew) are allowed when the connecting people are unknown; they're superseded once the chain can be derived.
-- Ending a relationship (e.g. divorce) keeps it as **former**; derived in-laws move to a Former group. Parent links never end.
+- Ending a relationship (e.g. divorce) keeps it as **former**; derived in-laws move to a Former group. Parent links never end. A former partner can become a current partner again.
+- Directional links (parent, grandparent, aunt/uncle) read "A is the … of B". Symmetric links (partner, sibling, cousin, social) are stored once, lowest id first, so the same link can't exist twice.
+- A relationship without a space is visible only to its owner.
+
+## Data details
+- Birthdays store day, month and an optional year (the year is often unknown).
+- Each user keeps **one** notes text per person, any number of memory aids, and their own timeline.
+- Space names are unique per owner (ignoring case); colors can repeat.
+- Deleting a space never deletes people or links; links in it become private to their owner.
 
 ## API
 - API-first: the frontend uses the same API users get.
