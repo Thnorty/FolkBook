@@ -1,4 +1,4 @@
-import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query'
+import { infiniteQueryOptions, keepPreviousData, queryOptions } from '@tanstack/react-query'
 import { api, unwrap } from '@/api/client'
 import type { components } from '@/api/schema'
 
@@ -36,6 +36,8 @@ export function peopleListQuery({ search = '', space, needsDetails = false }: Pe
   return infiniteQueryOptions({
     queryKey: ['people', 'list', { search, space, needsDetails }],
     initialPageParam: 1,
+    // While a new search loads, keep showing the last results instead of a loading line.
+    placeholderData: keepPreviousData,
     queryFn: ({ pageParam, signal }) =>
       unwrap(
         api.GET('/api/people', {

@@ -3,6 +3,7 @@ import { ChevronDown, ImagePlus, Trash2 } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { Button } from '@/components/ui/button'
+import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Kbd } from '@/components/ui/kbd'
 import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
@@ -304,17 +305,16 @@ export function PersonForm({ person, onSubmit, onCancel, saving, error, formId }
         </p>
       )}
 
-      <div className="hidden items-center gap-2 md:flex">
-        <span className="type-meta text-ink-faint">
-          <Kbd shortcut={{ key: 'Enter', mod: true }} /> saves · Esc cancels
-        </span>
-        <Button type="button" variant="ghost" className="ml-auto" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={saving}>
-          {saving ? 'Saving…' : 'Save person'}
-        </Button>
-      </div>
+      <FormDialogFooter
+        submitLabel="Save person"
+        busy={saving}
+        onCancel={onCancel}
+        hint={
+          <>
+            <Kbd shortcut={{ key: 'Enter', mod: true }} /> saves · Esc cancels
+          </>
+        }
+      />
     </form>
   )
 }

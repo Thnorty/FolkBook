@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { UsersRound } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { components } from '@/api/schema'
+import { ownership, peopleCount } from '@/features/spaces/labels'
 import { cn } from '@/lib/utils'
 
 type Space = components['schemas']['SpaceOut']
@@ -74,16 +75,19 @@ export function FilterChips({
           {item.name}
         </Chip>
       ))}
+      <Link
+        to="/spaces"
+        className="flex h-9 flex-none items-center px-2 text-md font-medium whitespace-nowrap text-accent hover:underline"
+      >
+        All spaces →
+      </Link>
     </div>
   )
 }
 
 /** Shown above the list when a space is picked: what it is, and a way to its page. */
 export function SpaceBanner({ space }: { space: Space }) {
-  const facts = [
-    `${space.people_count} ${space.people_count === 1 ? 'person' : 'people'}`,
-    space.role === 'owner' ? 'you own it' : `${space.owner?.name ?? 'Someone'}'s space`,
-  ]
+  const facts = [peopleCount(space.people_count), ownership(space)]
   return (
     <div
       data-space={space.color}

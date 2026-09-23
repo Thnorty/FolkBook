@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { LayoutGrid, List, UserPlus } from 'lucide-react'
 import { useCallback, useState } from 'react'
@@ -13,8 +13,8 @@ import type { FlyOrigin } from '@/motion/FlyFrom'
 import { EmptyBook } from './EmptyBook'
 import { PeekPanel } from './PeekPanel'
 import { FilterChips, SpaceBanner } from './Filters'
-import { PersonRow, PersonTile } from './PersonLink'
-import { needsDetailsCountQuery, peopleCountQuery, peopleListQuery } from './queries'
+import { NoMatch, PeopleResults } from './PeopleResults'
+import { needsDetailsCountQuery, peopleCountQuery } from './queries'
 import { SearchBox } from './SearchBox'
 import type { PeopleSearch } from './search'
 
@@ -40,8 +40,6 @@ export function PeoplePage() {
   const total = useQuery(peopleCountQuery).data
   const needsCount = useQuery(needsDetailsCountQuery).data
   const spaces = useQuery(spacesQuery).data?.items ?? []
-  const list = useInfiniteQuery(peopleListQuery({ search: q, space, needsDetails: needs }))
-  const people = list.data?.pages.flatMap((page) => page.items) ?? []
   const filtered = Boolean(q || space || needs)
   const pickedSpace = spaces.find((item) => item.id === space)
   const grid = view === 'grid'
@@ -104,64 +102,23 @@ export function PeoplePage() {
           {pickedSpace && <SpaceBanner space={pickedSpace} />}
         </div>
 
-        <section aria-label="People" aria-busy={list.isPending} className="mt-5">
-          {list.isPending ? (
-            <p className="py-10 text-center text-ink-soft">Opening your notebook…</p>
-          ) : list.isError ? (
-            <div className="py-10 text-center">
-              <p className="text-danger">{list.error.message}</p>
-              <Button variant="secondary" className="mt-4" onClick={() => void list.refetch()}>
-                Try again
-              </Button>
-            </div>
-          ) : people.length === 0 || (!filtered && people.every((person) => person.is_me)) ? (
-            filtered ? (
-              <div className="py-10 text-center">
-                <p className="text-ink-soft">No one matches.</p>
-                <Button
-                  variant="secondary"
-                  className="mt-4"
-                  onClick={() => setSearch({ q: undefined, space: undefined, needs: undefined })}
-                >
-                  Clear filters
-                </Button>
-              </div>
-            ) : (
-              <EmptyBook />
-            )
-          ) : (
-            <>
-              <ul
-                className={cn(
-                  grid
-                    ? 'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'
-                    : 'flex flex-col gap-2',
-                )}
-              >
-                {people.map((person) => (
-                  <li key={person.id}>
-                    {grid ? (
-                      <PersonTile person={person} />
-                    ) : (
-                      <PersonRow person={person} onPeek={openPeek} />
-                    )}
-                  </li>
-                ))}
-              </ul>
-              {list.hasNextPage && (
-                <div className="mt-5 flex justify-center">
-                  <Button
-                    variant="secondary"
-                    disabled={list.isFetchingNextPage}
-                    onClick={() => void list.fetchNextPage()}
-                  >
-                    {list.isFetchingNextPage ? 'Loading…' : 'Show more'}
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </section>
+        <div className="mt-5">
+          <PeopleResults
+            filters={{ search: q, space, needsDetails: needs }}
+            grid={grid}
+            onPeek={openPeek}
+            empty={
+              filtered ? (
+                <NoMatch
+                  onClear={() => setSearch({ q: undefined, space: undefined, needs: undefined })}
+                />
+              ) : (
+                <EmptyBook />
+              )
+            }
+            onlyMe={!filtered && <EmptyBook />}
+          />
+        </div>
       </div>
       {peek && <PeekPanel personId={peek} flyFrom={peekFrom} onClose={closePeek} />}
     </div>

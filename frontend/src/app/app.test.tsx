@@ -182,7 +182,7 @@ describe('keyboard shortcuts', () => {
 
   it('Ctrl+K opens the palette, which jumps to what you pick', async () => {
     loggedInServer()
-    renderApp('/')
+    const router = renderApp('/')
     await heading('Today')
 
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true })
@@ -190,7 +190,7 @@ describe('keyboard shortcuts', () => {
     await userEvent.type(within(palette).getByRole('combobox'), 'family')
     await userEvent.keyboard('{Enter}')
 
-    await heading('Space')
+    await waitFor(() => expect(router.state.location.pathname).toBe('/spaces/s2'))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 

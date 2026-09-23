@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { currentUserQuery, type CurrentUser } from '@/api/session'
 import { PersonFormProvider } from '@/features/person/PersonFormProvider'
 import { usePersonForm } from '@/features/person/usePersonForm'
+import { SpaceFormProvider } from '@/features/spaces/SpaceFormProvider'
 import { useShortcut } from '@/lib/shortcuts'
 import { PageFade } from '@/motion/PageTurn'
 import { BottomTabs } from './BottomTabs'
@@ -25,7 +26,9 @@ export function AppLayout() {
   if (!user) return null
   return (
     <PersonFormProvider>
-      <Shell user={user} />
+      <SpaceFormProvider>
+        <Shell user={user} />
+      </SpaceFormProvider>
     </PersonFormProvider>
   )
 }
