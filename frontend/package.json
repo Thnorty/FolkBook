@@ -16,7 +16,8 @@
     "api:generate": "npm run api:spec && npm run api:types",
     "api:spec": "cd ../backend && uv run --env-file ../.env python manage.py export_openapi_schema --api config.api.api --indent 2 --output ../frontend/openapi.json",
     "api:types": "openapi-typescript openapi.json -o src/api/schema.d.ts",
-    "api:check": "openapi-typescript openapi.json -o src/api/schema.d.ts --check"
+    "api:check": "openapi-typescript openapi.json -o src/api/schema.d.ts --check",
+    "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
     "@fontsource-variable/caveat": "^5.3.0",
@@ -50,6 +51,7 @@
     "openapi-typescript": "^7.13.0",
     "oxlint": "^1.81.0",
     "prettier": "^3.9.9",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",

@@ -68,3 +68,31 @@ describe('appearance', () => {
     expect(root.dataset.theme).toBe('dark')
   })
 })
+
+describe('status bar color', () => {
+  function addMetas() {
+    for (const scheme of ['light', 'dark']) {
+      const meta = document.createElement('meta')
+      meta.name = 'theme-color'
+      meta.dataset.scheme = scheme
+      meta.media = `(prefers-color-scheme: ${scheme})`
+      document.head.append(meta)
+    }
+    return [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')]
+  }
+
+  it('follows the picked theme, and the OS again on System', () => {
+    const [light, dark] = addMetas()
+
+    setAppearance({ theme: 'dark' })
+    expect([light.media, dark.media]).toEqual(['not all', 'all'])
+
+    setAppearance({ theme: 'system' })
+    expect([light.media, dark.media]).toEqual([
+      '(prefers-color-scheme: light)',
+      '(prefers-color-scheme: dark)',
+    ])
+    light.remove()
+    dark.remove()
+  })
+})

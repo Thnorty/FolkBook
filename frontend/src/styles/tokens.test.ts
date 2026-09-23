@@ -1,6 +1,5 @@
-/// <reference types="node" />
-import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { token, type Mode } from '@/test/tokens'
 
 /*
  * WCAG AA contrast for every text/background pair the components use, in both themes.
@@ -8,7 +7,6 @@ import { describe, expect, it } from 'vitest'
  */
 
 type Rgba = [number, number, number, number]
-type Mode = 'light' | 'dark'
 
 const TEXT = 4.5 // AA, normal text
 const UI = 3 // AA, input borders and focus outlines
@@ -24,18 +22,8 @@ function parseColor(value: string): Rgba {
   throw new Error(`Can't read color ${value}`)
 }
 
-// Read from disk: Vitest doesn't load CSS imports, not even ?raw.
-const css = readFileSync('src/styles/tokens.css', 'utf8')
-const tokens = new Map<string, Record<Mode, string>>()
-for (const [, name, value] of css.matchAll(/--([\w-]+):\s*([^;]+);/g)) {
-  const pair = value.match(/^light-dark\((.+), (.+)\)$/)
-  tokens.set(name, pair ? { light: pair[1], dark: pair[2] } : { light: value, dark: value })
-}
-
 function color(name: string, mode: Mode): Rgba {
-  const token = tokens.get(name)
-  if (!token) throw new Error(`No token --${name}`)
-  return parseColor(token[mode])
+  return parseColor(token(name, mode))
 }
 
 /** `top` painted over an opaque `bottom`, like a translucent fill on paper. */

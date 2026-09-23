@@ -5,9 +5,11 @@ import { createQueryClient } from './api/query'
 import { Providers } from './app/Providers'
 import './index.css'
 import { applyAppearance } from './lib/appearance'
+import { registerServiceWorker } from './lib/serviceWorker'
 import { createAppRouter } from './router'
 
 applyAppearance()
+registerServiceWorker()
 const queryClient = createQueryClient()
 const router = createAppRouter(queryClient)
 
