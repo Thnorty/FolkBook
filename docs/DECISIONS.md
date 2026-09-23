@@ -24,7 +24,9 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - **Private per user, always:** notes, memory aids and interactions (timeline), even on shared people.
 - A relationship has an owner and a space; it's visible only if the viewer can see **that** space.
 - When access ends (unshared, left, removed), the user keeps copies of the people they wrote notes on.
-- Each user has one **"Me"** node, shown in the graph and in every space they're a member of.
+- Each user has one **"Me"** node, shown in the graph and in every space they're a member of. It's a normal person record linked to the account (`user.me`), created together with the user; the user's name, photo and birthday live there, not on the account.
+- Accounts log in with **email** (case-insensitive, stored lowercase). Server admins are users with `is_staff`.
+- Records exposed by the API use **UUID** primary keys, so IDs can't be guessed or counted.
 - Paths can cross shared spaces (Me → Defne → people in Defne's space).
 
 ## Relationships

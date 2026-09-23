@@ -16,7 +16,7 @@ package = false
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
-addopts = "--strict-markers"
+addopts = "--strict-markers --import-mode=importlib"
 
 [tool.ruff]
 line-length = 100
@@ -25,6 +25,10 @@ extend-exclude = ["*/migrations/*"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "DJ", "SIM", "RUF"]
+ignore = [
+    "RUF001", # names like "Yılmaz" are real data, not look-alike characters
+    "RUF012", # Django's class attributes (Meta, admin options) are lists by convention
+]
 
 [dependency-groups]
 dev = [
