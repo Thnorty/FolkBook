@@ -58,6 +58,10 @@ cd backend && uv run --env-file ../.env python manage.py db_worker
 cd backend && uv run --env-file ../.env python manage.py run_scheduler
 ```
 
+### Design system
+
+With the frontend dev server running, open <http://localhost:5173/design> to see the colors, type and core components in light and dark mode. The page exists only in development.
+
 ### API types
 
 The frontend's API types are generated from the backend. After changing an endpoint or schema, regenerate them and commit both files (`frontend/openapi.json` and `frontend/src/api/schema.d.ts`); a backend test and a CI check fail until you do:
