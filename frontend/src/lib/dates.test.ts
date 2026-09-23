@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatBirthday, formatDay, formatDaysAgo } from './dates'
+import { formatBirthday, formatDay, formatDaysAgo, isoDay } from './dates'
 
 describe('formatDay', () => {
   it('shows the calendar day from the API, whatever the time zone', () => {
@@ -26,6 +26,15 @@ describe('formatDaysAgo', () => {
     ['2023-01-01', /3 years ago/],
   ])('%s → %s', (iso, expected) => {
     expect(english(iso)).toMatch(expected)
+  })
+})
+
+describe('isoDay', () => {
+  it('writes local calendar days, counting back across months and years', () => {
+    const today = new Date(2026, 0, 1, 23, 30) // late on 1 Jan 2026, local time
+
+    expect(isoDay(0, today)).toBe('2026-01-01')
+    expect(isoDay(1, today)).toBe('2025-12-31')
   })
 })
 
