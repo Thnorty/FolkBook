@@ -26,7 +26,7 @@ Until the first-run setup screen exists, create the admin account from the comma
 docker compose exec backend python manage.py createsuperuser
 ```
 
-For a real server, set `SITE_ADDRESS` to your domain (e.g. `folk.example.com`) and Caddy gets an HTTPS certificate automatically. Use `docker compose -f compose.yaml up -d` there so the development overrides aren't applied.
+For a real server, set `SITE_ADDRESS` to your domain (e.g. `folk.example.com`) and Caddy gets an HTTPS certificate automatically. Also set `DJANGO_SECURE_COOKIES=true`, and add your domain to `DJANGO_ALLOWED_HOSTS` and `DJANGO_CSRF_TRUSTED_ORIGINS` (e.g. `https://folk.example.com`). Use `docker compose -f compose.yaml up -d` there so the development overrides aren't applied.
 
 ## Develop
 

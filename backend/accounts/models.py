@@ -5,6 +5,8 @@ from django.db import models, transaction
 from django.db.models.functions import Lower
 from django.utils import timezone
 
+from core.models import BaseModel
+
 
 class UserManager(BaseUserManager["User"]):
     use_in_migrations = True
@@ -69,3 +71,27 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self) -> str:
         return self.email
+
+
+class Device(BaseModel):
+    """A signed-in browser (one per session), so users can see and end their sessions."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="devices")
+    session_key = models.CharField(max_length=40, unique=True)
+    user_agent = models.CharField(max_length=300, blank=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    last_seen = models.DateTimeField(default=timezone.now)
+
+    def __str__(self) -> str:
+        return f"{self.user} on {self.user_agent[:40]}"
+
+
+class FailedLogin(models.Model):
+    """A wrong-password attempt, to slow down password guessing."""
+
+    email = models.CharField(max_length=254, db_index=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    def __str__(self) -> str:
+        return f"{self.email} at {self.at:%Y-%m-%d %H:%M}"

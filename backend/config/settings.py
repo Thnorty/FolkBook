@@ -33,6 +33,11 @@ ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 # Caddy terminates HTTPS and tells Django the original scheme.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# Turn on when FolkBook is served over HTTPS (a real domain), so cookies never travel
+# over plain HTTP. Off by default because local setups use http://localhost.
+SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = env_bool("DJANGO_SECURE_COOKIES")
+# The app reads the CSRF cookie and sends it back in the X-CSRFToken header.
+CSRF_COOKIE_HTTPONLY = False
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -57,6 +62,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "accounts.middleware.DeviceActivityMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

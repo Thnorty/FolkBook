@@ -3,6 +3,7 @@ from django.db import DatabaseError, connection
 from ninja import NinjaAPI, Schema
 from ninja.security import django_auth
 
+from accounts.api import router as auth_router
 from core.api import Conflict, validation_detail
 from graph.api import router as graph_router
 from interactions.api import router as interactions_router
@@ -14,6 +15,7 @@ from spaces.api import router as spaces_router
 
 # Every endpoint needs a logged-in user unless it says `auth=None`.
 api = NinjaAPI(title="FolkBook API", version="0.1.0", auth=django_auth)
+api.add_router("/auth", auth_router)
 api.add_router("/people", people_router)
 api.add_router("/spaces", spaces_router)
 api.add_router("/relationships", relationships_router)

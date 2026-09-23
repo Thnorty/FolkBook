@@ -74,6 +74,8 @@ These rules are the product. Breaking one is a critical bug.
   - Lists are paginated: `{"items": [...], "count": N}`, 50 per page. Their query count must not grow with the number of rows (there's a test for each list).
   - Order names with `core.db.by_name()` (ICU collation), never plain `order_by("name")`.
   - A schema field that must hide data (e.g. contact details) gets an explicit resolver that returns the filtered value.
+  - When a static path segment sits next to a parameter (`/devices/sign-out-others` next to `/devices/{id}`), type the parameter (`{uuid:id}`) so the static path isn't swallowed.
+- **Auth for the app:** session cookies. The frontend calls `GET /api/auth/csrf` once, then sends the `csrftoken` cookie's value as the `X-CSRFToken` header on every write (also on login). The token changes on login, so read it again afterwards.
 - Timestamps in UTC; format dates for the user on the frontend.
 - Names are Unicode (Yılmaz, Şen, Ayşe). Search and sorting must handle this correctly.
 

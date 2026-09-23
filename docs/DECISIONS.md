@@ -27,6 +27,9 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - Each user has one **"Me"** node, shown in the graph and in every space they're a member of. It's a normal person record linked to the account (`user.me`), created together with the user; the user's name, photo and birthday live there, not on the account.
 - Accounts log in with **email** (case-insensitive, stored lowercase). Server admins are users with `is_staff`.
 - Records exposed by the API use **UUID** primary keys, so IDs can't be guessed or counted.
+- **Sessions:** the app logs in with a session cookie. "Keep me logged in" lasts 30 days; otherwise the session ends when the browser closes. Each session is listed as a signed-in device ("Firefox on macOS", IP, last seen) that can be signed out. Changing the password signs out every other device.
+- **Password guessing:** after 10 wrong passwords for an email within 15 minutes, logging in to that account is blocked until the window passes. Wrong email and wrong password get the same answer.
+- Cookies are marked secure (HTTPS only) when `DJANGO_SECURE_COOKIES=true`; set it once FolkBook runs on a domain with HTTPS.
 - Paths can cross shared spaces (Me → Defne → people in Defne's space).
 - The graph connects people three ways: **stored links**; a space's owner and **the people they put in it**; a space's owner and **its members**. When a pair is connected several ways, the stored link describes it. "How do I know …?" returns the fewest-steps route (stored links win ties) plus up to two alternatives that start with a different first step.
 - Everyone who can see a space sees the Me of its owner and of every member.
