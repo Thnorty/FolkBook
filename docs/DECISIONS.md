@@ -41,6 +41,13 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - Ending a relationship (e.g. divorce) keeps it as **former**; derived in-laws move to a Former group. Parent links never end. A former partner can become a current partner again.
 - Directional links (parent, grandparent, aunt/uncle) read "A is the … of B". Symmetric links (partner, sibling, cousin, social) are stored once, lowest id first, so the same link can't exist twice.
 - A relationship without a space is visible only to its owner.
+- Derived family (`relationships/family.py`), always from the links the viewer can see:
+  - **Siblings** share a parent. *Half-siblings* share one parent and each has another known parent; if a parent is unknown they're just siblings. *Step-siblings* are connected only through a step-parent or a parent's partner.
+  - **Step-parents / step-children** come from stored step links, or from a parent's (or your) *current* partner. An ended partnership creates no step family.
+  - **Grandparents / grandchildren, aunts / uncles** (incl. their current partners), **nieces / nephews** and **cousins** (children of aunts / uncles).
+  - **In-laws:** your partner's parents and siblings, your siblings' partners, your children's partners. Through an ended partnership they're *former* in-laws.
+  - A direct "other family" link that the stored parents now explain is shown once, as derived, with a pointer to the direct link so the app can offer to remove it.
+  - Relation names are gender-neutral (parent, sibling, aunt/uncle).
 
 ## Data details
 - Birthdays store day, month and an optional year (the year is often unknown).
