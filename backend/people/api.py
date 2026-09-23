@@ -10,6 +10,8 @@ from access.policy import (
     can_delete_person,
     can_edit_person,
     visible_contact_methods,
+    visible_memory_aids,
+    visible_notes,
     visible_people,
     visible_spaces,
 )
@@ -17,11 +19,22 @@ from core.api import access_for
 from core.db import by_name
 from people import services
 from people.models import Person
-from people.schemas import PersonDetailOut, PersonIn, PersonOut, PersonPatch
+from people.schemas import (
+    MemoryAidIn,
+    MemoryAidOut,
+    MemoryAidPatch,
+    NoteIn,
+    NoteOut,
+    PersonDetailOut,
+    PersonIn,
+    PersonOut,
+    PersonPatch,
+)
 from relationships.family import family_of
 from relationships.schemas import FamilyRelationOut
 
 router = Router(tags=["people"])
+memory_aids_router = Router(tags=["memory aids"])
 
 
 def people_for(access: Access) -> QuerySet[Person]:
@@ -96,4 +109,62 @@ def update_person(request, person_id: UUID, payload: PersonPatch):
 def delete_person(request, person_id: UUID):
     access = access_for(request)
     services.delete_person(access, get_object_or_404(visible_people(access), pk=person_id))
+    return Status(204, None)
+
+
+# ---------------------------------------------------------------- notes (private)
+
+
+@router.get("/{person_id}/note", response=NoteOut)
+def get_note(request, person_id: UUID):
+    """The user's own notes on this person (empty if none)."""
+    access = access_for(request)
+    person = get_object_or_404(visible_people(access), pk=person_id)
+    note = visible_notes(access).filter(person=person).first()
+    return note or {"body": "", "updated_at": None}
+
+
+@router.put("/{person_id}/note", response=NoteOut)
+def save_note(request, person_id: UUID, payload: NoteIn):
+    """Replace the user's notes on this person. Empty text removes them."""
+    access = access_for(request)
+    person = get_object_or_404(visible_people(access), pk=person_id)
+    note = services.save_note(access, person, payload.body)
+    return note or {"body": "", "updated_at": None}
+
+
+# ---------------------------------------------------------------- memory aids (private)
+
+
+def visible_aid(access, aid_id: UUID):
+    return get_object_or_404(visible_memory_aids(access).select_related("person"), pk=aid_id)
+
+
+@memory_aids_router.get("", response=list[MemoryAidOut])
+@paginate(PageNumberPagination, page_size=50)
+def list_memory_aids(request, person: UUID | None = None):
+    """The user's own sticky notes, pinned first; `person` narrows to one person."""
+    aids = visible_memory_aids(access_for(request))
+    return aids.filter(person=person) if person else aids
+
+
+@memory_aids_router.post("", response={201: MemoryAidOut})
+def create_memory_aid(request, payload: MemoryAidIn):
+    access = access_for(request)
+    person = get_object_or_404(visible_people(access), pk=payload.person_id)
+    data = payload.model_dump(include={"text", "pinned"})
+    return Status(201, services.create_memory_aid(access, person, data))
+
+
+@memory_aids_router.patch("/{aid_id}", response=MemoryAidOut)
+def update_memory_aid(request, aid_id: UUID, payload: MemoryAidPatch):
+    access = access_for(request)
+    changes = payload.model_dump(exclude_unset=True)
+    return services.update_memory_aid(access, visible_aid(access, aid_id), changes)
+
+
+@memory_aids_router.delete("/{aid_id}", response={204: None})
+def delete_memory_aid(request, aid_id: UUID):
+    access = access_for(request)
+    services.delete_memory_aid(access, visible_aid(access, aid_id))
     return Status(204, None)

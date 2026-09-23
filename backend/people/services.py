@@ -11,9 +11,10 @@ from access.policy import (
     can_add_person_to_space,
     can_delete_person,
     can_edit_person,
+    can_write_private,
     visible_spaces,
 )
-from people.models import ContactMethod, Person, Tag
+from people.models import ContactMethod, MemoryAid, Note, Person, Tag
 from spaces.models import Space
 
 BASIC_FIELDS = ("name", "how_we_met", "work")
@@ -100,3 +101,44 @@ def _spaces(access: Access, ids: Iterable) -> list[Space]:
     if len(spaces) != len(ids):
         raise ValidationError({"space_ids": "One of these spaces doesn't exist."})
     return spaces
+
+
+# ---------------------------------------------------------------- private data
+
+
+def save_note(access: Access, person: Person, body: str) -> Note | None:
+    """Replace the user's notes on a person. An empty text removes them."""
+    _check_can_write_private(access, person)
+    if not body.strip():
+        Note.objects.filter(author=access.user, person=person).delete()
+        return None
+    note, _ = Note.objects.update_or_create(
+        author=access.user, person=person, defaults={"body": body}
+    )
+    return note
+
+
+def create_memory_aid(access: Access, person: Person, data: dict[str, Any]) -> MemoryAid:
+    _check_can_write_private(access, person)
+    last = MemoryAid.objects.filter(author=access.user, person=person).order_by("-position")
+    position = (last.values_list("position", flat=True).first() or 0) + 1
+    return MemoryAid.objects.create(author=access.user, person=person, position=position, **data)
+
+
+def update_memory_aid(access: Access, aid: MemoryAid, changes: dict[str, Any]) -> MemoryAid:
+    _check_can_write_private(access, aid.person)
+    for field in ("text", "pinned", "position"):
+        if field in changes:
+            setattr(aid, field, changes[field])
+    aid.save()
+    return aid
+
+
+def delete_memory_aid(access: Access, aid: MemoryAid) -> None:
+    _check_can_write_private(access, aid.person)
+    aid.delete()
+
+
+def _check_can_write_private(access: Access, person: Person) -> None:
+    if not can_write_private(access, person):
+        raise PermissionDenied("This access can't change private notes.")

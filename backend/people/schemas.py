@@ -1,3 +1,4 @@
+import datetime
 from uuid import UUID
 
 from ninja import Field, Schema
@@ -103,3 +104,37 @@ class PersonPatch(Schema):
     birthday: Birthday | None = None
     tags: list[str] | None = None
     contact_methods: list[ContactMethodIn] | None = None
+
+
+# ---------------------------------------------------------------- private data
+
+
+class NoteOut(Schema):
+    """The user's own notes on a person; never anyone else's."""
+
+    body: str
+    updated_at: datetime.datetime | None
+
+
+class NoteIn(Schema):
+    body: str = Field(max_length=20000)
+
+
+class MemoryAidOut(Schema):
+    id: UUID
+    person_id: UUID
+    text: str
+    pinned: bool
+    position: int
+
+
+class MemoryAidIn(Schema):
+    person_id: UUID
+    text: str = Field(min_length=1, max_length=300)
+    pinned: bool = False
+
+
+class MemoryAidPatch(Schema):
+    text: str | None = Field(None, min_length=1, max_length=300)
+    pinned: bool | None = None
+    position: int | None = Field(None, ge=0)

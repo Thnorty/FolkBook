@@ -120,10 +120,10 @@ def world(db) -> World:
         tom_jin_private=RelationshipFactory(owner=defne, person_a=tom, person_b=jin, type="cousin"),
     )
 
-    NoteFactory(author=ela, person=oskar)
+    NoteFactory(author=ela, person=oskar, body="Ela: Oskar sets the Tuesday routes.")
     MemoryAidFactory(author=ela, person=oskar)
     InteractionFactory(author=ela, person=oskar)
     KeepInTouchFactory(user=ela, person=oskar)
-    NoteFactory(author=deniz, person=oskar)
-    NoteFactory(author=defne, person=jin)
+    NoteFactory(author=deniz, person=oskar, body="Deniz: owes me a belay.")
+    NoteFactory(author=defne, person=jin, body="Defne: Jin's cousin is Tom.")
     return world
