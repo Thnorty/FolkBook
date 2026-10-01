@@ -9,6 +9,9 @@ import { Choice as ChoiceChip } from '@/components/ui/choice'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { NO_FILTERS, toCanvas, type GraphData } from '@/features/graph/graphModel'
+import { NetworkCanvas } from '@/features/graph/NetworkCanvas'
+import { useCanvasColors } from '@/features/graph/usePalette'
 import { InteractionForm } from '@/features/person/InteractionForm'
 import { setAppearance, useAppearance, type Appearance } from '@/lib/appearance'
 import { notify } from '@/lib/notify'
@@ -138,6 +141,66 @@ function ChoiceDemo() {
           </ChoiceChip>
         ))}
       </div>
+    </div>
+  )
+}
+
+const DEMO_GRAPH: GraphData = (() => {
+  const friends = { id: 's1', name: 'Friends', color: 'sage' as const }
+  const family = { id: 's2', name: 'Family', color: 'clay' as const }
+  const hackathon = { id: 's3', name: 'Hackathon 2026', color: 'plum' as const }
+  const node = (id: string, name: string, spaces: GraphData['nodes'][number]['spaces']) => ({
+    id,
+    name,
+    is_me: id === 'me',
+    spaces,
+  })
+  const link = (id: string, source: string, target: string, type: string, former = false) => ({
+    id,
+    source,
+    target,
+    kind: 'relationship' as const,
+    type,
+    label: type === 'met_at' ? 'Hackathon' : '',
+    former,
+    space: null,
+  })
+  return {
+    nodes: [
+      node('me', 'Ela', []),
+      node('emma', 'Emma Yılmaz', [friends]),
+      node('deniz', 'Deniz Arslan', [friends]),
+      node('kerem', 'Kerem Yılmaz', [family]),
+      node('ayse', 'Ayşe Yılmaz', [family]),
+      node('tom', 'Tom Bergqvist', [hackathon]),
+      node('defne', 'Defne Aydın', [hackathon]),
+    ],
+    edges: [
+      link('1', 'me', 'emma', 'friend'),
+      link('2', 'me', 'deniz', 'friend'),
+      link('3', 'emma', 'kerem', 'partner', true),
+      link('4', 'ayse', 'kerem', 'parent'),
+      link('5', 'emma', 'tom', 'cousin'),
+      link('6', 'me', 'defne', 'met_at'),
+      link('7', 'defne', 'tom', 'colleague'),
+    ],
+  }
+})()
+
+function GraphDemo() {
+  const colors = useCanvasColors()
+  const [selected, setSelected] = useState<string | null>(null)
+  const { nodes, edges } = toCanvas(DEMO_GRAPH, NO_FILTERS, colors.palette)
+  return (
+    <div className="h-90 overflow-hidden rounded-card border border-line">
+      <NetworkCanvas
+        nodes={nodes}
+        edges={edges}
+        colors={colors}
+        selected={selected}
+        onSelect={setSelected}
+        onFocus={setSelected}
+      />
     </div>
   )
 }
@@ -319,6 +382,10 @@ export default function DesignSystem() {
             onOpen={() => notify({ title: 'Opens the entry' })}
           />
         </ol>
+      </Section>
+
+      <Section title="Graph">
+        <GraphDemo />
       </Section>
 
       <Section title="Dialogs">

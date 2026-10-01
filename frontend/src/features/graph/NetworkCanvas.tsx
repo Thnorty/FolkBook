@@ -1,5 +1,9 @@
 import { forwardRef, useMemo } from 'react'
 import { GraphCanvas, type GraphCanvasRef, type Theme } from 'reagraph'
+// Instrument Sans (OFL, fonts/OFL.txt), Latin and Latin Extended merged into one .woff
+// at weight 500: the canvas can't use .woff2. Without a font of our own, the labels
+// would fetch fonts from a CDN, which a self-hosted notebook mustn't do.
+import labelFontUrl from './fonts/instrument-sans-500.woff?url'
 import type { CanvasEdge, CanvasNode } from './graphModel'
 import type { CanvasColors } from './usePalette'
 
@@ -23,25 +27,29 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
 ) {
   const theme = useMemo(() => canvasTheme(colors), [colors])
   return (
-    <GraphCanvas
-      ref={ref}
-      nodes={nodes}
-      edges={edges}
-      theme={theme}
-      layoutType="forceDirected2d"
-      clusterAttribute="cluster"
-      edgeArrowPosition="none"
-      edgeLabelPosition="above"
-      labelType="auto"
-      selections={selected ? [selected] : []}
-      onNodeClick={(node) => onSelect(node.id)}
-      onNodeDoubleClick={(node) => onFocus(node.id)}
-      onCanvasClick={() => onSelect(null)}
-    />
+    // Reagraph fills the nearest positioned box; without this one it would take the page.
+    <div className="relative size-full">
+      <GraphCanvas
+        ref={ref}
+        nodes={nodes}
+        edges={edges}
+        theme={theme}
+        layoutType="forceDirected2d"
+        clusterAttribute="cluster"
+        labelFontUrl={labelFontUrl}
+        edgeArrowPosition="none"
+        edgeLabelPosition="above"
+        labelType="all" // names and relationships; the graph kit labels every line
+        selections={selected ? [selected] : []}
+        onNodeClick={(node) => onSelect(node.id)}
+        onNodeDoubleClick={(node) => onFocus(node.id)}
+        onCanvasClick={() => onSelect(null)}
+      />
+    </div>
   )
 })
 
-function canvasTheme({ paper, ink, accent }: CanvasColors): Theme {
+function canvasTheme({ paper, ink, accent, palette }: CanvasColors): Theme {
   return {
     canvas: { background: paper },
     node: {
@@ -64,7 +72,7 @@ function canvasTheme({ paper, ink, accent }: CanvasColors): Theme {
     arrow: { fill: ink, activeFill: accent },
     lasso: { border: `1px solid ${accent}`, background: 'transparent' },
     cluster: {
-      stroke: ink,
+      stroke: palette.noSpace, // faint, so the people stand out
       opacity: 0.55,
       selectedOpacity: 1,
       inactiveOpacity: 0.1,
