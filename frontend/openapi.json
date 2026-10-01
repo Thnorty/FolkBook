@@ -1696,6 +1696,59 @@
         ]
       }
     },
+    "/api/relationships/{link_id}/end-preview": {
+      "get": {
+        "operationId": "relationships_api_end_preview",
+        "summary": "End Preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "link_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Link Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "person",
+            "schema": {
+              "format": "uuid",
+              "title": "Person",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FamilyRelationOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Who on `person`'s page would move to Former if this link ended.",
+        "tags": [
+          "relationships"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/relationships/{link_id}/reopen": {
       "post": {
         "operationId": "relationships_api_reopen_relationship",
@@ -3839,7 +3892,42 @@
         "type": "object"
       },
       "RelationshipPatch": {
+        "description": "Changing `type` also takes the two people again, in the order the new type reads\n(e.g. \"Partner\" → \"Parent of Emma\"). They must be the same two people.",
         "properties": {
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RelationshipType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "person_a_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person A Id"
+          },
+          "person_b_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Person B Id"
+          },
           "parent_type": {
             "anyOf": [
               {

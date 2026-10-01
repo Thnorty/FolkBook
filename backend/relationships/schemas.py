@@ -2,6 +2,7 @@ import datetime
 from uuid import UUID
 
 from ninja import Field, Schema
+from pydantic import model_validator
 
 from people.schemas import PersonRef, SpaceRef
 from relationships.models import ParentType, RelationshipType
@@ -44,9 +45,21 @@ class RelationshipIn(Schema):
 
 
 class RelationshipPatch(Schema):
+    """Changing `type` also takes the two people again, in the order the new type reads
+    (e.g. "Partner" → "Parent of Emma"). They must be the same two people."""
+
+    type: RelationshipType | None = None
+    person_a_id: UUID | None = None
+    person_b_id: UUID | None = None
     parent_type: ParentType | None = None
     label: str | None = Field(None, max_length=200)
     started_on: datetime.date | None = None
+
+    @model_validator(mode="after")
+    def type_comes_with_both_people(self):
+        if self.type and not (self.person_a_id and self.person_b_id):
+            raise ValueError("Changing the type needs person_a_id and person_b_id.")
+        return self
 
 
 class EndIn(Schema):

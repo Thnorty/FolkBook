@@ -8,8 +8,15 @@ from ninja.pagination import PageNumberPagination, paginate
 from access.policy import Access, visible_people, visible_relationships, visible_spaces
 from core.api import access_for
 from relationships import services
+from relationships.family import moving_to_former
 from relationships.models import FAMILY_TYPES, Relationship
-from relationships.schemas import EndIn, RelationshipIn, RelationshipOut, RelationshipPatch
+from relationships.schemas import (
+    EndIn,
+    FamilyRelationOut,
+    RelationshipIn,
+    RelationshipOut,
+    RelationshipPatch,
+)
 
 router = Router(tags=["relationships"])
 
@@ -75,6 +82,14 @@ def end_relationship(request, link_id: UUID, payload: EndIn):
     access = access_for(request)
     services.end_relationship(access, visible_link(access, link_id), payload.ended_on)
     return visible_link(access, link_id)
+
+
+@router.get("/{link_id}/end-preview", response=list[FamilyRelationOut])
+def end_preview(request, link_id: UUID, person: UUID):
+    """Who on `person`'s page would move to Former if this link ended."""
+    access = access_for(request)
+    focus = get_object_or_404(visible_people(access), pk=person)
+    return moving_to_former(access, focus, visible_link(access, link_id))
 
 
 @router.post("/{link_id}/reopen", response=RelationshipOut)

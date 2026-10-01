@@ -2,8 +2,9 @@
 
 import datetime
 from typing import Any
+from uuid import UUID
 
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
 from access.policy import Access, can_create_relationship, can_edit_relationship
@@ -44,6 +45,8 @@ def update_relationship(
     access: Access, link: Relationship, changes: dict[str, Any]
 ) -> Relationship:
     _check_can_edit(access, link)
+    if changes.get("type"):
+        _retype(link, changes["type"], changes["person_a_id"], changes["person_b_id"])
     for field in EDITABLE_FIELDS:
         if field in changes:
             setattr(link, field, changes[field])
@@ -70,6 +73,14 @@ def reopen_relationship(access: Access, link: Relationship) -> Relationship:
 def delete_relationship(access: Access, link: Relationship) -> None:
     _check_can_edit(access, link)
     link.delete()
+
+
+def _retype(link: Relationship, type: RelationshipType, a_id: UUID, b_id: UUID) -> None:
+    by_id = {link.person_a_id: link.person_a, link.person_b_id: link.person_b}
+    if {a_id, b_id} != set(by_id):
+        raise ValidationError("A link's type can change, but not who it connects.")
+    link.type = type
+    link.person_a, link.person_b = stored_order(type, by_id[a_id], by_id[b_id])
 
 
 def _check_can_edit(access: Access, link: Relationship) -> None:
