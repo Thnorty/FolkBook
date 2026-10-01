@@ -11,6 +11,8 @@ type ConfirmDialogProps = {
   onConfirm: () => void
   busy?: boolean
   cancelLabel?: string
+  /** A plain confirmation (e.g. sharing) rather than a destructive one (the default). */
+  tone?: 'danger' | 'plain'
   /** More about what will happen, under the description (e.g. what goes with it). */
   children?: ReactNode
 }
@@ -25,6 +27,7 @@ export function ConfirmDialog({
   onConfirm,
   busy = false,
   cancelLabel = 'Cancel',
+  tone = 'danger',
   children,
 }: ConfirmDialogProps) {
   return (
@@ -42,7 +45,7 @@ export function ConfirmDialog({
               <Button variant="ghost">{cancelLabel}</Button>
             </AlertDialog.Cancel>
             <Button
-              className="bg-danger text-on-accent hover:bg-danger"
+              className={tone === 'danger' ? 'bg-danger text-on-accent hover:bg-danger' : undefined}
               disabled={busy}
               onClick={onConfirm}
             >

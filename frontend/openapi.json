@@ -1850,6 +1850,208 @@
         ]
       }
     },
+    "/api/spaces/{space_id}/members": {
+      "get": {
+        "operationId": "spaces_api_list_members",
+        "summary": "List Members",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemberOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Who can see this space: the owner, then members with their roles.",
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "spaces_api_share_space",
+        "summary": "Share Space",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Share the space with an account on this server, as a viewer or editor.",
+        "tags": [
+          "spaces"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}/share-candidates": {
+      "get": {
+        "operationId": "spaces_api_share_candidates",
+        "summary": "Share Candidates",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "maxLength": 100,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccountOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Accounts on this server to share with: owner only, a name or email to search.",
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}/members/{user_id}": {
+      "patch": {
+        "operationId": "spaces_api_change_member_role",
+        "summary": "Change Member Role",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "spaces"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/relationships": {
       "get": {
         "operationId": "relationships_api_list_relationships",
@@ -4687,6 +4889,115 @@
           "count"
         ],
         "title": "PagedPersonRef",
+        "type": "object"
+      },
+      "MemberOut": {
+        "description": "Someone who can see a space: its owner, or a member and their role.",
+        "properties": {
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "is_you": {
+            "title": "Is You",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "email",
+          "role",
+          "is_you"
+        ],
+        "title": "MemberOut",
+        "type": "object"
+      },
+      "ShareIn": {
+        "properties": {
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              }
+            ],
+            "default": "viewer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "ShareIn",
+        "type": "object"
+      },
+      "CandidateParams": {
+        "properties": {
+          "q": {
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Q",
+            "type": "string"
+          }
+        },
+        "required": [
+          "q"
+        ],
+        "title": "CandidateParams",
+        "type": "object"
+      },
+      "AccountOut": {
+        "description": "An account on this server, to share a space with.",
+        "properties": {
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "email"
+        ],
+        "title": "AccountOut",
+        "type": "object"
+      },
+      "RoleIn": {
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "title": "RoleIn",
         "type": "object"
       },
       "PagedRelationshipOut": {

@@ -14,7 +14,15 @@ import { notify } from '@/lib/notify'
 import { usePageTitle } from '@/lib/usePageTitle'
 import { cn } from '@/lib/utils'
 import { ownership, peopleCount } from './labels'
-import { deleteSpace, hiddenPeopleQuery, refreshSpaces, spaceQuery, type Space } from './queries'
+import {
+  deleteSpace,
+  hiddenPeopleQuery,
+  membersQuery,
+  refreshSpaces,
+  spaceQuery,
+  type Space,
+} from './queries'
+import { ShareDialog } from './ShareDialog'
 import { useSpaceForm } from './useSpaceForm'
 
 // The graph code (WebGL) loads only when a space has people to draw.
@@ -25,6 +33,7 @@ export function SpacePage() {
   const { spaceId } = useParams({ from: '/app/spaces/$spaceId' })
   const space = useQuery(spaceQuery(spaceId))
   const [search, setSearch] = useState('')
+  const [sharing, setSharing] = useState(false)
   const clear = useCallback(() => setSearch(''), [])
   usePageTitle(space.data?.name ?? 'Space')
 
@@ -72,7 +81,15 @@ export function SpacePage() {
             )}
           </p>
         </div>
-        {data.role === 'owner' && <SpaceMenu space={data} />}
+        {data.role === 'owner' && (
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setSharing(true)}>
+              <UsersRound aria-hidden />
+              Share
+            </Button>
+            <SpaceMenu space={data} />
+          </div>
+        )}
       </header>
 
       <div className="mt-5 flex flex-col gap-4">
@@ -96,6 +113,7 @@ export function SpacePage() {
           }
         />
         <HiddenPeople spaceId={spaceId} />
+        {data.member_count > 0 && <Members spaceId={spaceId} />}
         {data.people_count > 0 && (
           <Suspense fallback={null}>
             <SpaceGraph spaceId={spaceId} />
@@ -105,7 +123,29 @@ export function SpacePage() {
           Open the graph →
         </Link>
       </div>
+      {sharing && <ShareDialog space={data} onClose={() => setSharing(false)} />}
     </div>
+  )
+}
+
+/** Who can see this space, and as what. */
+function Members({ spaceId }: { spaceId: string }) {
+  const members = useQuery(membersQuery(spaceId)).data ?? []
+  return (
+    <section aria-labelledby="space-members" className="flex flex-col gap-2">
+      <h2 id="space-members" className="type-label text-ink-faint">
+        Who sees this space
+      </h2>
+      <ul className="flex flex-wrap gap-x-4 gap-y-1">
+        {members.map((member) => (
+          <li key={member.user_id}>
+            {member.name}
+            {member.is_you && ' (you)'}
+            <span className="ml-1.5 type-meta text-ink-faint">{member.role}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

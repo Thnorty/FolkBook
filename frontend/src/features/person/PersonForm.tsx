@@ -7,7 +7,9 @@ import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Kbd } from '@/components/ui/kbd'
 import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
-import { spacesQuery } from '@/features/spaces/queries'
+import { SharedSpaceConfirm } from '@/features/spaces/SharedSpaceConfirm'
+import { spacesQuery, type Space } from '@/features/spaces/queries'
+import { useDismissed } from '@/lib/useDismissed'
 import { cn } from '@/lib/utils'
 import { BirthdayFields, ContactFields, TagInput, type ContactValue } from './PersonFormFields'
 import { birthdayInput, type BirthdayValue } from './birthday'
@@ -62,6 +64,8 @@ export function PersonForm({
   const [work, setWork] = useState(person?.work ?? '')
   const [pronouns, setPronouns] = useState<Pronouns | ''>(person?.pronouns ?? '')
   const [spaceIds, setSpaceIds] = useState(person?.spaces.map((space) => space.id) ?? [])
+  const [askFor, setAskFor] = useState<Space | null>(null)
+  const [confirmedShared, dontAskAgain] = useDismissed('folkbook.sharedSpaceConfirmed')
   const [birthday, setBirthday] = useState(birthdayOf(person))
   const [contacts, setContacts] = useState<ContactValue[]>(
     person?.contact_methods.map(({ kind, label, value }) => ({ kind, label, value })) ?? [],
@@ -243,11 +247,19 @@ export function PersonForm({
                   type="button"
                   aria-pressed={on}
                   data-space={space.color}
-                  onClick={() =>
-                    setSpaceIds(
-                      on ? spaceIds.filter((id) => id !== space.id) : [...spaceIds, space.id],
-                    )
-                  }
+                  onClick={() => {
+                    // Showing someone to other people for the first time: ask (4j, 4k).
+                    const shownToOthers =
+                      !on &&
+                      space.member_count > 0 &&
+                      !person?.spaces.some((ref) => ref.id === space.id) &&
+                      !confirmedShared.includes(space.id)
+                    if (shownToOthers) setAskFor(space)
+                    else
+                      setSpaceIds(
+                        on ? spaceIds.filter((id) => id !== space.id) : [...spaceIds, space.id],
+                      )
+                  }}
                   className={cn(
                     'inline-flex h-9 cursor-pointer items-center gap-2 rounded-full border px-3.5 text-md font-medium',
                     on
@@ -328,6 +340,19 @@ export function PersonForm({
         <p role="alert" className="type-small text-danger">
           {error}
         </p>
+      )}
+
+      {askFor && (
+        <SharedSpaceConfirm
+          space={askFor}
+          personName={name.trim() || 'They'}
+          onCancel={() => setAskFor(null)}
+          onConfirm={(remember) => {
+            if (remember) dontAskAgain(askFor.id)
+            setSpaceIds([...spaceIds, askFor.id])
+            setAskFor(null)
+          }}
+        />
       )}
 
       <FormDialogFooter

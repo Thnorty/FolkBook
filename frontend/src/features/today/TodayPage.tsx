@@ -29,7 +29,7 @@ import {
   type Birthday,
   type Nudge,
 } from './queries'
-import { useDismissed } from './useDismissed'
+import { useDismissed } from '@/lib/useDismissed'
 
 const SNOOZE_DAYS = 7
 const longDate = new Intl.DateTimeFormat(undefined, {
