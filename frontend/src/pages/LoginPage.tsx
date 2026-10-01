@@ -1,15 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import type { FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { logIn } from '@/api/session'
-import { Logo } from '@/app/Logo'
+import { AuthFrame } from '@/components/AuthFrame'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { safeRedirect } from '@/lib/redirect'
 import { usePageTitle } from '@/lib/usePageTitle'
 
-/** Log in (screen 5l). First run, invites and password reset come with #16. */
+/** Log in (screen 5l). */
 export function LoginPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -32,44 +32,54 @@ export function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-start justify-center px-4 py-16 md:items-center">
-      <div className="w-full max-w-sm md:rounded-card md:border md:border-line md:bg-card md:p-8 md:shadow-paper">
-        <Logo />
-        <h1 className="mt-6 type-title">Log in</h1>
-        <form onSubmit={submit} className="mt-5 flex flex-col gap-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" autoComplete="username" required />
-          </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-            />
-          </div>
-          <label className="flex items-center gap-2.5 type-small">
-            <input
-              name="remember"
-              type="checkbox"
-              defaultChecked
-              className="size-4 accent-accent"
-            />
-            Keep me logged in on this device
-          </label>
-          {login.error && (
-            <p role="alert" className="type-small text-danger">
-              {login.error.message}
-            </p>
-          )}
-          <Button type="submit" disabled={login.isPending}>
-            {login.isPending ? 'Logging in…' : 'Log in'}
-          </Button>
-        </form>
-      </div>
-    </main>
+    <AuthFrame>
+      <h1 className="mt-6 type-title">Log in</h1>
+      <form onSubmit={submit} className="mt-5 flex flex-col gap-4">
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" name="email" type="email" autoComplete="username" required />
+        </div>
+        <div>
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+          />
+        </div>
+        <label className="flex items-center gap-2.5 type-small">
+          <input name="remember" type="checkbox" defaultChecked className="size-4 accent-accent" />
+          Keep me logged in on this device
+        </label>
+        {login.error && (
+          <p role="alert" className="type-small text-danger">
+            {login.error.message}
+          </p>
+        )}
+        <Button type="submit" disabled={login.isPending}>
+          {login.isPending ? 'Logging in…' : 'Log in'}
+        </Button>
+      </form>
+      <ForgotPassword />
+    </AuthFrame>
+  )
+}
+
+/**
+ * Without email on this server (SMTP comes with #37), only an admin can make a reset
+ * link, from Settings → Users.
+ */
+function ForgotPassword() {
+  const [open, setOpen] = useState(false)
+  return open ? (
+    <p role="status" className="mt-5 type-small text-ink-soft">
+      Ask your FolkBook&apos;s admin for a reset link. They can make one in Settings, under Users.
+    </p>
+  ) : (
+    <Button variant="ghost" className="mt-3 w-full" onClick={() => setOpen(true)}>
+      Forgot password?
+    </Button>
   )
 }

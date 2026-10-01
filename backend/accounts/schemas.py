@@ -51,3 +51,24 @@ class DeviceOut(Schema):
     @staticmethod
     def resolve_is_current(obj, context):
         return obj.session_key == context["request"].session.session_key
+
+
+class ResetLinkIn(Schema):
+    user_id: UUID
+
+
+class ResetLinkOut(Schema):
+    """Shown once, to the admin who made it."""
+
+    path: str  # the link to hand over: the app's address + this path
+    email: str
+    expires_at: datetime.datetime
+
+
+class ResetPreviewOut(Schema):
+    email: str
+    expires_at: datetime.datetime
+
+
+class ResetIn(Schema):
+    password: str = Field(max_length=4096)

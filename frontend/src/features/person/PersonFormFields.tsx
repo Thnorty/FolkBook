@@ -1,5 +1,6 @@
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
+import type { BirthdayValue } from './birthday'
 import type { components } from '@/api/schema'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +9,6 @@ import { cn } from '@/lib/utils'
 
 /* The "More details" fields of the person form: birthday, contact details, tags. */
 
-export type BirthdayValue = { day: string; month: string; year: string }
 export type ContactValue = components['schemas']['ContactMethodIn']
 
 const SELECT =

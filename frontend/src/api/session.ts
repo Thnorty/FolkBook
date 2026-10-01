@@ -25,14 +25,46 @@ function forgetOtherData(queryClient: QueryClient) {
   })
 }
 
+/** Start using `user`'s session: nothing cached from before carries over. */
+function start(queryClient: QueryClient, user: CurrentUser): CurrentUser {
+  forgetOtherData(queryClient)
+  queryClient.setQueryData(currentUserQuery.queryKey, user)
+  return user
+}
+
 export async function logIn(
   queryClient: QueryClient,
   credentials: components['schemas']['LoginIn'],
 ): Promise<CurrentUser> {
-  const user = await unwrap(api.POST('/api/auth/login', { body: credentials }))
-  forgetOtherData(queryClient)
-  queryClient.setQueryData(currentUserQuery.queryKey, user)
+  return start(queryClient, await unwrap(api.POST('/api/auth/login', { body: credentials })))
+}
+
+type SignUp = components['schemas']['SignUpIn']
+
+/** Whether this server still needs its first account. */
+export const setupStatusQuery = queryOptions({
+  queryKey: ['auth', 'setup'],
+  queryFn: ({ signal }) => unwrap(api.GET('/api/setup', { signal })),
+})
+
+/** Create the server's first account (its admin) and log in with it. */
+export async function setUpServer(queryClient: QueryClient, account: SignUp) {
+  const user = start(queryClient, await unwrap(api.POST('/api/setup', { body: account })))
+  queryClient.setQueryData(setupStatusQuery.queryKey, { needed: false })
   return user
+}
+
+/** Sign up with an invite link and log in with the new account. */
+export async function acceptInvite(queryClient: QueryClient, token: string, account: SignUp) {
+  return start(
+    queryClient,
+    await unwrap(
+      api.POST('/api/invites/by-token/{token}/accept', {
+        params: { path: { token } },
+        body: account,
+      }),
+    ),
+  )
 }
 
 export async function logOut(queryClient: QueryClient) {
