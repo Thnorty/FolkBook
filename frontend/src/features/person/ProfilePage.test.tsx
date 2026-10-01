@@ -309,6 +309,29 @@ describe('profile page', () => {
     ).toBeInTheDocument()
   })
 
+  it('says whose a shared person is, and which side is only yours', async () => {
+    server({
+      'GET /api/people/emma': () =>
+        json({ ...EMMA, is_mine: false, owner: ref('defne', 'Defne Aydın'), can_edit: false }),
+    })
+    renderApp('/people/emma')
+
+    expect(await screen.findByText(/Shared by Defne Aydın · Friends/)).toBeInTheDocument()
+    expect(screen.getByText('Viewer')).toBeInTheDocument()
+    expect(screen.getByText(/Ask Defne, who keeps Emma's profile/)).toBeInTheDocument()
+    expect(screen.getByText('Your side · only you see this')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+  })
+
+  it('shows nothing of that on your own people', async () => {
+    server()
+    renderApp('/people/emma')
+    await screen.findByRole('heading', { level: 1, name: 'Emma Yılmaz' })
+
+    expect(screen.queryByText(/Shared by/)).not.toBeInTheDocument()
+    expect(screen.queryByText('Your side · only you see this')).not.toBeInTheDocument()
+  })
+
   it("says so when the person isn't in your notebook", async () => {
     server({ 'GET /api/people/emma': () => json({ detail: 'Not Found' }, 404) })
     renderApp('/people/emma')

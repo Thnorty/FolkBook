@@ -1,4 +1,4 @@
-import { Mail, Phone, Pencil } from 'lucide-react'
+import { Mail, Pencil, Phone, UsersRound } from 'lucide-react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { SpaceChip } from '@/components/notebook/spaces'
 import { Button } from '@/components/ui/button'
@@ -35,6 +35,7 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
 
   return (
     <header className="flex flex-col gap-4">
+      {!person.is_mine && person.owner && <SharedBy person={person} owner={person.owner.name} />}
       <div className="flex items-end gap-5">
         {travel(
           sharedPerson.photo(person.id),
@@ -65,9 +66,6 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
           <h1 className="type-display">{person.name}</h1>,
         )}
         {person.how_we_met && <p className="text-ink-soft">{person.how_we_met}</p>}
-        {!person.is_mine && person.owner && (
-          <p className="type-small text-ink-soft">From {person.owner.name}&apos;s notebook</p>
-        )}
         {person.last_talked_on && (
           <p className="type-meta text-ink-faint">
             Last talked {formatRelativeDay(person.last_talked_on)}
@@ -122,5 +120,27 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
         </ul>
       )}
     </header>
+  )
+}
+
+/** "Shared by Defne · Hackathon 2026 · Viewer": whose profile this is (screens 4l, 4m). */
+function SharedBy({ person, owner }: { person: PersonDetail; owner: string }) {
+  const ownerFirst = owner.split(' ')[0]
+  const first = person.name.split(' ')[0]
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 type-small text-ink-soft">
+        <UsersRound aria-hidden className="size-4 text-ink-faint" />
+        Shared by {[owner, ...person.spaces.map((space) => space.name)].join(' · ')}
+        <span className="rounded-full border border-line-strong px-2 type-meta text-ink-faint">
+          {person.can_edit ? 'Editor' : 'Viewer'}
+        </span>
+      </p>
+      <p className="type-meta text-ink-faint">
+        {person.can_edit
+          ? `${ownerFirst} keeps this profile; as an editor you can fix the basics.`
+          : `Basic profile: read-only. Spot something wrong? Ask ${ownerFirst}, who keeps ${first}'s profile.`}
+      </p>
+    </div>
   )
 }
