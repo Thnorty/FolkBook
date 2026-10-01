@@ -16,7 +16,7 @@ from enum import StrEnum
 
 from access.policy import Access, visible_people, visible_relationships
 from people.models import Person
-from relationships.models import FAMILY_TYPES, ParentType, RelationshipType
+from relationships.models import FAMILY_TYPES, ParentType, Relationship, RelationshipType
 
 PersonId = Hashable
 
@@ -231,18 +231,40 @@ class FamilyGraph:
         return sorted(results.values(), key=lambda r: (order.index(r.relation), str(r.person)))
 
 
-def family_of(access: Access, person: Person) -> list[FamilyRelation]:
+def family_of(
+    access: Access, person: Person, *, ending: Hashable | None = None
+) -> list[FamilyRelation]:
     """The family of `person`, from the links `access` is allowed to see.
 
+    With `ending` (a link's id), it's worked out as if that link had ended.
     Each result's `person` is a `Person`. Two queries: the links, then the people.
     """
     links = visible_relationships(access).filter(type__in=sorted(FAMILY_TYPES))
     graph = FamilyGraph(
         Link(
-            link.pk, link.person_a_id, link.person_b_id, link.type, link.parent_type, link.is_former
+            link.pk,
+            link.person_a_id,
+            link.person_b_id,
+            link.type,
+            link.parent_type,
+            link.is_former or link.pk == ending,
         )
         for link in links
     )
     relations = graph.relations_of(person.pk)
     people = visible_people(access).in_bulk([r.person for r in relations])
     return [replace(r, person=people[r.person]) for r in relations if r.person in people]
+
+
+def moving_to_former(access: Access, person: Person, link: Relationship) -> list[FamilyRelation]:
+    """Who on `person`'s page would move to Former if `link` ended (in-laws, …).
+
+    The two people the link connects aren't listed: that change is the link itself.
+    """
+    already = {(r.person, r.relation) for r in family_of(access, person) if r.former}
+    linked = {link.person_a_id, link.person_b_id}
+    return [
+        r
+        for r in family_of(access, person, ending=link.pk)
+        if r.former and (r.person, r.relation) not in already and r.person.pk not in linked
+    ]

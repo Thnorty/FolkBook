@@ -109,11 +109,13 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 - **Leave / unshare:** owner removes a member or a member leaves. Referenced people become the member's own copies with their notes kept (§3.14)
 
 ### 3.8 Relationships
-1. Profile → **Add connection** → pick person → pick type
-   - Family: parent (biological / adoptive / step), partner, *(siblings etc. are derived: suggest adding parents instead)*
+1. Profile → Connections **+ Add** → pick person (search, or create someone new by name) → pick type
+   - Family: parent of / child of (then biological / adoptive / step), partner. Siblings, cousins, in-laws are derived from these
+   - Other family, for when the connecting people are unknown: sibling, cousin, grandparent, grandchild, aunt / uncle, niece / nephew. Stored as a direct link; once the parents are added, the derivation explains it
    - Social: friend, colleague, classmate, met at…, custom
-2. Optional: start date, which space the link belongs to (defaults to a space both people share)
-3. **Ending a relationship** (divorce, left a job): "End" → end date → status becomes *former*. Derived in-laws update automatically; UI shows them under "Former" or hides them (setting)
+2. Optional: start date, which space the link belongs to (defaults to a space both people share; "No space" keeps it private)
+3. The **⋯ menu** on a link you made: Change type (same two people), Open their page, End this relationship…, Reopen (a former link), Remove the link (with Undo)
+4. **Ending a relationship** (divorce, left a job): end date or "Don't know" → status becomes *former*. The dialog lists who moves to "Former" with it (e.g. in-laws); derived in-laws update automatically. Parent links never end. Undo reopens it
 
 ### 3.9 Graph view
 - **Default:** you ("Me") in the center, people around, clustered by space (colored by space tab color)

@@ -537,6 +537,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/relationships/{link_id}/end-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * End Preview
+         * @description Who on `person`'s page would move to Former if this link ended.
+         */
+        get: operations["relationships_api_end_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/relationships/{link_id}/reopen": {
         parameters: {
             query?: never;
@@ -1252,8 +1272,17 @@ export interface components {
             /** Space Id */
             space_id?: string | null;
         };
-        /** RelationshipPatch */
+        /**
+         * RelationshipPatch
+         * @description Changing `type` also takes the two people again, in the order the new type reads
+         *     (e.g. "Partner" → "Parent of Emma"). They must be the same two people.
+         */
         RelationshipPatch: {
+            type?: components["schemas"]["RelationshipType"] | null;
+            /** Person A Id */
+            person_a_id?: string | null;
+            /** Person B Id */
+            person_b_id?: string | null;
             parent_type?: components["schemas"]["ParentType"] | null;
             /** Label */
             label?: string | null;
@@ -2474,6 +2503,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RelationshipOut"];
+                };
+            };
+        };
+    };
+    relationships_api_end_preview: {
+        parameters: {
+            query: {
+                person: string;
+            };
+            header?: never;
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilyRelationOut"][];
                 };
             };
         };

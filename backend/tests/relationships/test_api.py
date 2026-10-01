@@ -215,3 +215,90 @@ def test_private_family_links_tell_others_nothing(api, world, ela_has_a_brother)
 
 def test_family_of_someone_you_cannot_see_is_not_found(api, world):
     assert api.login(world.ela).get(f"/people/{world.jin.pk}/family").status_code == 404
+
+
+# ---------------------------------------------------------------- changing the type
+
+
+def test_change_a_partnership_into_a_parent_link(api, world):
+    client = api.login(world.ela)
+    link = create(client, world.emma, world.oskar, type="partner").json()
+
+    response = client.patch(
+        f"/relationships/{link['id']}",
+        {
+            "type": "parent",
+            "person_a_id": str(world.oskar.pk),
+            "person_b_id": str(world.emma.pk),
+            "parent_type": "adoptive",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["id"], body["type"], body["parent_type"]) == (link["id"], "parent", "adoptive")
+    assert (body["person_a"]["name"], body["person_b"]["name"]) == ("Oskar", "Emma")
+
+
+def test_symmetric_types_are_stored_once_after_a_change(api, world):
+    client = api.login(world.ela)
+    parent = create(client, world.oskar, world.emma, type="parent", parent_type="step").json()
+    client.patch(
+        f"/relationships/{parent['id']}",
+        {
+            "type": "sibling",
+            "person_a_id": str(world.oskar.pk),
+            "person_b_id": str(world.emma.pk),
+            "parent_type": None,
+        },
+    )
+
+    response = create(client, world.emma, world.oskar, type="sibling")
+
+    assert response.status_code == 409
+
+
+@pytest.mark.parametrize(
+    ("fields", "message"),
+    [
+        ({"type": "colleague"}, "needs person_a_id and person_b_id"),
+        ({"type": "colleague", "person_a": "emma", "person_b": "tom"}, "not who it connects"),
+    ],
+)
+def test_changing_the_type_keeps_the_same_two_people(api, world, fields, message):
+    for side in ("person_a", "person_b"):
+        if side in fields:
+            fields[f"{side}_id"] = str(getattr(world, fields.pop(side)).pk)
+
+    response = api.login(world.ela).patch(f"/relationships/{world.emma_oskar_private.pk}", fields)
+
+    assert response.status_code == 422
+    assert message in str(response.json()["detail"])
+
+
+# ---------------------------------------------------------------- ending, previewed
+
+
+def test_ending_a_partnership_previews_who_moves_to_former(api, world):
+    client = api.login(world.ela)
+    partners = create(client, world.ela.me, world.emma, type="partner").json()
+    create(client, world.oskar, world.emma, type="parent", parent_type="biological")
+    create(client, world.oskar, world.ines, type="parent", parent_type="biological")
+
+    response = client.get(
+        f"/relationships/{partners['id']}/end-preview", person=str(world.ela.me.pk)
+    )
+
+    assert response.status_code == 200
+    moving = {(r["person"]["name"], r["relation"], r["former"]) for r in response.json()}
+    assert moving == {("Oskar", "parent_in_law", True), ("Ines", "sibling_in_law", True)}
+    assert Relationship.objects.get(pk=partners["id"]).is_former is False  # only a preview
+
+
+def test_end_preview_follows_what_you_can_see(api, world):
+    assert (
+        api.login(world.ela)
+        .get(f"/relationships/{world.tom_jin_private.pk}/end-preview", person=str(world.tom.pk))
+        .status_code
+        == 404
+    )

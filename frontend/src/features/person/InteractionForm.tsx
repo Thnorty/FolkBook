@@ -1,6 +1,7 @@
 import { Plus, Trash2, X } from 'lucide-react'
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
+import { Choice, pickedBoxClass } from '@/components/ui/choice'
 import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Kbd } from '@/components/ui/kbd'
@@ -31,7 +32,6 @@ type InteractionFormProps = {
 }
 
 const KINDS = Object.keys(INTERACTION_KINDS) as Interaction['kind'][]
-const PICKED_DAY = 'border-accent text-ink ring-3 ring-focus-glow'
 
 /** Log a call, coffee or message, or change one (screens 2o, 2p). */
 export function InteractionForm({
@@ -86,7 +86,6 @@ export function InteractionForm({
               name="kind"
               checked={kind === option}
               onChange={() => setKind(option)}
-              look="chip"
             >
               {INTERACTION_KINDS[option]}
               {option === 'custom' && '…'}
@@ -119,7 +118,8 @@ export function InteractionForm({
               name="day"
               checked={day === value}
               onChange={() => setDay(value)}
-              look="day"
+              look="box"
+              className="flex-1 md:flex-none"
             >
               {name}
             </Choice>
@@ -131,7 +131,7 @@ export function InteractionForm({
             max={today}
             required
             onChange={(event) => setDay(event.target.value)}
-            className={cn('w-auto flex-none', day !== today && day !== yesterday && PICKED_DAY)}
+            className={cn('w-auto flex-none', day !== today && day !== yesterday && pickedBoxClass)}
           />
         </div>
       </fieldset>
@@ -205,51 +205,5 @@ export function InteractionForm({
         }
       />
     </form>
-  )
-}
-
-/**
- * One option in a row of choices. A kind is a chip that fills in when picked; a day is
- * a box that gets outlined, like the date field next to it.
- */
-function Choice({
-  name,
-  checked,
-  onChange,
-  look,
-  children,
-}: {
-  name: string
-  checked: boolean
-  onChange: () => void
-  look: 'chip' | 'day'
-  children: ReactNode
-}) {
-  return (
-    <label className={cn('cursor-pointer', look === 'day' && 'flex-1 md:flex-none')}>
-      <input
-        type="radio"
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        className="peer sr-only"
-      />
-      <span
-        className={cn(
-          'flex h-11 items-center justify-center border border-line-input text-md font-medium text-ink-soft peer-focus-visible:ring-3 peer-focus-visible:ring-focus-glow hover:border-line-strong md:h-9',
-          look === 'chip'
-            ? 'rounded-full px-3.5 peer-checked:border-accent peer-checked:bg-accent peer-checked:text-on-accent'
-            : 'rounded-card bg-card px-3',
-          look === 'day' && checked && PICKED_DAY,
-        )}
-      >
-        {children}
-        {look === 'chip' && checked && (
-          <span aria-hidden className="ml-1">
-            ✓
-          </span>
-        )}
-      </span>
-    </label>
   )
 }

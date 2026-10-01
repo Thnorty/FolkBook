@@ -14,6 +14,8 @@ export type InteractionInput = components['schemas']['InteractionIn']
 export type InteractionChanges = components['schemas']['InteractionPatch']
 export type Relationship = components['schemas']['RelationshipOut']
 export type FamilyRelation = components['schemas']['FamilyRelationOut']
+export type RelationshipInput = components['schemas']['RelationshipIn']
+export type RelationshipChanges = components['schemas']['RelationshipPatch']
 export type PersonInput = components['schemas']['PersonIn']
 export type PersonChanges = components['schemas']['PersonPatch']
 
@@ -46,6 +48,36 @@ export const otherLinksQuery = (personId: string) =>
       )
       return page.items
     },
+  })
+
+/** Stored family links (parents, partners, other family), to change or end them. */
+export const familyLinksQuery = (personId: string) =>
+  queryOptions({
+    queryKey: ['people', personId, 'family-links'],
+    queryFn: async ({ signal }) => {
+      const page = await unwrap(
+        api.GET('/api/relationships', {
+          params: { query: { person: personId, family: true } },
+          signal,
+        }),
+      )
+      return page.items
+    },
+  })
+
+const linkPath = (linkId: string) => ({ params: { path: { link_id: linkId } } })
+
+/** Who on `personId`'s page would move to Former if this link ended (screen 2m). */
+export const endPreviewQuery = (personId: string, linkId: string) =>
+  queryOptions({
+    queryKey: ['people', personId, 'end-preview', linkId],
+    queryFn: ({ signal }) =>
+      unwrap(
+        api.GET('/api/relationships/{link_id}/end-preview', {
+          params: { path: { link_id: linkId }, query: { person: personId } },
+          signal,
+        }),
+      ),
   })
 
 export const memoryAidsQuery = (personId: string) =>
@@ -142,6 +174,50 @@ export async function deleteInteraction(queryClient: QueryClient, interactionId:
   await unwrap(api.DELETE('/api/interactions/{interaction_id}', interactionPath(interactionId)))
   await queryClient.invalidateQueries({ queryKey: ['people'] })
 }
+
+/*
+ * Link writes. Afterwards refresh everything under ['people']: both people's
+ * connections, and the family worked out from them.
+ */
+
+async function afterLinkWrite<T>(queryClient: QueryClient, write: Promise<T>) {
+  const result = await write
+  await queryClient.invalidateQueries({ queryKey: ['people'] })
+  return result
+}
+
+export const createRelationship = (queryClient: QueryClient, input: RelationshipInput) =>
+  afterLinkWrite(queryClient, unwrap(api.POST('/api/relationships', { body: input })))
+
+export const updateRelationship = (
+  queryClient: QueryClient,
+  linkId: string,
+  changes: RelationshipChanges,
+) =>
+  afterLinkWrite(
+    queryClient,
+    unwrap(api.PATCH('/api/relationships/{link_id}', { ...linkPath(linkId), body: changes })),
+  )
+
+export const endRelationship = (queryClient: QueryClient, linkId: string, endedOn: string | null) =>
+  afterLinkWrite(
+    queryClient,
+    unwrap(
+      api.POST('/api/relationships/{link_id}/end', {
+        ...linkPath(linkId),
+        body: { ended_on: endedOn },
+      }),
+    ),
+  )
+
+export const reopenRelationship = (queryClient: QueryClient, linkId: string) =>
+  afterLinkWrite(
+    queryClient,
+    unwrap(api.POST('/api/relationships/{link_id}/reopen', linkPath(linkId))),
+  )
+
+export const deleteRelationship = (queryClient: QueryClient, linkId: string) =>
+  afterLinkWrite(queryClient, unwrap(api.DELETE('/api/relationships/{link_id}', linkPath(linkId))))
 
 export function createPerson(input: PersonInput) {
   return unwrap(api.POST('/api/people', { body: input }))

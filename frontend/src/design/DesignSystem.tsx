@@ -5,6 +5,7 @@ import { SpaceChip, SpaceTab, type SpaceColor } from '@/components/notebook/spac
 import { StickyNote, type NoteColor } from '@/components/notebook/StickyNote'
 import { TimelineItem } from '@/components/notebook/TimelineItem'
 import { Button } from '@/components/ui/button'
+import { Choice as ChoiceChip } from '@/components/ui/choice'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -107,6 +108,40 @@ function InkDemo() {
   )
 }
 
+function ChoiceDemo() {
+  const [kind, setKind] = useState('Partner')
+  const [day, setDay] = useState('Today')
+  return (
+    <div className="mt-5 flex flex-col gap-2.5">
+      <div className="flex flex-wrap gap-1.5">
+        {['Parent of Emma', 'Child of Emma', 'Partner'].map((option) => (
+          <ChoiceChip
+            key={option}
+            name="ds-kind"
+            checked={kind === option}
+            onChange={() => setKind(option)}
+          >
+            {option}
+          </ChoiceChip>
+        ))}
+      </div>
+      <div className="flex gap-1.5">
+        {['Today', 'Yesterday'].map((option) => (
+          <ChoiceChip
+            key={option}
+            name="ds-day"
+            look="box"
+            checked={day === option}
+            onChange={() => setDay(option)}
+          >
+            {option}
+          </ChoiceChip>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function SmallFormDemo() {
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
@@ -205,6 +240,7 @@ export default function DesignSystem() {
             <Input id="ds-email" defaultValue="emma@" aria-invalid />
           </div>
         </div>
+        <ChoiceDemo />
       </Section>
 
       <Section title="People">
