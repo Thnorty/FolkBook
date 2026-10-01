@@ -4,6 +4,7 @@ from uuid import UUID
 from ninja import Field, Schema
 from pydantic import model_validator
 
+from people.models import Pronouns
 from people.schemas import PersonRef, SpaceRef
 from relationships.models import ParentType, RelationshipType
 
@@ -68,6 +69,7 @@ class EndIn(Schema):
 
 class FamilyRelationOut(Schema):
     person: PersonRef
+    pronouns: Pronouns | None  # the person's, so the app can say "sister" for "sibling"
     relation: str  # parent, sibling, half_sibling, cousin, parent_in_law, …
     derived: bool
     former: bool
@@ -77,6 +79,10 @@ class FamilyRelationOut(Schema):
     @staticmethod
     def resolve_parent_type(obj):
         return obj.parent_type or None
+
+    @staticmethod
+    def resolve_pronouns(obj):
+        return obj.person.pronouns or None
 
     @staticmethod
     def resolve_direct_link_id(obj):

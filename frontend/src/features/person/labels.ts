@@ -27,9 +27,43 @@ const RELATIONS: Record<string, string> = {
   met_at: 'met at',
 }
 
-/** "half_sibling" → "half-sibling". Unknown codes show as written, with spaces. */
-export function relationLabel(code: string): string {
+export type Pronouns = NonNullable<components['schemas']['PersonOut']['pronouns']>
+
+/** What to call someone given their pronouns: [she, he]. Partners stay "partner". */
+const GENDERED: Record<string, [string, string]> = {
+  parent: ['mother', 'father'],
+  child: ['daughter', 'son'],
+  sibling: ['sister', 'brother'],
+  half_sibling: ['half-sister', 'half-brother'],
+  step_sibling: ['stepsister', 'stepbrother'],
+  step_parent: ['stepmother', 'stepfather'],
+  step_child: ['stepdaughter', 'stepson'],
+  grandparent: ['grandmother', 'grandfather'],
+  grandchild: ['granddaughter', 'grandson'],
+  aunt_uncle: ['aunt', 'uncle'],
+  niece_nephew: ['niece', 'nephew'],
+  parent_in_law: ['mother-in-law', 'father-in-law'],
+  child_in_law: ['daughter-in-law', 'son-in-law'],
+  sibling_in_law: ['sister-in-law', 'brother-in-law'],
+}
+
+/**
+ * "half_sibling" → "half-sibling", or "half-sister" for someone who goes by she.
+ * Without pronouns (or with they) the name stays neutral. Unknown codes show as
+ * written, with spaces.
+ */
+export function relationLabel(code: string, pronouns?: Pronouns | null): string {
+  const gendered = GENDERED[code]
+  if (gendered && pronouns === 'she') return gendered[0]
+  if (gendered && pronouns === 'he') return gendered[1]
   return RELATIONS[code] ?? code.replaceAll('_', ' ')
+}
+
+/** The choices for pronouns, as the form shows them. */
+export const PRONOUNS: Record<Pronouns, string> = {
+  she: 'she / her',
+  he: 'he / him',
+  they: 'they / them',
 }
 
 /** What a stored link says about the other person: "friend", "met at Hackathon 2026". */

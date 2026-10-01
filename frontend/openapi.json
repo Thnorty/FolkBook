@@ -3904,6 +3904,16 @@
             ],
             "title": "Last Talked On"
           },
+          "pronouns": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pronouns"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "added_at": {
             "format": "date-time",
             "title": "Added At",
@@ -3924,6 +3934,7 @@
           "photo",
           "needs_details",
           "last_talked_on",
+          "pronouns",
           "added_at"
         ],
         "title": "PersonOut",
@@ -3951,6 +3962,15 @@
         ],
         "title": "PhotoOut",
         "type": "object"
+      },
+      "Pronouns": {
+        "enum": [
+          "she",
+          "he",
+          "they"
+        ],
+        "title": "Pronouns",
+        "type": "string"
       },
       "ContactKind": {
         "enum": [
@@ -4080,6 +4100,16 @@
             ],
             "title": "Last Talked On"
           },
+          "pronouns": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pronouns"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "added_at": {
             "format": "date-time",
             "title": "Added At",
@@ -4119,6 +4149,7 @@
           "photo",
           "needs_details",
           "last_talked_on",
+          "pronouns",
           "added_at",
           "contact_methods",
           "can_edit",
@@ -4213,6 +4244,16 @@
             "maxLength": 40,
             "title": "Photo Caption",
             "type": "string"
+          },
+          "pronouns": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pronouns"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -4325,6 +4366,16 @@
               }
             ],
             "title": "Photo Caption"
+          },
+          "pronouns": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pronouns"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "title": "PersonPatch",
@@ -4334,6 +4385,16 @@
         "properties": {
           "person": {
             "$ref": "#/components/schemas/PersonRef"
+          },
+          "pronouns": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pronouns"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "relation": {
             "title": "Relation",
@@ -4372,6 +4433,7 @@
         },
         "required": [
           "person",
+          "pronouns",
           "relation",
           "derived",
           "former",
