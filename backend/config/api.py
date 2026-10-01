@@ -15,6 +15,7 @@ from people.api import memory_aids_router
 from people.api import router as people_router
 from relationships.api import router as relationships_router
 from reminders.api import router as reminders_router
+from search.api import router as search_router
 from spaces.api import router as spaces_router
 from today.api import router as today_router
 
@@ -33,6 +34,7 @@ api.add_router("/memory-aids", memory_aids_router)
 api.add_router("/interactions", interactions_router)
 api.add_router("/keep-in-touch", reminders_router)
 api.add_router("/today", today_router)
+api.add_router("/search", search_router)
 
 
 @api.exception_handler(PermissionDenied)
