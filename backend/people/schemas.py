@@ -41,6 +41,15 @@ class PhotoOut(Schema):
     caption: str
 
 
+def photo_of(person) -> dict | None:
+    """A person's photo URLs and caption, or None without a photo."""
+    if not person.photo:
+        return None
+    # The file name changes with every new photo, so the URL can be cached for good.
+    url = f"/api/people/{person.pk}/photo?v={Path(person.photo.name).stem}"
+    return {"url": url, "thumbnail_url": f"{url}&size=thumbnail", "caption": person.photo_caption}
+
+
 class PersonOut(Schema):
     """The basic profile, as the viewer is allowed to see it."""
 
@@ -77,11 +86,7 @@ class PersonOut(Schema):
 
     @staticmethod
     def resolve_photo(obj):
-        if not obj.photo:
-            return None
-        # The file name changes with every new photo, so the URL can be cached for good.
-        url = f"/api/people/{obj.pk}/photo?v={Path(obj.photo.name).stem}"
-        return {"url": url, "thumbnail_url": f"{url}&size=thumbnail", "caption": obj.photo_caption}
+        return photo_of(obj)
 
     @staticmethod
     def resolve_tags(obj):

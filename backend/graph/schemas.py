@@ -11,6 +11,7 @@ class GraphNodeOut(Schema):
     name: str
     is_me: bool  # the viewer's own Me: the center of the graph
     spaces: list[SpaceRef]  # visible spaces the person is in, for cluster colors
+    photo_url: str | None  # the small photo, for the node's face
 
 
 class GraphEdgeOut(Schema):

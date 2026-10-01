@@ -1732,6 +1732,8 @@ export interface components {
             is_me: boolean;
             /** Spaces */
             spaces: components["schemas"]["SpaceRef"][];
+            /** Photo Url */
+            photo_url: string | null;
         };
         /** GraphOut */
         GraphOut: {

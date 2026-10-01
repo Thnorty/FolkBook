@@ -7,6 +7,7 @@ from access.policy import visible_people
 from core.api import access_for
 from graph.queries import Edge, Graph, Path, neighborhood, paths_to, visible_graph
 from graph.schemas import GraphOut, PathsOut
+from people.schemas import photo_of
 
 router = Router(tags=["graph"])
 
@@ -37,6 +38,7 @@ def _graph_out(graph: Graph, me_id: UUID) -> dict:
                 "name": person.name,
                 "is_me": person.pk == me_id,
                 "spaces": graph.spaces_of.get(person.pk, []),
+                "photo_url": (photo_of(person) or {}).get("thumbnail_url"),
             }
             for person in graph.people.values()
         ],

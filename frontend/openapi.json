@@ -5068,13 +5068,25 @@
             },
             "title": "Spaces",
             "type": "array"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
           }
         },
         "required": [
           "id",
           "name",
           "is_me",
-          "spaces"
+          "spaces",
+          "photo_url"
         ],
         "title": "GraphNodeOut",
         "type": "object"
