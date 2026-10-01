@@ -46,7 +46,7 @@ export function BirthdayFields({
           aria-label="Month"
           value={value.month}
           onChange={(event) => onChange({ ...value, month: event.target.value })}
-          className={cn(SELECT, 'flex-1')}
+          className={cn(SELECT, 'min-w-0 flex-1')}
         >
           <option value="">Month</option>
           {monthNames.map((name, i) => (
@@ -64,7 +64,7 @@ export function BirthdayFields({
           placeholder="Year (optional)"
           value={value.year}
           onChange={(event) => onChange({ ...value, year: event.target.value })}
-          className="w-36"
+          className="w-28"
         />
       </div>
     </fieldset>

@@ -117,7 +117,11 @@ def list_people(
         people = people.filter(needs_details=True)
     if recent:
         since = timezone.now() - RECENT
-        people = people.filter(owner=access.user, created_at__gte=since).order_by("-created_at")
+        people = (
+            people.filter(owner=access.user, created_at__gte=since)
+            .exclude(account=access.user)  # your own Me isn't someone you added
+            .order_by("-created_at")
+        )
     return search_people(access, people, search)
 
 
