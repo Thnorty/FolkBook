@@ -1,5 +1,7 @@
+import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Logo } from '@/app/Logo'
+import { aboutQuery } from '@/features/settings/queries'
 import { cn } from '@/lib/utils'
 
 type AuthFrameProps = {
@@ -14,6 +16,7 @@ type AuthFrameProps = {
  * server's address underneath.
  */
 export function AuthFrame({ children, wide = false }: AuthFrameProps) {
+  const about = useQuery(aboutQuery).data // the AGPL: anyone using the server gets its source
   return (
     <main className="flex min-h-dvh flex-col items-center px-4 py-16 md:justify-center">
       <div
@@ -25,7 +28,14 @@ export function AuthFrame({ children, wide = false }: AuthFrameProps) {
         <Logo />
         {children}
       </div>
-      <p className="mt-6 type-meta text-ink-faint">{window.location.host}</p>
+      <p className="mt-6 flex gap-3 type-meta text-ink-faint">
+        {window.location.host}
+        {about && (
+          <a href={about.source_url} target="_blank" rel="noreferrer" className="hover:text-ink">
+            Source code
+          </a>
+        )}
+      </p>
     </main>
   )
 }

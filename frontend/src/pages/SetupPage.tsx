@@ -1,13 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Check, Copy } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { setUpServer } from '@/api/session'
 import { AuthFrame } from '@/components/AuthFrame'
 import { Button } from '@/components/ui/button'
+import { CopyLink } from '@/components/ui/copy-link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createInvite, inviteLink } from '@/features/invites/queries'
+import { createInvite } from '@/features/invites/queries'
+import { appLink } from '@/lib/links'
 import { birthdayInput, type BirthdayValue } from '@/features/person/birthday'
 import { BirthdayFields } from '@/features/person/PersonFormFields'
 import { updatePerson } from '@/features/person/queries'
@@ -230,14 +232,7 @@ function ExtrasStep() {
   const invite = useMutation({
     mutationFn: () => createInvite(),
   })
-  const [copied, setCopied] = useState(false)
-  const link = invite.data && inviteLink(invite.data.path)
-
-  const copy = async () => {
-    if (!link) return
-    await navigator.clipboard.writeText(link)
-    setCopied(true)
-  }
+  const link = invite.data && appLink(invite.data.path)
 
   return (
     <StepPage
@@ -251,16 +246,8 @@ function ExtrasStep() {
           week.
         </p>
         {link ? (
-          <div className="mt-3 flex gap-2">
-            <Input
-              readOnly
-              value={link}
-              aria-label="Invite link"
-              onFocus={(event) => event.target.select()}
-            />
-            <Button variant="secondary" onClick={() => void copy()} aria-label="Copy the link">
-              {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
-            </Button>
+          <div className="mt-3">
+            <CopyLink link={link} label="Invite link" />
           </div>
         ) : (
           <Button

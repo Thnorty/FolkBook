@@ -1,0 +1,92 @@
+import { queryOptions, type QueryClient } from '@tanstack/react-query'
+import { api, unwrap } from '@/api/client'
+import type { components } from '@/api/schema'
+
+export type ReminderSettings = components['schemas']['ReminderSettingsSchema']
+
+/** Where you're signed in, most recently used first. */
+export const devicesQuery = queryOptions({
+  queryKey: ['auth', 'devices'],
+  queryFn: async ({ signal }) => (await unwrap(api.GET('/api/auth/devices', { signal }))).items,
+})
+
+export async function signOutDevice(queryClient: QueryClient, deviceId: string) {
+  await unwrap(
+    api.DELETE('/api/auth/devices/{device_id}', { params: { path: { device_id: deviceId } } }),
+  )
+  await queryClient.invalidateQueries({ queryKey: devicesQuery.queryKey })
+}
+
+export async function signOutOtherDevices(queryClient: QueryClient) {
+  await unwrap(api.POST('/api/auth/devices/sign-out-others'))
+  await queryClient.invalidateQueries({ queryKey: devicesQuery.queryKey })
+}
+
+/** Change your password; every other device is signed out. */
+export async function changePassword(
+  queryClient: QueryClient,
+  body: components['schemas']['PasswordIn'],
+) {
+  await unwrap(api.POST('/api/auth/password', { body }))
+  await queryClient.invalidateQueries({ queryKey: devicesQuery.queryKey })
+}
+
+export const reminderSettingsQuery = queryOptions({
+  queryKey: ['reminder-settings'],
+  queryFn: ({ signal }) => unwrap(api.GET('/api/keep-in-touch/settings', { signal })),
+})
+
+/** Nudges on or off, and the default interval. Today and profiles follow. */
+export async function saveReminderSettings(queryClient: QueryClient, settings: ReminderSettings) {
+  const saved = await unwrap(api.PUT('/api/keep-in-touch/settings', { body: settings }))
+  queryClient.setQueryData(reminderSettingsQuery.queryKey, saved)
+  await queryClient.invalidateQueries({ queryKey: ['people'] })
+  return saved
+}
+
+/** This server's FolkBook version, and where its source code is (AGPL). */
+export const aboutQuery = queryOptions({
+  queryKey: ['about'],
+  queryFn: ({ signal }) => unwrap(api.GET('/api/about', { signal })),
+  staleTime: Infinity,
+})
+
+export type User = components['schemas']['UserOut']
+export type Invite = components['schemas']['InviteOut']
+
+/** Everyone on this server (admins only). */
+export const usersQuery = queryOptions({
+  queryKey: ['users'],
+  queryFn: async ({ signal }) => (await unwrap(api.GET('/api/users', { signal }))).items,
+})
+
+/** Make someone an admin or not, or (de)activate them. */
+export async function updateUser(
+  queryClient: QueryClient,
+  userId: string,
+  changes: components['schemas']['UserPatch'],
+) {
+  const user = await unwrap(
+    api.PATCH('/api/users/{user_id}', { params: { path: { user_id: userId } }, body: changes }),
+  )
+  await queryClient.invalidateQueries({ queryKey: usersQuery.queryKey })
+  return user
+}
+
+/** A one-time password reset link for someone (admins only; shown once). */
+export function createResetLink(userId: string) {
+  return unwrap(api.POST('/api/auth/password-resets', { body: { user_id: userId } }))
+}
+
+/** Your invite links; admins see every invite on the server. */
+export const invitesQuery = queryOptions({
+  queryKey: ['invites', 'list'],
+  queryFn: async ({ signal }) => (await unwrap(api.GET('/api/invites', { signal }))).items,
+})
+
+export async function revokeInvite(queryClient: QueryClient, inviteId: string) {
+  await unwrap(
+    api.DELETE('/api/invites/{invite_id}', { params: { path: { invite_id: inviteId } } }),
+  )
+  await queryClient.invalidateQueries({ queryKey: invitesQuery.queryKey })
+}

@@ -17,6 +17,14 @@ import { ProfilePage } from './features/person/ProfilePage'
 import { SpacePage } from './features/spaces/SpacePage'
 import { SpacesPage } from './features/spaces/SpacesPage'
 import { TodayPage } from './features/today/TodayPage'
+import {
+  AboutSettings,
+  AppearanceSettings,
+  ReminderSettingsPage,
+} from './features/settings/OtherSettings'
+import { InvitesSettings, UsersSettings } from './features/settings/AdminSettings'
+import { ProfileSettings } from './features/settings/ProfileSettings'
+import { SettingsLayout } from './features/settings/SettingsLayout'
 import { validatePeopleSearch } from './features/people/search'
 import { InvitePage } from './pages/InvitePage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -86,6 +94,35 @@ function placeholder<const Path extends string>(path: Path, title: string, note:
   })
 }
 
+const settingsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: 'settings',
+  component: SettingsLayout,
+})
+
+const settingsTree = settingsRoute.addChildren([
+  // Phones list the sections here; desktop shows the first one beside the list.
+  createRoute({ getParentRoute: () => settingsRoute, path: '/', component: ProfileSettings }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'profile',
+    component: ProfileSettings,
+  }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'reminders',
+    component: ReminderSettingsPage,
+  }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'appearance',
+    component: AppearanceSettings,
+  }),
+  createRoute({ getParentRoute: () => settingsRoute, path: 'about', component: AboutSettings }),
+  createRoute({ getParentRoute: () => settingsRoute, path: 'users', component: UsersSettings }),
+  createRoute({ getParentRoute: () => settingsRoute, path: 'invites', component: InvitesSettings }),
+])
+
 const appPages = [
   createRoute({ getParentRoute: () => appRoute, path: '/', component: TodayPage }),
   createRoute({
@@ -107,11 +144,7 @@ const appPages = [
     'Quick capture',
     'Write what happened; AI suggests the people, notes and links to save.',
   ),
-  placeholder(
-    'settings',
-    'Settings',
-    'Your profile, appearance, AI, reminders, API keys and more.',
-  ),
+  settingsTree,
 ]
 
 /** An invite link: open to anyone who has it, logged in or not. */
