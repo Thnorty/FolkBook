@@ -20,5 +20,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Whole-app tests type into forms key by key; with every file running at once on a
+    // busy machine, the longest ones pass 5s.
+    testTimeout: 15_000,
   },
 })

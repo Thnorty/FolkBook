@@ -239,6 +239,18 @@ export async function restorePerson(queryClient: QueryClient, personId: string) 
   return person
 }
 
+/** Take someone shared with you out of your book. Nobody else is affected. */
+export function hidePerson(personId: string) {
+  return unwrap(api.POST('/api/people/{person_id}/hide', path(personId)))
+}
+
+/** Add someone you took out back to your book, with your notes about them. */
+export async function unhidePerson(queryClient: QueryClient, personId: string) {
+  const person = await unwrap(api.POST('/api/people/{person_id}/unhide', path(personId)))
+  await refreshPeople(queryClient)
+  return person
+}
+
 /** After adding or changing someone: everything about people, and space counts. */
 export async function refreshPeople(queryClient: QueryClient) {
   await Promise.all([

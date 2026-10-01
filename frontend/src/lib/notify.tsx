@@ -3,7 +3,7 @@ import { ToastCard } from '@/components/ui/toast'
 
 const DEFAULT_DURATION = 6000
 
-type Notice = {
+export type Notice = {
   title: string
   description?: string
   /** One action, e.g. Undo. Clicking it also closes the toast. */

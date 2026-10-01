@@ -22,6 +22,19 @@ export const spaceQuery = (spaceId: string) =>
 
 const path = (spaceId: string) => ({ params: { path: { space_id: spaceId } } })
 
+/** People in the space that you took out of your book, to add back. Under ['people'], so
+ * taking someone out or adding them back refreshes it. */
+export const hiddenPeopleQuery = (spaceId: string) =>
+  queryOptions({
+    queryKey: ['people', 'hidden', spaceId],
+    queryFn: async ({ signal }) => {
+      const page = await unwrap(
+        api.GET('/api/spaces/{space_id}/hidden-people', { ...path(spaceId), signal }),
+      )
+      return page.items
+    },
+  })
+
 export function createSpace(input: SpaceInput) {
   return unwrap(api.POST('/api/spaces', { body: input }))
 }

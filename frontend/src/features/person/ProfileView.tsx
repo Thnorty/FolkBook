@@ -63,7 +63,11 @@ export function ProfileView({ personId, compact = false, flyFrom, onGone }: Prof
           person={data}
           pageTurn={!compact}
           flyFrom={flyFrom}
-          menu={data.can_delete && <PersonMenu person={data} page={page} onGone={onGone} />}
+          menu={
+            (data.can_delete || data.can_hide) && (
+              <PersonMenu person={data} page={page} onGone={onGone} />
+            )
+          }
         />
         {!data.is_me && (
           <PageFade afterTurn={!compact}>
