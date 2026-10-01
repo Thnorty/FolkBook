@@ -162,6 +162,8 @@ def _apply_basic(person: Person, data: dict[str, Any]) -> None:
     for field in BASIC_FIELDS:
         if field in data:
             setattr(person, field, data[field])
+    if "pronouns" in data:
+        person.pronouns = data["pronouns"] or ""
     if "birthday" in data:
         birthday = data["birthday"] or {}
         person.birth_day = birthday.get("day")

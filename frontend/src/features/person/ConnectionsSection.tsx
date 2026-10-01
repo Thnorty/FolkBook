@@ -63,7 +63,7 @@ function familyRow(relation: FamilyRelation, link?: Relationship): Row {
     group: 'family',
     personId: relation.person.id,
     name: relation.person.name,
-    relation: relationLabel(relation.relation),
+    relation: relationLabel(relation.relation, relation.pronouns),
     derived: relation.derived,
     former: relation.former,
     link: link?.is_mine ? link : undefined,

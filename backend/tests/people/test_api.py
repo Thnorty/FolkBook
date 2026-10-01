@@ -294,3 +294,48 @@ def test_delete_a_person(api, world, who, target, status):
 
 def test_your_me_cannot_be_deleted(api, world):
     assert api.login(world.ela).delete(f"/people/{world.ela.me.pk}").status_code == 403
+
+
+# ---------------------------------------------------------------- pronouns
+
+
+def test_pronouns_are_optional_and_can_be_cleared(api, world):
+    client = api.login(world.ela)
+    created = client.post("/people", {"name": "Selin", "pronouns": "she"}).json()
+
+    cleared = client.patch(f"/people/{created['id']}", {"pronouns": None}).json()
+
+    assert created["pronouns"] == "she"
+    assert cleared["pronouns"] is None
+    assert client.post("/people", {"name": "Anna"}).json()["pronouns"] is None
+
+
+def test_pronouns_are_basic_profile_that_editors_can_fix(api, world):
+    response = api.login(world.deniz).patch(f"/people/{world.oskar.pk}", {"pronouns": "he"})
+
+    assert response.status_code == 200
+    assert api.login(world.kaan).get(f"/people/{world.oskar.pk}").json()["pronouns"] == "he"
+
+
+def test_family_says_each_relatives_pronouns(api, world):
+    client = api.login(world.ela)
+    client.patch(f"/people/{world.oskar.pk}", {"pronouns": "he"})
+    client.post(
+        "/relationships",
+        {
+            "person_a_id": str(world.oskar.pk),
+            "person_b_id": str(world.emma.pk),
+            "type": "parent",
+            "parent_type": "biological",
+        },
+    )
+
+    [father] = client.get(f"/people/{world.emma.pk}/family").json()
+
+    assert (father["relation"], father["pronouns"]) == ("parent", "he")
+
+
+def test_unknown_pronouns_are_refused(api, world):
+    response = api.login(world.ela).post("/people", {"name": "X", "pronouns": "it"})
+
+    assert response.status_code == 422

@@ -1346,6 +1346,7 @@ export interface components {
             needs_details: boolean;
             /** Last Talked On */
             last_talked_on: string | null;
+            pronouns: components["schemas"]["Pronouns"] | null;
             /**
              * Added At
              * Format: date-time
@@ -1361,6 +1362,11 @@ export interface components {
             /** Caption */
             caption: string;
         };
+        /**
+         * Pronouns
+         * @enum {string}
+         */
+        Pronouns: "she" | "he" | "they";
         /**
          * ContactKind
          * @enum {string}
@@ -1410,6 +1416,7 @@ export interface components {
             needs_details: boolean;
             /** Last Talked On */
             last_talked_on: string | null;
+            pronouns: components["schemas"]["Pronouns"] | null;
             /**
              * Added At
              * Format: date-time
@@ -1470,6 +1477,7 @@ export interface components {
              * @default
              */
             photo_caption?: string;
+            pronouns?: components["schemas"]["Pronouns"] | null;
         };
         /**
          * PersonPatch
@@ -1491,10 +1499,12 @@ export interface components {
             space_ids?: string[] | null;
             /** Photo Caption */
             photo_caption?: string | null;
+            pronouns?: components["schemas"]["Pronouns"] | null;
         };
         /** FamilyRelationOut */
         FamilyRelationOut: {
             person: components["schemas"]["PersonRef"];
+            pronouns: components["schemas"]["Pronouns"] | null;
             /** Relation */
             relation: string;
             /** Derived */

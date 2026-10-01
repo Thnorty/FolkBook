@@ -4,7 +4,7 @@ from uuid import UUID
 
 from ninja import Field, Schema
 
-from people.models import ContactMethod
+from people.models import ContactMethod, Pronouns
 from spaces.models import Space
 
 
@@ -57,6 +57,12 @@ class PersonOut(Schema):
     photo: PhotoOut | None
     needs_details: bool  # nobody wrote down how you know them yet
     last_talked_on: datetime.date | None  # latest entry on your own timeline with them
+    pronouns: Pronouns | None  # None: not set
+
+    @staticmethod
+    def resolve_pronouns(obj):
+        return obj.pronouns or None
+
     added_at: datetime.datetime  # when they came into their owner's book
 
     @staticmethod
@@ -119,6 +125,7 @@ class PersonIn(Schema):
     contact_methods: list[ContactMethodIn] = []
     space_ids: list[UUID] = []
     photo_caption: str = Field("", max_length=40)
+    pronouns: Pronouns | None = None
 
 
 class PersonPatch(Schema):
@@ -132,6 +139,7 @@ class PersonPatch(Schema):
     contact_methods: list[ContactMethodIn] | None = None
     space_ids: list[UUID] | None = None  # the spaces you can see; others are left alone
     photo_caption: str | None = Field(None, max_length=40)
+    pronouns: Pronouns | None = None  # send null to clear
 
 
 # ---------------------------------------------------------------- private data

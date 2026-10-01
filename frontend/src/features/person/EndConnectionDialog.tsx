@@ -105,7 +105,7 @@ export function EndConnectionDialog({
                   <span className="font-serif text-lg">{relation.person.name}</span>
                   <span className="text-ink-soft">
                     {' '}
-                    — former {relationLabel(relation.relation)}
+                    — former {relationLabel(relation.relation, relation.pronouns)}
                   </span>
                 </li>
               ))}

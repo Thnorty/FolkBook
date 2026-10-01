@@ -30,6 +30,12 @@ class Tag(BaseModel):
         return self.name
 
 
+class Pronouns(models.TextChoices):
+    SHE = "she", "she / her"
+    HE = "he", "he / him"
+    THEY = "they", "they / them"
+
+
 def photo_path(person: "Person", filename: str) -> str:
     return f"photos/{person.pk}/{filename}"
 
@@ -68,6 +74,9 @@ class Person(BaseModel):
     photo = models.FileField(upload_to=photo_path, blank=True)
     photo_thumbnail = models.FileField(upload_to=photo_path, blank=True)
     photo_caption = models.CharField(max_length=40, blank=True)
+    # Optional, only so relation names can say "sister" or "father-in-law"; the family
+    # itself is worked out without it.
+    pronouns = models.CharField(max_length=4, choices=Pronouns.choices, blank=True)
     # Deleting first hides someone for a short while, so it can be undone; then a
     # job deletes them for good (people.services.purge_deleted_people).
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)

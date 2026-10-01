@@ -33,6 +33,7 @@ const family = (person: string, name: string, relation: string, extra = {}) => (
   former: false,
   parent_type: null,
   direct_link_id: null,
+  pronouns: null,
   ...extra,
 })
 
@@ -83,6 +84,7 @@ function server(overrides: Overrides = {}) {
     'GET /api/people/emma/family': () =>
       json([
         family('kerem', 'Kerem Yılmaz', 'partner'),
+        family('ayse', 'Ayşe Yılmaz', 'parent', { pronouns: 'she' }),
         family('tom', 'Tom Bergqvist', 'cousin', { derived: true }),
         family('nazli', 'Nazlı Yılmaz', 'parent_in_law', { derived: true, former: true }),
       ]),
@@ -218,7 +220,10 @@ describe('profile page', () => {
     renderApp('/people/emma')
     const connections = await section('Connections')
 
-    expect(await within(connections).findByText('4 current · 3 former')).toBeInTheDocument()
+    expect(await within(connections).findByText('5 current · 3 former')).toBeInTheDocument()
+    expect(
+      within(connections).getByRole('link', { name: /Ayşe Yılmaz\s*mother/ }),
+    ).toBeInTheDocument()
     expect(
       within(connections).getByRole('link', { name: /Tom Bergqvist\s*cousin\s*derived/ }),
     ).toHaveAttribute('href', '/people/tom')
@@ -368,5 +373,14 @@ describe('labels', () => {
     expect(intervalLabel(60)).toBe('Every 2 months')
     expect(intervalLabel(365)).toBe('Every year')
     expect(intervalLabel(10)).toBe('Every 10 days')
+  })
+
+  it('says "sister" or "father-in-law" when pronouns are known', () => {
+    expect(relationLabel('sibling', 'she')).toBe('sister')
+    expect(relationLabel('parent_in_law', 'he')).toBe('father-in-law')
+    expect(relationLabel('step_child', 'she')).toBe('stepdaughter')
+    expect(relationLabel('sibling', 'they')).toBe('sibling')
+    expect(relationLabel('partner', 'she')).toBe('partner')
+    expect(relationLabel('cousin', 'he')).toBe('cousin')
   })
 })

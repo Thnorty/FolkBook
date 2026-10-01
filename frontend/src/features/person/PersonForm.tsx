@@ -11,6 +11,7 @@ import { spacesQuery } from '@/features/spaces/queries'
 import { cn } from '@/lib/utils'
 import { BirthdayFields, ContactFields, TagInput, type ContactValue } from './PersonFormFields'
 import { birthdayInput, type BirthdayValue } from './birthday'
+import { PRONOUNS, type Pronouns } from './labels'
 import { cropToBlob } from './photo'
 import { PhotoCropper } from './PhotoCropper'
 import type { PersonDetail, PersonInput } from './queries'
@@ -59,6 +60,7 @@ export function PersonForm({
   const [name, setName] = useState(person?.name ?? initialName ?? '')
   const [howWeMet, setHowWeMet] = useState(person?.how_we_met ?? '')
   const [work, setWork] = useState(person?.work ?? '')
+  const [pronouns, setPronouns] = useState<Pronouns | ''>(person?.pronouns ?? '')
   const [spaceIds, setSpaceIds] = useState(person?.spaces.map((space) => space.id) ?? [])
   const [birthday, setBirthday] = useState(birthdayOf(person))
   const [contacts, setContacts] = useState<ContactValue[]>(
@@ -101,6 +103,7 @@ export function PersonForm({
         how_we_met: howWeMet.trim(),
         work: work.trim(),
         birthday: birthdayInput(birthday),
+        pronouns: pronouns || null,
         // Tags and contact details belong to the owner: not sent at all otherwise.
         ...(ownsDetails && {
           tags,
@@ -272,7 +275,7 @@ export function PersonForm({
         >
           <span className="font-medium">More details</span>
           <span className="type-meta text-ink-faint">
-            work · birthday{ownsDetails && ' · contact · tags'}
+            work · birthday · pronouns{ownsDetails && ' · contact · tags'}
           </span>
           <ChevronDown
             aria-hidden
@@ -292,6 +295,25 @@ export function PersonForm({
               />
             </div>
             <BirthdayFields value={birthday} onChange={setBirthday} />
+            <div>
+              <Label htmlFor="person-pronouns">Pronouns</Label>
+              <select
+                id="person-pronouns"
+                value={pronouns}
+                onChange={(event) => setPronouns(event.target.value as Pronouns | '')}
+                className="h-11 w-full rounded-card border border-line-input bg-card px-3 text-input outline-none focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-focus-glow md:h-10"
+              >
+                <option value="">Not set</option>
+                {(Object.keys(PRONOUNS) as Pronouns[]).map((option) => (
+                  <option key={option} value={option}>
+                    {PRONOUNS[option]}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1.5 type-small text-ink-faint">
+                Optional. Lets FolkBook say “sister” instead of “sibling”.
+              </p>
+            </div>
             {ownsDetails && (
               <>
                 <ContactFields value={contacts} onChange={setContacts} />
