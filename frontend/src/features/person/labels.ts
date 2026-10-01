@@ -1,5 +1,5 @@
 import type { components } from '@/api/schema'
-import { formatDaysAgo } from '@/lib/dates'
+import { formatRelativeDay } from '@/lib/dates'
 
 /* Words shown for codes the API sends (relation types, timeline kinds). One place, so
    every screen says the same thing. Gendered names ("sister") come with #54. */
@@ -65,7 +65,7 @@ export function loggedSummary(
     DID[kind] && !label
       ? `${DID[kind]} ${firstName}`
       : `${label || INTERACTION_KINDS[kind]} with ${firstName}`
-  return `${what} ${formatDaysAgo(occurred_on, today)}`
+  return `${what} ${formatRelativeDay(occurred_on, today)}`
 }
 
 /** "1 memory aid", "2 timeline entries". */

@@ -117,6 +117,22 @@ export const keepInTouchQuery = (personId: string) =>
       ),
   })
 
+export type KeepInTouchSetting = components['schemas']['KeepInTouchSchema']
+
+/** Change how often to keep in touch, snooze or stop. Today's nudges follow. */
+export async function saveKeepInTouch(
+  queryClient: QueryClient,
+  personId: string,
+  setting: KeepInTouchSetting,
+) {
+  const saved = await unwrap(
+    api.PUT('/api/keep-in-touch/{person_id}', { ...path(personId), body: setting }),
+  )
+  queryClient.setQueryData(keepInTouchQuery(personId).queryKey, saved)
+  await queryClient.invalidateQueries({ queryKey: ['people', 'due'] })
+  return saved
+}
+
 export async function saveNote(queryClient: QueryClient, personId: string, body: string) {
   const note = await unwrap(
     api.PUT('/api/people/{person_id}/note', { ...path(personId), body: { body } }),

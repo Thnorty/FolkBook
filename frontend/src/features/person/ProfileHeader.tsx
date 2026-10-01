@@ -2,7 +2,7 @@ import { Mail, Phone, Pencil } from 'lucide-react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { SpaceChip } from '@/components/notebook/spaces'
 import { Button } from '@/components/ui/button'
-import { formatBirthday, formatDaysAgo } from '@/lib/dates'
+import { formatBirthday, formatRelativeDay } from '@/lib/dates'
 import type { ReactNode } from 'react'
 import { FlyFrom, type FlyOrigin } from '@/motion/FlyFrom'
 import { Shared } from '@/motion/PageTurn'
@@ -70,7 +70,7 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
         )}
         {person.last_talked_on && (
           <p className="type-meta text-ink-faint">
-            Last talked {formatDaysAgo(person.last_talked_on)}
+            Last talked {formatRelativeDay(person.last_talked_on)}
           </p>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatBirthday, formatDay, formatDaysAgo, isoDay } from './dates'
+import { formatBirthday, formatDay, formatRelativeDay, isoDay } from './dates'
 
 describe('formatDay', () => {
   it('shows the calendar day from the API, whatever the time zone', () => {
@@ -11,9 +11,9 @@ describe('formatDay', () => {
   })
 })
 
-describe('formatDaysAgo', () => {
+describe('formatRelativeDay', () => {
   const today = new Date(2026, 8, 23) // 23 Sep 2026, local time
-  const english = (iso: string) => formatDaysAgo(iso, today)
+  const english = (iso: string) => formatRelativeDay(iso, today)
 
   it.each([
     ['2026-09-23', /today/],
@@ -26,6 +26,19 @@ describe('formatDaysAgo', () => {
     ['2023-01-01', /3 years ago/],
   ])('%s → %s', (iso, expected) => {
     expect(english(iso)).toMatch(expected)
+  })
+})
+
+describe('formatRelativeDay, ahead', () => {
+  const today = new Date(2026, 8, 23)
+
+  it.each([
+    ['2026-09-23', /today/],
+    ['2026-09-24', /tomorrow/],
+    ['2026-10-14', /in 3 weeks/],
+    ['2026-12-01', /in 2 months/],
+  ])('%s → %s', (iso, expected) => {
+    expect(formatRelativeDay(iso, today)).toMatch(expected)
   })
 })
 

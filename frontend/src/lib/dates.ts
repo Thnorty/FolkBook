@@ -14,15 +14,23 @@ export function formatDay(isoDate: string): string {
 const DAY = 24 * 60 * 60 * 1000
 const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
 
-/** How long ago a calendar day was, e.g. "yesterday", "3 weeks ago", "last year". */
-export function formatDaysAgo(isoDate: string, today: Date = new Date()): string {
-  const then = Date.UTC(...ymd(isoDate))
+/** A calendar day relative to today: "yesterday", "3 weeks ago", "in 2 months", "next year". */
+export function formatRelativeDay(isoDate: string, today: Date = new Date()): string {
+  return relativeDays(daysFrom(today, isoDate))
+}
+
+function daysFrom(today: Date, isoDate: string): number {
   const now = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
-  const days = Math.round((now - then) / DAY)
-  if (days < 7) return relative.format(-days, 'day')
-  if (days < 30) return relative.format(-Math.floor(days / 7), 'week')
-  if (days < 365) return relative.format(-Math.floor(days / 30), 'month')
-  return relative.format(-Math.floor(days / 365), 'year')
+  return Math.round((Date.UTC(...ymd(isoDate)) - now) / DAY)
+}
+
+function relativeDays(days: number): string {
+  const sign = Math.sign(days)
+  const size = Math.abs(days)
+  if (size < 7) return relative.format(days, 'day')
+  if (size < 30) return relative.format(sign * Math.floor(size / 7), 'week')
+  if (size < 365) return relative.format(sign * Math.floor(size / 30), 'month')
+  return relative.format(sign * Math.floor(size / 365), 'year')
 }
 
 /** The calendar day `daysBack` days before `today`, where the user is, as the API writes it. */
