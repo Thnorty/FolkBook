@@ -14,6 +14,7 @@ from people.api import router as people_router
 from relationships.api import router as relationships_router
 from reminders.api import router as reminders_router
 from spaces.api import router as spaces_router
+from today.api import router as today_router
 
 # Every endpoint needs a logged-in user unless it says `auth=None`.
 api = NinjaAPI(title="FolkBook API", version="0.1.0", auth=django_auth)
@@ -28,6 +29,7 @@ api.add_router("/graph", graph_router)
 api.add_router("/memory-aids", memory_aids_router)
 api.add_router("/interactions", interactions_router)
 api.add_router("/keep-in-touch", reminders_router)
+api.add_router("/today", today_router)
 
 
 @api.exception_handler(PermissionDenied)

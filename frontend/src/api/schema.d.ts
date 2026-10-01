@@ -301,6 +301,7 @@ export interface paths {
         /**
          * List People
          * @description Everyone the user can see, by name. `needs_details`: no "how we met" yet.
+         *     `recent`: people added to your own book in the last 30 days, newest first.
          *
          *     `search` matches names, how you met, work, tags, spaces and your own notes and
          *     memory aids, ignoring case and accents.
@@ -851,6 +852,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/today/birthdays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Birthdays
+         * @description Birthdays of people you can see, from today to `days` ahead. Not your own.
+         */
+        get: operations["today_api_list_birthdays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/today/remember": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Remember
+         * @description One of your memory aids at random; `skip` the one just shown. 204 if you have none.
+         */
+        get: operations["today_api_remember"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1099,6 +1140,11 @@ export interface components {
             needs_details: boolean;
             /** Last Talked On */
             last_talked_on: string | null;
+            /**
+             * Added At
+             * Format: date-time
+             */
+            added_at: string;
         };
         /** PhotoOut */
         PhotoOut: {
@@ -1158,6 +1204,11 @@ export interface components {
             needs_details: boolean;
             /** Last Talked On */
             last_talked_on: string | null;
+            /**
+             * Added At
+             * Format: date-time
+             */
+            added_at: string;
             /** Contact Methods */
             contact_methods: components["schemas"]["ContactMethodOut"][];
             /** Can Edit */
@@ -1694,6 +1745,35 @@ export interface components {
              */
             stopped?: boolean;
         };
+        /** BirthdayParams */
+        BirthdayParams: {
+            /** Today */
+            today?: string | null;
+            /**
+             * Days
+             * @default 7
+             */
+            days?: number;
+        };
+        /** BirthdayOut */
+        BirthdayOut: {
+            person: components["schemas"]["PersonOut"];
+            /**
+             * On
+             * Format: date
+             */
+            on: string;
+            /** Turns */
+            turns: number | null;
+        };
+        /**
+         * RememberOut
+         * @description One of your memory aids, picked at random: "Remember? Emma's kid is Arda".
+         */
+        RememberOut: {
+            aid: components["schemas"]["MemoryAidOut"];
+            person: components["schemas"]["PersonRef"];
+        };
     };
     responses: never;
     parameters: never;
@@ -2120,6 +2200,7 @@ export interface operations {
                 space?: string | null;
                 needs_details?: boolean;
                 search?: string;
+                recent?: boolean;
                 page?: number;
                 page_size?: number | null;
             };
@@ -3183,6 +3264,58 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["KeepInTouchOut"];
                 };
+            };
+        };
+    };
+    today_api_list_birthdays: {
+        parameters: {
+            query?: {
+                today?: string | null;
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BirthdayOut"][];
+                };
+            };
+        };
+    };
+    today_api_remember: {
+        parameters: {
+            query?: {
+                skip?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RememberOut"];
+                };
+            };
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

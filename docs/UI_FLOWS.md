@@ -140,12 +140,13 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 - Logging an interaction resets that person's keep-in-touch timer
 
 ### 3.12 Today (home screen)
-Sections, each hidden when empty:
-1. **Birthdays & occasions** (today / this week)
-2. **Keep in touch:** nudge cards (only if enabled): "You haven't talked to Deniz in 4 months" → *We talked* · *Snooze* · *Stop reminding me*
-3. **Shared with you:** new shared spaces / people
-4. **Recently added / continue enriching** (imported people without details)
-5. **Random memory refresh** (optional): "Remember? Emma's kid is Arda"
+Sections, each hidden when empty; with nothing at all, an empty state (Add someone · Quick capture). Dates come from the device, so "today" follows the user's time zone.
+1. **Birthdays** (today and the next 7 days): "Turns 34 today" → *Wish* logs "Birthday wishes" in one tap (Undo)
+2. **Keep in touch:** nudge cards (see DECISIONS for when someone is due), with a pinned memory aid as a hint → *We talked* (logs "Talked" today) · *Snooze* (a week) · *Stop*; each with Undo
+3. **Remember?** a random memory aid on a sticky note → *Got it* · *Show another*
+4. **Shared with you:** spaces others shared with you → *Open space* · *Dismiss* (remembered on this device)
+5. **Fill in the blanks:** people without "how you know them" → *Start with Anna →* · *See all*
+6. **Recently added:** people added to your book in the last 30 days
 
 ### 3.13 Search
 - Searches names, notes, memory aids, spaces, tags (only what you can see)
