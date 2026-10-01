@@ -24,7 +24,7 @@ export function EmptyBook() {
         Start with three people you&apos;d hate to forget something about.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2.5">
-        <Button onClick={openNew}>Add someone</Button>
+        <Button onClick={() => openNew()}>Add someone</Button>
         <Button asChild variant="secondary">
           <Link to="/capture">Quick capture</Link>
         </Button>

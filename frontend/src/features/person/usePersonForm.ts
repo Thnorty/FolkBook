@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react'
 
 type PersonFormControls = {
-  /** Open the form to add someone. */
-  openNew: () => void
+  /** Open the form to add someone, with their name filled in if given (e.g. from search). */
+  openNew: (options?: { name?: string }) => void
   /** Open the form to edit this person. */
   openEdit: (personId: string) => void
 }

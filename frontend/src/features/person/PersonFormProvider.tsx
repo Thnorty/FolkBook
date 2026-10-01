@@ -12,10 +12,10 @@ const FORM_ID = 'person-form'
 
 /** Makes the add / edit person form available anywhere below it (usePersonForm). */
 export function PersonFormProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState<{ personId?: string } | null>(null)
+  const [open, setOpen] = useState<{ personId?: string; name?: string } | null>(null)
   const controls = useMemo(
     () => ({
-      openNew: () => setOpen({}),
+      openNew: (options?: { name?: string }) => setOpen({ name: options?.name }),
       openEdit: (personId: string) => setOpen({ personId }),
     }),
     [],
@@ -24,12 +24,26 @@ export function PersonFormProvider({ children }: { children: ReactNode }) {
   return (
     <PersonFormContext.Provider value={controls}>
       {children}
-      {open && <PersonFormDialog personId={open.personId} onClose={() => setOpen(null)} />}
+      {open && (
+        <PersonFormDialog
+          personId={open.personId}
+          initialName={open.name}
+          onClose={() => setOpen(null)}
+        />
+      )}
     </PersonFormContext.Provider>
   )
 }
 
-function PersonFormDialog({ personId, onClose }: { personId?: string; onClose: () => void }) {
+function PersonFormDialog({
+  personId,
+  initialName,
+  onClose,
+}: {
+  personId?: string
+  initialName?: string
+  onClose: () => void
+}) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const person = useQuery({ ...personQuery(personId ?? ''), enabled: Boolean(personId) })
@@ -67,6 +81,7 @@ function PersonFormDialog({ personId, onClose }: { personId?: string; onClose: (
         <PersonForm
           formId={FORM_ID}
           person={person.data}
+          initialName={initialName}
           saving={save.isPending}
           error={save.error?.message}
           onSubmit={(result) => save.mutate(result)}

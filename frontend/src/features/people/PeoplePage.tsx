@@ -83,7 +83,7 @@ export function PeoplePage() {
                   <LayoutGrid aria-hidden />
                 </Button>
               </div>
-              <Button variant="secondary" onClick={openNew}>
+              <Button variant="secondary" onClick={() => openNew()}>
                 <UserPlus aria-hidden />
                 Add person
                 <Kbd shortcut={SHORTCUTS.addPerson} className="hidden text-ink-faint md:inline" />

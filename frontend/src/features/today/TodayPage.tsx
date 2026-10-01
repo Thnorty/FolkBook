@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { PageHeader } from '@/components/PageHeader'
 import { Polaroid } from '@/components/notebook/Polaroid'
@@ -90,7 +91,18 @@ export function TodayPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
-      <PageHeader title="Today" meta={meta} />
+      <PageHeader
+        title="Today"
+        meta={meta}
+        actions={
+          // Phones have no Ctrl/⌘+K: search opens as a page.
+          <Button asChild variant="ghost" className="md:hidden" aria-label="Search">
+            <Link to="/search">
+              <Search aria-hidden />
+            </Link>
+          </Button>
+        }
+      />
       {empty ? (
         <EmptyToday />
       ) : (
@@ -416,7 +428,7 @@ function EmptyToday() {
         show up here.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-2.5">
-        <Button onClick={openNew}>Add someone</Button>
+        <Button onClick={() => openNew()}>Add someone</Button>
         <Button asChild variant="secondary">
           <Link to="/capture">Quick capture</Link>
         </Button>

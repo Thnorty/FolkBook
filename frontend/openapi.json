@@ -3037,6 +3037,46 @@
           }
         ]
       }
+    },
+    "/api/search": {
+      "get": {
+        "operationId": "search_api_search_everything",
+        "summary": "Search Everything",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Q",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "People, spaces, your memory aids and your notes matching `q`, a few of each.\n\nOnly what you can see; other people's notes and memory aids never match.",
+        "tags": [
+          "search"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -5629,6 +5669,113 @@
           "person"
         ],
         "title": "RememberOut",
+        "type": "object"
+      },
+      "SearchParams": {
+        "properties": {
+          "q": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Q",
+            "type": "string"
+          }
+        },
+        "required": [
+          "q"
+        ],
+        "title": "SearchParams",
+        "type": "object"
+      },
+      "MemoryAidHit": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "person"
+        ],
+        "title": "MemoryAidHit",
+        "type": "object"
+      },
+      "NoteHit": {
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person",
+          "snippet"
+        ],
+        "title": "NoteHit",
+        "type": "object"
+      },
+      "SearchOut": {
+        "description": "Everything matching a search, among what the user can see (screens 4x, 4y).",
+        "properties": {
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/PersonOut"
+            },
+            "title": "People",
+            "type": "array"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceOut"
+            },
+            "title": "Spaces",
+            "type": "array"
+          },
+          "memory_aids": {
+            "items": {
+              "$ref": "#/components/schemas/MemoryAidHit"
+            },
+            "title": "Memory Aids",
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "$ref": "#/components/schemas/NoteHit"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "did_you_mean": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "people",
+          "spaces",
+          "memory_aids",
+          "notes",
+          "did_you_mean"
+        ],
+        "title": "SearchOut",
         "type": "object"
       }
     },
