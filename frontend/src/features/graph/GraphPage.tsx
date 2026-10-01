@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { graphSpaces, graphSummary, NO_FILTERS, toCanvas, type Filters } from './graphModel'
 import { NetworkCanvas } from './NetworkCanvas'
 import { graphQuery, neighborhoodQuery } from './queries'
+import { useNodeFaces } from './faces'
 import { useCanvasColors } from './usePalette'
 
 /** The network: you in the middle, everyone around, clustered by space (3b–3e, 3m, 3n). */
@@ -28,9 +29,10 @@ export function GraphPage() {
   const closePreview = useCallback(() => setSelected(null), [])
 
   const shown = (focus && focused.data) || graph.data
+  const faces = useNodeFaces(graph.data?.nodes, colors)
   const drawn = useMemo(
-    () => shown && toCanvas(shown, filters, colors.palette),
-    [shown, filters, colors.palette],
+    () => shown && toCanvas(shown, filters, colors.palette, faces),
+    [shown, filters, colors.palette, faces],
   )
   const summary = graph.data && graphSummary(graph.data)
   const focusName = focus && shown?.nodes.find((node) => node.id === focus)?.name

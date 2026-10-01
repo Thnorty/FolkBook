@@ -9,6 +9,7 @@ import { Choice as ChoiceChip } from '@/components/ui/choice'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useNodeFaces } from '@/features/graph/faces'
 import { NO_FILTERS, toCanvas, type GraphData } from '@/features/graph/graphModel'
 import { NetworkCanvas } from '@/features/graph/NetworkCanvas'
 import { useCanvasColors } from '@/features/graph/usePalette'
@@ -154,6 +155,7 @@ const DEMO_GRAPH: GraphData = (() => {
     name,
     is_me: id === 'me',
     spaces,
+    photo_url: null,
   })
   const link = (id: string, source: string, target: string, type: string, former = false) => ({
     id,
@@ -190,7 +192,8 @@ const DEMO_GRAPH: GraphData = (() => {
 function GraphDemo() {
   const colors = useCanvasColors()
   const [selected, setSelected] = useState<string | null>(null)
-  const { nodes, edges } = toCanvas(DEMO_GRAPH, NO_FILTERS, colors.palette)
+  const faces = useNodeFaces(DEMO_GRAPH.nodes, colors)
+  const { nodes, edges } = toCanvas(DEMO_GRAPH, NO_FILTERS, colors.palette, faces)
   return (
     <div className="h-90 overflow-hidden rounded-card border border-line">
       <NetworkCanvas

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { MoreHorizontal, UsersRound } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
-import { useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { ApiError } from '@/api/errors'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -16,6 +16,9 @@ import { cn } from '@/lib/utils'
 import { ownership, peopleCount } from './labels'
 import { deleteSpace, hiddenPeopleQuery, refreshSpaces, spaceQuery, type Space } from './queries'
 import { useSpaceForm } from './useSpaceForm'
+
+// The graph code (WebGL) loads only when a space has people to draw.
+const SpaceGraph = lazy(() => import('@/features/graph/SpaceGraph'))
 
 /** One space: what it is, and its people (screens 4b, 4e). */
 export function SpacePage() {
@@ -93,6 +96,11 @@ export function SpacePage() {
           }
         />
         <HiddenPeople spaceId={spaceId} />
+        {data.people_count > 0 && (
+          <Suspense fallback={null}>
+            <SpaceGraph spaceId={spaceId} />
+          </Suspense>
+        )}
         <Link to="/graph" className="self-start text-md font-medium text-accent hover:underline">
           Open the graph →
         </Link>

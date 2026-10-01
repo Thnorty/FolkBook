@@ -4,7 +4,15 @@ import type { Palette } from './graphModel'
 
 const SPACES = ['sage', 'ochre', 'clay', 'plum', 'teal', 'slate'] as const
 
-export type CanvasColors = { paper: string; ink: string; accent: string; palette: Palette }
+export type CanvasColors = {
+  paper: string
+  ink: string
+  accent: string
+  /** A face's rim, like a polaroid's frame, and initials on a space color. */
+  frame: string
+  onSpace: string
+  palette: Palette
+}
 
 /**
  * The design tokens as plain colors, for the WebGL canvas (it can't read CSS). Tokens
@@ -28,6 +36,8 @@ export function useCanvasColors(): CanvasColors {
       paper: read('--paper'),
       ink: read('--ink'),
       accent: read('--accent'),
+      frame: read('--photo-frame'),
+      onSpace: read('--on-space'),
       palette: {
         me: read('--ink'),
         noSpace: read('--ink-faint'),
