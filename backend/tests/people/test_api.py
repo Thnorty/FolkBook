@@ -288,7 +288,8 @@ def test_delete_a_person(api, world, who, target, status):
     response = api.login(getattr(world, who)).delete(f"/people/{person.pk}")
 
     assert response.status_code == status
-    assert Person.objects.filter(pk=person.pk).exists() == (status != 204)
+    # Hidden at once, deleted for good later (tests/people/test_delete.py).
+    assert Person.objects.filter(pk=person.pk, deleted_at=None).exists() == (status != 204)
 
 
 def test_your_me_cannot_be_deleted(api, world):

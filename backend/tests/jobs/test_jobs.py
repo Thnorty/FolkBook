@@ -13,6 +13,7 @@ from accounts.models import Device
 from jobs import tasks
 from jobs.models import ScheduledRun
 from jobs.scheduler import PERIODIC_JOBS, Periodic, enqueue_due
+from people import tasks as people_tasks
 from tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -51,10 +52,12 @@ def test_prune_task_results_runs():
 # ---------------------------------------------------------------- scheduler
 
 
-def test_housekeeping_runs_daily():
+def test_what_runs_how_often():
     assert {(job.task, job.every) for job in PERIODIC_JOBS} == {
         (tasks.clear_expired_sessions, DAY),
         (tasks.prune_task_results, DAY),
+        # Makes deletes final once Undo runs out, so it must run about that often.
+        (people_tasks.purge_deleted_people, datetime.timedelta(minutes=1)),
     }
 
 

@@ -136,7 +136,7 @@ def visible_people(access: Access) -> QuerySet[Person]:
     own = Q(account=access.user)
     if not access.is_space_limited:
         own |= Q(owner=access.user)
-    return Person.objects.filter(own | _people_in(visible_spaces(access)))
+    return Person.objects.filter(own | _people_in(visible_spaces(access)), deleted_at__isnull=True)
 
 
 def can_see_person(access: Access, person: Person) -> bool:
@@ -174,6 +174,13 @@ def can_delete_person(access: Access, person: Person) -> bool:
         and person.account_id is None
         and can_see_person(access, person)
     )
+
+
+def restorable_people(access: Access) -> QuerySet[Person]:
+    """The user's own people that were just deleted and can still be brought back."""
+    if access.read_only or access.is_space_limited:
+        return Person.objects.none()
+    return Person.objects.filter(owner=access.user, deleted_at__isnull=False)
 
 
 # ---------------------------------------------------------------- spaces (writes)

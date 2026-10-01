@@ -1036,6 +1036,45 @@
         ]
       }
     },
+    "/api/people/{person_id}/restore": {
+      "post": {
+        "operationId": "people_api_restore_person",
+        "summary": "Restore Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Undo a delete, within a minute of it.",
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/people/{person_id}/note": {
       "get": {
         "operationId": "people_api_get_note",

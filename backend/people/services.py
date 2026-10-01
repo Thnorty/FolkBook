@@ -1,5 +1,6 @@
 """Creating and changing people. Every write checks the permission layer first."""
 
+import datetime
 import secrets
 from collections.abc import Iterable
 from typing import Any
@@ -8,6 +9,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
+from django.utils import timezone
 
 from access.policy import (
     Access,
@@ -17,12 +19,16 @@ from access.policy import (
     can_write_private,
     visible_spaces,
 )
+from core.api import Conflict
 from people import photos
 from people.models import ContactMethod, MemoryAid, Note, Person, Tag
 from spaces import services as spaces
 from spaces.models import Space
 
 BASIC_FIELDS = ("name", "how_we_met", "work", "photo_caption")
+# How long a deleted person can be brought back. The app offers Undo for 10 seconds;
+# the rest is slack for a slow connection. The purge job runs every minute.
+UNDO_WINDOW = datetime.timedelta(minutes=1)
 OWNER_ONLY_FIELDS = ("tags", "contact_methods")
 
 
@@ -69,11 +75,33 @@ def update_person(access: Access, person: Person, changes: dict[str, Any]) -> Pe
 
 
 def delete_person(access: Access, person: Person) -> None:
+    """Hide the person everywhere at once; they're deleted for good after UNDO_WINDOW."""
     if not can_delete_person(access, person):
         raise PermissionDenied("Only the owner can delete this person.")
-    files = _photo_files(person)
-    person.delete()
-    _delete_after_commit(files)
+    person.deleted_at = timezone.now()
+    person.save(update_fields=["deleted_at", "updated_at"])
+
+
+def restore_person(access: Access, person: Person) -> Person:
+    """Undo a delete, as long as it hasn't been made final yet."""
+    if person.deleted_at is None or person.deleted_at < timezone.now() - UNDO_WINDOW:
+        raise Conflict("It's too late to bring them back.")
+    person.deleted_at = None
+    person.save(update_fields=["deleted_at", "updated_at"])
+    return person
+
+
+def purge_deleted_people(now: datetime.datetime | None = None) -> int:
+    """Delete for good everyone deleted more than UNDO_WINDOW ago. Returns how many."""
+    cutoff = (now or timezone.now()) - UNDO_WINDOW
+    purged = 0
+    for person in Person.objects.filter(deleted_at__lt=cutoff):
+        with transaction.atomic():
+            files = _photo_files(person)
+            person.delete()  # notes, memory aids, timeline and links go with them
+            _delete_after_commit(files)
+        purged += 1
+    return purged
 
 
 # ---------------------------------------------------------------- photos
