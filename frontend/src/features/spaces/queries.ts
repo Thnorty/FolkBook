@@ -35,11 +35,54 @@ export const hiddenPeopleQuery = (spaceId: string) =>
     },
   })
 
+export type Member = components['schemas']['MemberOut']
+export type Role = components['schemas']['RoleIn']['role']
+
+/** Who can see a space: the owner first, then members and their roles. */
+export const membersQuery = (spaceId: string) =>
+  queryOptions({
+    queryKey: ['spaces', spaceId, 'members'],
+    queryFn: ({ signal }) =>
+      unwrap(api.GET('/api/spaces/{space_id}/members', { ...path(spaceId), signal })),
+  })
+
+/** Accounts on this server to share with (owner only; at least two letters). */
+export const shareCandidatesQuery = (spaceId: string, q: string) =>
+  queryOptions({
+    queryKey: ['spaces', spaceId, 'candidates', q],
+    queryFn: ({ signal }) =>
+      unwrap(
+        api.GET('/api/spaces/{space_id}/share-candidates', {
+          params: { path: { space_id: spaceId }, query: { q } },
+          signal,
+        }),
+      ),
+    enabled: q.length >= 2,
+  })
+
+export function shareSpace(spaceId: string, userId: string, role: Role) {
+  return unwrap(
+    api.POST('/api/spaces/{space_id}/members', {
+      ...path(spaceId),
+      body: { user_id: userId, role },
+    }),
+  )
+}
+
+export function changeRole(spaceId: string, userId: string, role: Role) {
+  return unwrap(
+    api.PATCH('/api/spaces/{space_id}/members/{user_id}', {
+      params: { path: { space_id: spaceId, user_id: userId } },
+      body: { role },
+    }),
+  )
+}
+
 export function createSpace(input: SpaceInput) {
   return unwrap(api.POST('/api/spaces', { body: input }))
 }
 
-export function updateSpace(spaceId: string, changes: Partial<SpaceInput>) {
+export function updateSpace(spaceId: string, changes: components['schemas']['SpacePatch']) {
   return unwrap(api.PATCH('/api/spaces/{space_id}', { ...path(spaceId), body: changes }))
 }
 
