@@ -6,6 +6,8 @@
 
 /** The default ease: quick start, soft landing. Also --ease-notebook in index.css. */
 export const EASE = [0.2, 0.8, 0.2, 1] as const
+/** For things leaving for good, like a page torn out: slow start, gone fast. */
+export const EASE_IN = [0.4, 0, 1, 1] as const
 
 export const LIMITS = { ui: 0.45, decorative: 0.7 } as const
 
@@ -14,6 +16,8 @@ export const DURATION = {
   pageTurn: 0.36,
   /** A page's content fading in. */
   pageFade: 0.16,
+  /** A deleted person's page tearing out of the book. */
+  tear: 0.38,
   /** Ink underline drawn under something just saved. Decorative. */
   ink: 0.7,
   /** With reduced motion, every effect becomes a plain fade this long. */

@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from jobs import tasks
 from jobs.models import ScheduledRun
+from people import tasks as people_tasks
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,7 @@ class Periodic:
 PERIODIC_JOBS = [
     Periodic(tasks.clear_expired_sessions, every=datetime.timedelta(days=1)),
     Periodic(tasks.prune_task_results, every=datetime.timedelta(days=1)),
+    Periodic(people_tasks.purge_deleted_people, every=datetime.timedelta(minutes=1)),
 ]
 
 

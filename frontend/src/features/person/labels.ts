@@ -68,6 +68,11 @@ export function loggedSummary(
   return `${what} ${formatDaysAgo(occurred_on, today)}`
 }
 
+/** "1 memory aid", "2 timeline entries". */
+export function countOf(count: number, one: string, many = `${one}s`): string {
+  return `${count} ${count === 1 ? one : many}`
+}
+
 /** How often to keep in touch: "Every week", "Every 2 months". */
 export function intervalLabel(days: number): string {
   if (days % 365 === 0) return days === 365 ? 'Every year' : `Every ${days / 365} years`

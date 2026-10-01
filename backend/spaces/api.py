@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from django.db.models import Count, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from ninja import Router, Status
 from ninja.pagination import PageNumberPagination, paginate
@@ -21,7 +21,7 @@ def spaces_for(access: Access) -> QuerySet[Space]:
         visible_spaces_with_role(access)
         .select_related("owner__me")
         .annotate(
-            people_count=Count("people", distinct=True),
+            people_count=Count("people", filter=Q(people__deleted_at__isnull=True), distinct=True),
             member_count=Count("memberships", distinct=True),
         )
         .order_by(by_name(), "pk")

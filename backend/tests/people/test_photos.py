@@ -3,9 +3,10 @@ from io import BytesIO
 import pytest
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 from PIL import Image
 
-from people import photos
+from people import photos, services
 from people.models import Person
 from tests.factories import PersonFactory
 
@@ -124,8 +125,11 @@ class TestUploadAndServe:
             upload(client, world.ela, person, photo_file())
         name = Person.objects.get(pk=person.pk).photo.name
 
+        client.delete(f"/api/people/{person.pk}")
+        assert default_storage.exists(name)  # Undo still needs it
+
         with django_capture_on_commit_callbacks(execute=True):
-            client.delete(f"/api/people/{person.pk}")
+            services.purge_deleted_people(now=timezone.now() + services.UNDO_WINDOW * 2)
 
         assert not default_storage.exists(name)
 

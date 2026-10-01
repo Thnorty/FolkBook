@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useRef } from 'react'
 import { ApiError } from '@/api/errors'
 import { cn } from '@/lib/utils'
 import type { FlyOrigin } from '@/motion/FlyFrom'
@@ -8,6 +9,7 @@ import { ConnectionsSection } from './ConnectionsSection'
 import { KeepInTouch } from './KeepInTouch'
 import { NotesSection } from './NotesSection'
 import { ProfileHeader } from './ProfileHeader'
+import { PersonMenu } from './PersonMenu'
 import { personQuery } from './queries'
 import { RememberSection } from './RememberSection'
 import { TimelineSection } from './TimelineSection'
@@ -18,11 +20,14 @@ type ProfileViewProps = {
   compact?: boolean
   /** In the peek panel: where the clicked card's photo and name were. */
   flyFrom?: FlyOrigin | null
+  /** Leave once the person is torn out of the book. */
+  onGone: () => void
 }
 
 /** Everything about one person: the profile page and the desktop peek panel. */
-export function ProfileView({ personId, compact = false, flyFrom }: ProfileViewProps) {
+export function ProfileView({ personId, compact = false, flyFrom, onGone }: ProfileViewProps) {
   const person = useQuery(personQuery(personId))
+  const page = useRef<HTMLDivElement>(null)
   usePageTitle(person.data?.name ?? 'Person')
 
   if (person.isPending) {
@@ -47,13 +52,19 @@ export function ProfileView({ personId, compact = false, flyFrom }: ProfileViewP
 
   return (
     <div
+      ref={page}
       className={cn(
         'flex flex-col gap-8',
         !compact && 'lg:grid lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:items-start lg:gap-12',
       )}
     >
       <div className={cn('flex flex-col gap-8', !compact && 'lg:sticky lg:top-6')}>
-        <ProfileHeader person={data} pageTurn={!compact} flyFrom={flyFrom} />
+        <ProfileHeader
+          person={data}
+          pageTurn={!compact}
+          flyFrom={flyFrom}
+          menu={data.can_delete && <PersonMenu person={data} page={page} onGone={onGone} />}
+        />
         {!data.is_me && (
           <PageFade afterTurn={!compact}>
             <KeepInTouch personId={personId} />

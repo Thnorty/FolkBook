@@ -68,6 +68,9 @@ class Person(BaseModel):
     photo = models.FileField(upload_to=photo_path, blank=True)
     photo_thumbnail = models.FileField(upload_to=photo_path, blank=True)
     photo_caption = models.CharField(max_length=40, blank=True)
+    # Deleting first hides someone for a short while, so it can be undone; then a
+    # job deletes them for good (people.services.purge_deleted_people).
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         verbose_name_plural = "people"

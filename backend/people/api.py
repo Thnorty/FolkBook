@@ -19,6 +19,7 @@ from access.policy import (
     Access,
     can_delete_person,
     can_edit_person,
+    restorable_people,
     visible_contact_methods,
     visible_interactions,
     visible_memory_aids,
@@ -165,6 +166,15 @@ def delete_person(request, person_id: UUID):
     access = access_for(request)
     services.delete_person(access, get_object_or_404(visible_people(access), pk=person_id))
     return Status(204, None)
+
+
+@router.post("/{uuid:person_id}/restore", response=PersonDetailOut)
+def restore_person(request, person_id: UUID):
+    """Undo a delete, within a minute of it."""
+    access = access_for(request)
+    person = get_object_or_404(restorable_people(access), pk=person_id)
+    services.restore_person(access, person)
+    return detail(access, person.pk)
 
 
 # ---------------------------------------------------------------- notes (private)
