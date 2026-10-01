@@ -57,6 +57,11 @@ class PersonOut(Schema):
     photo: PhotoOut | None
     needs_details: bool  # nobody wrote down how you know them yet
     last_talked_on: datetime.date | None  # latest entry on your own timeline with them
+    added_at: datetime.datetime  # when they came into their owner's book
+
+    @staticmethod
+    def resolve_added_at(obj):
+        return obj.created_at
 
     @staticmethod
     def resolve_birthday(obj):

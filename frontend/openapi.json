@@ -655,6 +655,16 @@
           },
           {
             "in": "query",
+            "name": "recent",
+            "schema": {
+              "default": false,
+              "title": "Recent",
+              "type": "boolean"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
             "name": "page",
             "schema": {
               "default": 1,
@@ -694,7 +704,7 @@
             }
           }
         },
-        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.\n\n`search` matches names, how you met, work, tags, spaces and your own notes and\nmemory aids, ignoring case and accents.",
+        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.\n`recent`: people added to your own book in the last 30 days, newest first.\n\n`search` matches names, how you met, work, tags, spaces and your own notes and\nmemory aids, ignoring case and accents.",
         "tags": [
           "people"
         ],
@@ -2662,6 +2672,117 @@
           }
         ]
       }
+    },
+    "/api/today/birthdays": {
+      "get": {
+        "operationId": "today_api_list_birthdays",
+        "summary": "List Birthdays",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "today",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Today"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "schema": {
+              "default": 7,
+              "maximum": 60,
+              "minimum": 0,
+              "title": "Days",
+              "type": "integer"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BirthdayOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Birthdays of people you can see, from today to `days` ahead. Not your own.",
+        "tags": [
+          "today"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/today/remember": {
+      "get": {
+        "operationId": "today_api_remember",
+        "summary": "Remember",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "skip",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Skip"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RememberOut"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "description": "One of your memory aids at random; `skip` the one just shown. 204 if you have none.",
+        "tags": [
+          "today"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -3301,6 +3422,11 @@
               }
             ],
             "title": "Last Talked On"
+          },
+          "added_at": {
+            "format": "date-time",
+            "title": "Added At",
+            "type": "string"
           }
         },
         "required": [
@@ -3316,7 +3442,8 @@
           "owner",
           "photo",
           "needs_details",
-          "last_talked_on"
+          "last_talked_on",
+          "added_at"
         ],
         "title": "PersonOut",
         "type": "object"
@@ -3472,6 +3599,11 @@
             ],
             "title": "Last Talked On"
           },
+          "added_at": {
+            "format": "date-time",
+            "title": "Added At",
+            "type": "string"
+          },
           "contact_methods": {
             "items": {
               "$ref": "#/components/schemas/ContactMethodOut"
@@ -3506,6 +3638,7 @@
           "photo",
           "needs_details",
           "last_talked_on",
+          "added_at",
           "contact_methods",
           "can_edit",
           "can_delete",
@@ -4983,6 +5116,78 @@
           }
         },
         "title": "KeepInTouchSchema",
+        "type": "object"
+      },
+      "BirthdayParams": {
+        "properties": {
+          "today": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Today"
+          },
+          "days": {
+            "default": 7,
+            "maximum": 60,
+            "minimum": 0,
+            "title": "Days",
+            "type": "integer"
+          }
+        },
+        "title": "BirthdayParams",
+        "type": "object"
+      },
+      "BirthdayOut": {
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonOut"
+          },
+          "on": {
+            "format": "date",
+            "title": "On",
+            "type": "string"
+          },
+          "turns": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turns"
+          }
+        },
+        "required": [
+          "person",
+          "on",
+          "turns"
+        ],
+        "title": "BirthdayOut",
+        "type": "object"
+      },
+      "RememberOut": {
+        "description": "One of your memory aids, picked at random: \"Remember? Emma's kid is Arda\".",
+        "properties": {
+          "aid": {
+            "$ref": "#/components/schemas/MemoryAidOut"
+          },
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          }
+        },
+        "required": [
+          "aid",
+          "person"
+        ],
+        "title": "RememberOut",
         "type": "object"
       }
     },

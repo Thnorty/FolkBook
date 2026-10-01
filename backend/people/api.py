@@ -1,3 +1,4 @@
+import datetime
 from typing import Literal
 from uuid import UUID
 
@@ -12,6 +13,7 @@ from django.db.models import (
 )
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from ninja import File, Router, Status, UploadedFile
 from ninja.pagination import PageNumberPagination, paginate
 
@@ -51,6 +53,8 @@ from relationships.schemas import FamilyRelationOut
 router = Router(tags=["people"])
 memory_aids_router = Router(tags=["memory aids"])
 
+
+RECENT = datetime.timedelta(days=30)
 
 # Imported or added in a hurry: nobody wrote down how you know them. Not your own Me.
 NEEDS_DETAILS = ExpressionWrapper(Q(how_we_met="", account__isnull=True), BooleanField())
@@ -92,8 +96,15 @@ def detail(access: Access, person_id: UUID) -> Person:
 
 @router.get("", response=list[PersonOut])
 @paginate(PageNumberPagination, page_size=50)
-def list_people(request, space: UUID | None = None, needs_details: bool = False, search: str = ""):
+def list_people(
+    request,
+    space: UUID | None = None,
+    needs_details: bool = False,
+    search: str = "",
+    recent: bool = False,
+):
     """Everyone the user can see, by name. `needs_details`: no "how we met" yet.
+    `recent`: people added to your own book in the last 30 days, newest first.
 
     `search` matches names, how you met, work, tags, spaces and your own notes and
     memory aids, ignoring case and accents.
@@ -104,6 +115,9 @@ def list_people(request, space: UUID | None = None, needs_details: bool = False,
         people = people.filter(spaces__in=visible_spaces(access).filter(pk=space))
     if needs_details:
         people = people.filter(needs_details=True)
+    if recent:
+        since = timezone.now() - RECENT
+        people = people.filter(owner=access.user, created_at__gte=since).order_by("-created_at")
     return search_people(access, people, search)
 
 
