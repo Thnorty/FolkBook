@@ -24,6 +24,8 @@ export type PersonFormResult = {
 type PersonFormProps = {
   /** The person being edited; nothing when adding someone. */
   person?: PersonDetail
+  /** When adding someone: their name, already typed elsewhere (e.g. in search). */
+  initialName?: string
   onSubmit: (result: PersonFormResult) => void
   onCancel: () => void
   saving: boolean
@@ -41,12 +43,20 @@ function birthdayOf(person?: PersonDetail): BirthdayValue {
 }
 
 /** Add or edit someone (screens 2a, 2b, 2c). */
-export function PersonForm({ person, onSubmit, onCancel, saving, error, formId }: PersonFormProps) {
+export function PersonForm({
+  person,
+  initialName,
+  onSubmit,
+  onCancel,
+  saving,
+  error,
+  formId,
+}: PersonFormProps) {
   const ownsDetails = !person || person.is_mine // tags and contact details: owner only
   const spaces = (useQuery(spacesQuery).data?.items ?? []).filter(
     (space) => space.role !== 'viewer',
   )
-  const [name, setName] = useState(person?.name ?? '')
+  const [name, setName] = useState(person?.name ?? initialName ?? '')
   const [howWeMet, setHowWeMet] = useState(person?.how_we_met ?? '')
   const [work, setWork] = useState(person?.work ?? '')
   const [spaceIds, setSpaceIds] = useState(person?.spaces.map((space) => space.id) ?? [])

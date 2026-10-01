@@ -29,6 +29,7 @@ import { validatePeopleSearch } from './features/people/search'
 import { InvitePage } from './pages/InvitePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { SearchPage } from './pages/SearchPage'
 import { SetupPage } from './pages/SetupPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
@@ -137,6 +138,7 @@ const appPages = [
     component: ProfilePage,
   }),
   placeholder('graph', 'Graph', 'How everyone you know is connected.'),
+  createRoute({ getParentRoute: () => appRoute, path: 'search', component: SearchPage }),
   createRoute({ getParentRoute: () => appRoute, path: 'spaces', component: SpacesPage }),
   createRoute({ getParentRoute: () => appRoute, path: 'spaces/$spaceId', component: SpacePage }),
   placeholder(

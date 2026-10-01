@@ -180,8 +180,17 @@ describe('keyboard shortcuts', () => {
     expect(await screen.findByRole('dialog', { name: 'Add someone' })).toBeInTheDocument()
   })
 
-  it('Ctrl+K opens the palette, which jumps to what you pick', async () => {
-    loggedInServer()
+  it('Ctrl+K opens the palette, which searches and jumps to what you pick', async () => {
+    loggedInServer({
+      'GET /api/search': () =>
+        json({
+          people: [],
+          spaces: [SPACES.items[1]],
+          memory_aids: [],
+          notes: [],
+          did_you_mean: null,
+        }),
+    })
     const router = renderApp('/')
     await heading('Today')
 

@@ -149,9 +149,10 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 6. **Recently added:** people added to your book in the last 30 days
 
 ### 3.13 Search
-- Searches names, notes, memory aids, spaces, tags (only what you can see)
-- Desktop: `Ctrl/Cmd + K` palette also runs actions ("Add person", "Open graph", "Quick capture")
-- Mobile: search at the top of People; recent searches
+- One search over names, how you met, work, tags, spaces, and your own notes and memory aids (only what you can see; accents and case don't matter)
+- Results grouped: People, Spaces, Memory aids, Notes (with the words around the match), then pages and actions
+- Nothing found: "Nothing matches …", a "Did you mean" for a close name, and "Add “Tahir” as a new person" (opens the form with the name filled in)
+- Desktop: `Ctrl/Cmd + K` palette; phones: the same as a Search page (button on Today)
 
 ### 3.14 Access revoked
 - When a space is unshared or you leave it: toast + Today card:
