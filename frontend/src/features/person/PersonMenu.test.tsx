@@ -83,6 +83,8 @@ function server(overrides: Overrides = {}) {
       json({ interval_days: null, snoozed_until: null, stopped: false }),
     'DELETE /api/people/emma': write(204),
     'POST /api/people/emma/restore': write(200, EMMA),
+    'POST /api/people/emma/hide': write(204),
+    'POST /api/people/emma/unhide': write(200, EMMA),
     ...overrides,
   })
   return writes
@@ -141,11 +143,38 @@ describe('tearing someone out of the book', () => {
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Tear out' }))
 
-    expect(await screen.findByText("Couldn't tear Emma out")).toBeInTheDocument()
+    expect(await screen.findByText("Couldn't take Emma out")).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/people/emma')
   })
 
-  it("isn't offered for someone you can't delete", async () => {
+  it('takes someone shared with you out of your book, and Undo adds them back', async () => {
+    const shared = {
+      ...EMMA,
+      is_mine: false,
+      owner: ref('defne', 'Defne Aydın'),
+      can_edit: false,
+      can_delete: false,
+      can_hide: true,
+    }
+    const writes = server({ 'GET /api/people/emma': () => json(shared) })
+    const router = renderApp('/people/emma')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'More' }))
+    expect(screen.queryByRole('menuitem', { name: /Tear out/ })).not.toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Remove from my book…' }))
+    const dialog = await screen.findByRole('alertdialog', { name: "Emma isn't yours to delete" })
+    expect(within(dialog).getByText(/Defne keeps Emma/)).toBeInTheDocument()
+    expect(within(dialog).getByText('You can add Emma back from Friends')).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove from my book' }))
+
+    expect(await screen.findByText('Emma Yılmaz removed from your book')).toBeInTheDocument()
+    await waitFor(() => expect(router.state.location.pathname).toBe('/people'))
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByText('Emma is back')).toBeInTheDocument()
+    expect(writes).toEqual(['POST /api/people/emma/hide', 'POST /api/people/emma/unhide'])
+  })
+
+  it("isn't offered for someone you can't delete or take out", async () => {
     server({ 'GET /api/people/emma': () => json({ ...EMMA, can_delete: false }) })
     renderApp('/people/emma')
     await screen.findByRole('heading', { level: 1, name: 'Emma Yılmaz' })

@@ -166,3 +166,23 @@ class MemoryAid(BaseModel):
 
     def __str__(self) -> str:
         return self.text
+
+
+class HiddenPerson(BaseModel):
+    """Someone shared with the user that they took out of their book.
+
+    Hides them for that user only: the owner and everyone else still see them, and
+    the user's own notes and links about them are kept (hidden too) for if they're
+    added back.
+    """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name="+")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "person"], name="people_hidden_once_per_user"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.person} hidden by {self.user}"

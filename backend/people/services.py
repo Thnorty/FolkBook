@@ -16,12 +16,13 @@ from access.policy import (
     can_add_person_to_space,
     can_delete_person,
     can_edit_person,
+    can_hide_person,
     can_write_private,
     visible_spaces,
 )
 from core.api import Conflict
 from people import photos
-from people.models import ContactMethod, MemoryAid, Note, Person, Tag
+from people.models import ContactMethod, HiddenPerson, MemoryAid, Note, Person, Tag
 from spaces import services as spaces
 from spaces.models import Space
 
@@ -80,6 +81,20 @@ def delete_person(access: Access, person: Person) -> None:
         raise PermissionDenied("Only the owner can delete this person.")
     person.deleted_at = timezone.now()
     person.save(update_fields=["deleted_at", "updated_at"])
+
+
+def hide_person(access: Access, person: Person) -> None:
+    """Take a shared person out of the user's book; it changes nothing for anyone else."""
+    if not can_hide_person(access, person):
+        raise PermissionDenied("Only people shared with you can be removed from your book.")
+    HiddenPerson.objects.get_or_create(user=access.user, person=person)
+
+
+def unhide_person(access: Access, person: Person) -> None:
+    """Add a hidden person back, with the notes and links the user kept about them."""
+    if access.read_only:
+        raise PermissionDenied("This access can't change your book.")
+    HiddenPerson.objects.filter(user=access.user, person=person).delete()
 
 
 def restore_person(access: Access, person: Person) -> Person:

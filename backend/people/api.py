@@ -19,6 +19,8 @@ from access.policy import (
     Access,
     can_delete_person,
     can_edit_person,
+    can_hide_person,
+    hidden_people,
     restorable_people,
     visible_contact_methods,
     visible_interactions,
@@ -84,6 +86,7 @@ def detail(access: Access, person_id: UUID) -> Person:
     person.contact_methods_shown = list(visible_contact_methods(access).filter(person=person))
     person.can_edit = can_edit_person(access, person)
     person.can_delete = can_delete_person(access, person)
+    person.can_hide = can_hide_person(access, person)
     return person
 
 
@@ -166,6 +169,22 @@ def delete_person(request, person_id: UUID):
     access = access_for(request)
     services.delete_person(access, get_object_or_404(visible_people(access), pk=person_id))
     return Status(204, None)
+
+
+@router.post("/{uuid:person_id}/hide", response={204: None})
+def hide_person(request, person_id: UUID):
+    """Take someone shared with you out of your book. Nobody else is affected."""
+    access = access_for(request)
+    services.hide_person(access, get_object_or_404(visible_people(access), pk=person_id))
+    return Status(204, None)
+
+
+@router.post("/{uuid:person_id}/unhide", response=PersonDetailOut)
+def unhide_person(request, person_id: UUID):
+    """Add someone you took out back to your book."""
+    access = access_for(request)
+    services.unhide_person(access, get_object_or_404(hidden_people(access), pk=person_id))
+    return detail(access, person_id)
 
 
 @router.post("/{uuid:person_id}/restore", response=PersonDetailOut)

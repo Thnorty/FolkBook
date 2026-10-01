@@ -97,6 +97,7 @@ class PersonDetailOut(PersonOut):
     contact_methods: list[ContactMethodOut]  # empty unless the viewer may see them
     can_edit: bool
     can_delete: bool
+    can_hide: bool  # shared with you: you can take them out of your book
 
     @staticmethod
     def resolve_contact_methods(obj):

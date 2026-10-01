@@ -1036,6 +1036,77 @@
         ]
       }
     },
+    "/api/people/{person_id}/hide": {
+      "post": {
+        "operationId": "people_api_hide_person",
+        "summary": "Hide Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "description": "Take someone shared with you out of your book. Nobody else is affected.",
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/people/{person_id}/unhide": {
+      "post": {
+        "operationId": "people_api_unhide_person",
+        "summary": "Unhide Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonDetailOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Add someone you took out back to your book.",
+        "tags": [
+          "people"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/people/{person_id}/restore": {
       "post": {
         "operationId": "people_api_restore_person",
@@ -1438,6 +1509,73 @@
             "description": "No Content"
           }
         },
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}/hidden-people": {
+      "get": {
+        "operationId": "spaces_api_list_hidden_people",
+        "summary": "List Hidden People",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedPersonRef"
+                }
+              }
+            }
+          }
+        },
+        "description": "People in this space that you took out of your book, to add back.",
         "tags": [
           "spaces"
         ],
@@ -3236,6 +3374,10 @@
           "can_delete": {
             "title": "Can Delete",
             "type": "boolean"
+          },
+          "can_hide": {
+            "title": "Can Hide",
+            "type": "boolean"
           }
         },
         "required": [
@@ -3254,7 +3396,8 @@
           "last_talked_on",
           "contact_methods",
           "can_edit",
-          "can_delete"
+          "can_delete",
+          "can_hide"
         ],
         "title": "PersonDetailOut",
         "type": "object"
@@ -3735,6 +3878,27 @@
           "person_id"
         ],
         "title": "SpacePersonIn",
+        "type": "object"
+      },
+      "PagedPersonRef": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedPersonRef",
         "type": "object"
       },
       "PagedRelationshipOut": {

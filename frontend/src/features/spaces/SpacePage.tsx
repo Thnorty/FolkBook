@@ -9,11 +9,12 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { menuContentClass, menuItemClass, menuSeparatorClass } from '@/components/ui/menu'
 import { NoMatch, PeopleResults } from '@/features/people/PeopleResults'
 import { SearchBox } from '@/features/people/SearchBox'
+import { unhidePerson } from '@/features/person/queries'
 import { notify } from '@/lib/notify'
 import { usePageTitle } from '@/lib/usePageTitle'
 import { cn } from '@/lib/utils'
 import { ownership, peopleCount } from './labels'
-import { deleteSpace, refreshSpaces, spaceQuery, type Space } from './queries'
+import { deleteSpace, hiddenPeopleQuery, refreshSpaces, spaceQuery, type Space } from './queries'
 import { useSpaceForm } from './useSpaceForm'
 
 /** One space: what it is, and its people (screens 4b, 4e). */
@@ -91,11 +92,50 @@ export function SpacePage() {
             )
           }
         />
+        <HiddenPeople spaceId={spaceId} />
         <Link to="/graph" className="self-start text-md font-medium text-accent hover:underline">
           Open the graph →
         </Link>
       </div>
     </div>
+  )
+}
+
+/** People here you took out of your book (screen 2t: "add them back from the space"). */
+function HiddenPeople({ spaceId }: { spaceId: string }) {
+  const queryClient = useQueryClient()
+  const hidden = useQuery(hiddenPeopleQuery(spaceId)).data ?? []
+  const addBack = useMutation({
+    mutationFn: (personId: string) => unhidePerson(queryClient, personId),
+    onSuccess: (person) => notify({ title: `${person.name} is back in your book` }),
+    onError: (error) => notify({ title: "Couldn't add them back", description: error.message }),
+  })
+  if (hidden.length === 0) return null
+
+  return (
+    <section
+      aria-labelledby="hidden-people"
+      className="rounded-card border border-dashed border-line-strong p-3"
+    >
+      <h2 id="hidden-people" className="px-1 type-meta text-ink-faint">
+        Taken out of your book · {hidden.length}
+      </h2>
+      <ul className="mt-1 flex flex-col">
+        {hidden.map((person) => (
+          <li key={person.id} className="flex items-center gap-3 px-1 py-1">
+            <span className="font-serif text-lg text-ink-soft">{person.name}</span>
+            <Button
+              variant="ghost"
+              className="ml-auto"
+              disabled={addBack.isPending}
+              onClick={() => addBack.mutate(person.id)}
+            >
+              Add back
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

@@ -6,19 +6,21 @@ import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { menuContentClass, menuItemClass } from '@/components/ui/menu'
 import { spacesQuery, type Space } from '@/features/spaces/queries'
-import { notify } from '@/lib/notify'
+import { notify, type Notice } from '@/lib/notify'
 import { cn } from '@/lib/utils'
 import { tearOut } from '@/motion/tearOut'
 import { useReducedMotion } from '@/motion/useReducedMotion'
 import { countOf } from './labels'
 import {
   deletePerson,
+  hidePerson,
   familyLinksQuery,
   memoryAidsQuery,
   noteQuery,
   otherLinksQuery,
   refreshPeople,
   restorePerson,
+  unhidePerson,
   timelineQuery,
   type PersonDetail,
 } from './queries'
@@ -33,35 +35,40 @@ type PersonMenuProps = {
   onGone: () => void
 }
 
-/** More actions on a profile: for now, tearing the person out of the book (2r, 2s). */
+/** More actions on a profile: tear your own person out (2r, 2s), or take out a shared one (2t). */
 export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
   const queryClient = useQueryClient()
   const reduced = useReducedMotion()
-  const [confirming, setConfirming] = useState(false)
-  const gone = useWhatGoes(person, confirming)
+  const [confirming, setConfirming] = useState<'tear' | 'remove' | null>(null)
+  const gone = useWhatGoes(person, confirming === 'tear')
   const firstName = person.name.split(' ')[0]
+  const ownerName = person.owner?.name ?? 'Someone'
 
-  const tear = async () => {
-    setConfirming(false) // so the page can be seen tearing
+  /** Tear the page out while `write` runs; then leave, and offer `undo` for a while. */
+  const leave = async (
+    write: () => Promise<unknown>,
+    done: Omit<Notice, 'action'>,
+    undo: () => Promise<unknown>,
+  ) => {
+    setConfirming(null) // so the page can be seen tearing
     const tearing = page.current && tearOut(page.current, reduced)
     try {
-      await Promise.all([deletePerson(person.id), tearing?.finished])
+      await Promise.all([write(), tearing?.finished])
     } catch (error) {
       await tearing?.putBack()
-      notify({ title: `Couldn't tear ${firstName} out`, description: (error as Error).message })
+      notify({ title: `Couldn't take ${firstName} out`, description: (error as Error).message })
       return
     }
     onGone()
     queryClient.removeQueries({ queryKey: ['people', person.id] })
     void refreshPeople(queryClient)
     notify({
-      title: `${person.name} torn out`,
-      description: gone.summary,
+      ...done,
       duration: UNDO_FOR,
       action: {
         label: 'Undo',
         onClick: () =>
-          void restorePerson(queryClient, person.id).then(
+          void undo().then(
             () => notify({ title: `${firstName} is back` }),
             (error: Error) => notify({ title: "Couldn't undo that", description: error.message }),
           ),
@@ -79,31 +86,39 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content align="end" sideOffset={6} className={menuContentClass}>
-            <DropdownMenu.Item
-              className={cn(menuItemClass, 'text-danger')}
-              onSelect={() => setConfirming(true)}
-            >
-              Tear out of the book…
-            </DropdownMenu.Item>
+            {person.can_delete && (
+              <DropdownMenu.Item
+                className={cn(menuItemClass, 'text-danger')}
+                onSelect={() => setConfirming('tear')}
+              >
+                Tear out of the book…
+              </DropdownMenu.Item>
+            )}
+            {person.can_hide && (
+              <DropdownMenu.Item className={menuItemClass} onSelect={() => setConfirming('remove')}>
+                Remove from my book…
+              </DropdownMenu.Item>
+            )}
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
+
       <ConfirmDialog
-        open={confirming}
-        onOpenChange={setConfirming}
+        open={confirming === 'tear'}
+        onOpenChange={(open) => setConfirming(open ? 'tear' : null)}
         title={`Tear ${firstName} out of the book?`}
         description={`You'll have ten seconds to undo. After that, ${firstName} is deleted from your FolkBook.`}
         cancelLabel="Keep"
         confirmLabel="Tear out"
-        onConfirm={() => void tear()}
+        onConfirm={() =>
+          void leave(
+            () => deletePerson(person.id),
+            { title: `${person.name} torn out`, description: gone.summary },
+            () => restorePerson(queryClient, person.id),
+          )
+        }
       >
-        {gone.lines.length > 0 && (
-          <ul className="mt-4 flex flex-col gap-1.5 rounded-card border border-line bg-card px-4 py-3 type-small">
-            {gone.lines.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        )}
+        {gone.lines.length > 0 && <Details lines={gone.lines} />}
         {gone.shared.map((space) => (
           <p key={space.id} className="mt-3 rounded-card bg-hover px-4 py-3 type-small">
             <strong className="font-medium">
@@ -114,7 +129,45 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
           </p>
         ))}
       </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirming === 'remove'}
+        onOpenChange={(open) => setConfirming(open ? 'remove' : null)}
+        title={`${firstName} isn't yours to delete`}
+        description={`${ownerName} shared ${firstName} with you. You can take ${firstName} out of your book: ${firstName} is hidden everywhere for you, and ${ownerName.split(' ')[0]} keeps ${firstName}.`}
+        cancelLabel="Keep"
+        confirmLabel="Remove from my book"
+        onConfirm={() =>
+          void leave(
+            () => hidePerson(person.id),
+            { title: `${person.name} removed from your book` },
+            () => unhidePerson(queryClient, person.id),
+          )
+        }
+      >
+        <Details
+          lines={[
+            `Your notes, memory aids and timeline about ${firstName} are kept, out of sight`,
+            `Connections you drew to ${firstName} are hidden too`,
+            ...(person.spaces.length > 0
+              ? [
+                  `You can add ${firstName} back from ${words(person.spaces.map((space) => space.name))}`,
+                ]
+              : []),
+          ]}
+        />
+      </ConfirmDialog>
     </>
+  )
+}
+
+function Details({ lines }: { lines: string[] }) {
+  return (
+    <ul className="mt-4 flex flex-col gap-1.5 rounded-card border border-line bg-card px-4 py-3 type-small">
+      {lines.map((line) => (
+        <li key={line}>{line}</li>
+      ))}
+    </ul>
   )
 }
 

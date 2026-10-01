@@ -54,6 +54,7 @@ type Write = { method: string; path: string; body: unknown }
 function server() {
   const writes: Write[] = []
   let spaces = [CLIMBING, FAMILY, HACKATHON]
+  let hidden = ['ola'] // taken out of your book
   const byId = (id: string) => spaces.find((item) => item.id === id)
   fakeServer({
     'GET /api/auth/me': () => json(ME),
@@ -89,6 +90,15 @@ function server() {
       const search = (query.get('search') ?? '').toLowerCase()
       const found = items.filter((p) => p.name.toLowerCase().includes(search))
       return json({ items: found, count: found.length })
+    },
+    'GET /api/spaces/s1/hidden-people': () =>
+      json({ items: hidden.map((id) => ({ id, name: 'Ola Nowak' })), count: hidden.length }),
+    'GET /api/spaces/s3/hidden-people': () => json({ items: [], count: 0 }),
+    'GET /api/spaces/new/hidden-people': () => json({ items: [], count: 0 }),
+    'POST /api/people/ola/unhide': () => {
+      writes.push({ method: 'POST', path: '/api/people/ola/unhide', body: null })
+      hidden = []
+      return json({ ...person('ola', 'Ola Nowak'), contact_methods: [], can_edit: false })
     },
   })
   return writes
@@ -131,6 +141,20 @@ describe('space page', () => {
       expect(screen.queryByRole('article', { name: 'Oskar Lind' })).not.toBeInTheDocument(),
     )
     expect(await screen.findByRole('article', { name: 'Ines Duarte' })).toBeInTheDocument()
+  })
+
+  it('lists people you took out of your book, and adds them back', async () => {
+    const writes = server()
+    renderApp('/spaces/s1')
+
+    const section = await screen.findByRole('region', { name: /Taken out of your book/ })
+    await userEvent.click(within(section).getByRole('button', { name: 'Add back' }))
+
+    expect(await screen.findByText('Ola Nowak is back in your book')).toBeInTheDocument()
+    expect(writes).toEqual([{ method: 'POST', path: '/api/people/ola/unhide', body: null }])
+    await waitFor(() =>
+      expect(screen.queryByRole('region', { name: /Taken out/ })).not.toBeInTheDocument(),
+    )
   })
 
   it("has no Edit or Delete in someone else's space", async () => {

@@ -76,7 +76,7 @@ Top to bottom:
 
 Actions: edit · add relationship · log interaction · add to space · open in graph · delete.
 
-For a **shared person you don't own**: basic profile is read-only (or editable with editor role); your notes and memory aids are still yours and private. A small "Shared by Defne · Hackathon 2026" label.
+For a **shared person you don't own**: basic profile is read-only (or editable with editor role); your notes and memory aids are still yours and private. A small "Shared by Defne · Hackathon 2026" label. **⋯ → Remove from my book…** hides them just for you (Undo for 10 seconds); the space page lists them under "Taken out of your book" with **Add back**.
 
 ### 3.5 Quick capture with AI
 1. "+" → **Quick capture** → a notebook-page textarea
