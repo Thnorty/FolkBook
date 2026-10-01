@@ -104,7 +104,8 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 - **Add people:** from the space page, from a profile, or by multi-select in People
 - **Share:** Space → Share → pick users on the server → role (viewer / editor) → first-time explainer:
   *"Members will see these 12 people's basic profiles and this space's links. Your notes and memory aids stay private."*
-- **Adding someone to a shared space:** first-time confirmation ("Tom will be visible to 4 people")
+  The dialog also has the contact-details toggle (off by default) and lists members with a role picker; the space page shows "Who sees this space". Only accounts on this server
+- **Adding someone to a shared space:** first-time confirmation ("Tom will be visible to 4 people", with who they are) and "Don't ask again" for that space, remembered on the device
 - **Shared indicator:** people icon on the space tab everywhere it appears
 - **Leave / unshare:** owner removes a member or a member leaves. Referenced people become the member's own copies with their notes kept (§3.14)
 
