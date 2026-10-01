@@ -9,6 +9,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - AI only **suggests** people and links; the user edits suggestions before confirming. Users bring their own key: Google Gemini or any OpenAI-compatible endpoint (incl. local models).
 - Contact import via .vcf files only. No voice input.
 - Reminders go out **by email only** (plus Today cards in the app). Self-hosters configure their own SMTP; the paid hosted version sends email for them. Memory aids are included in emails by default, with a setting to turn that off.
+- **Keep-in-touch nudges:** someone is due once the days since your latest timeline entry about them reach their interval (their own, or your default). Logging anything resets it; a snooze waits until its date; "stop" never nudges. Someone you've never talked to counts from when you set an interval for them, or when they came into your book. The default interval is empty for new users, so nobody is nudged until you choose to be; nudges can also be turned off entirely. Today asks with the device's own date, so "due today" follows the user's time zone.
 
 ## Hosting
 - **Self-hosted**, not local-first: the app needs a connection to the user's server; no offline mode.

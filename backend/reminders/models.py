@@ -31,3 +31,30 @@ class KeepInTouch(BaseModel):
 
     def __str__(self) -> str:
         return f"Keep in touch with {self.person}"
+
+
+class ReminderSettings(BaseModel):
+    """A user's keep-in-touch settings for everyone. Without a row, the defaults apply."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reminder_settings"
+    )
+    nudges_on = models.BooleanField(default=True, help_text="Keep-in-touch nudges on Today.")
+    default_interval_days = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text="For people without their own interval. Empty: only those with one.",
+    )
+
+    class Meta:
+        verbose_name_plural = "reminder settings"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(default_interval_days__isnull=True)
+                | models.Q(default_interval_days__gte=1),
+                name="reminders_default_interval_positive",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"Reminder settings of {self.user}"
