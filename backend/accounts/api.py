@@ -17,6 +17,8 @@ from accounts.schemas import (
     ResetLinkIn,
     ResetLinkOut,
     ResetPreviewOut,
+    UserOut,
+    UserPatch,
 )
 from core.api import ErrorOut, require_csrf
 
@@ -111,3 +113,24 @@ def reset_password(request, token: str, payload: ResetIn):
     except services.ResetUnusable:
         return Status(404, UNUSABLE_RESET)
     return Status(204, None)
+
+
+# ---------------------------------------------------------------- managing users (admins)
+
+users_router = Router(tags=["users"])
+
+
+@users_router.get("", response=list[UserOut])
+@paginate(PageNumberPagination, page_size=50)
+def list_users(request):
+    """Everyone on this server. Admins only."""
+    return services.users_for(request.auth)
+
+
+@users_router.patch("/{uuid:user_id}", response=UserOut)
+def update_user(request, user_id: UUID, payload: UserPatch):
+    """Make someone an admin or not, or deactivate them. Not yourself."""
+    users = services.users_for(request.auth)
+    user = get_object_or_404(users, pk=user_id)
+    services.update_user(request.auth, user, payload.model_dump(exclude_none=True))
+    return users.get(pk=user_id)

@@ -72,3 +72,28 @@ class ResetPreviewOut(Schema):
 
 class ResetIn(Schema):
     password: str = Field(max_length=4096)
+
+
+class UserOut(Schema):
+    """Someone with an account here, as admins see them."""
+
+    id: UUID
+    email: str
+    name: str
+    is_admin: bool
+    is_active: bool
+    last_active: datetime.datetime | None
+
+    @staticmethod
+    def resolve_name(obj):
+        me = getattr(obj, "me", None)
+        return me.name if me else obj.email
+
+    @staticmethod
+    def resolve_is_admin(obj):
+        return obj.is_staff
+
+
+class UserPatch(Schema):
+    is_admin: bool | None = None
+    is_active: bool | None = None  # False: they can't log in; their book is kept

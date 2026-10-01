@@ -10,6 +10,8 @@ from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import validate_email
 from django.db import transaction
+from django.db.models import Max
+from django.db.models.functions import Lower
 from django.http import HttpRequest
 from django.utils import timezone
 
@@ -194,3 +196,34 @@ def reset_password(token: str, password: str) -> None:
     sign_out_other_devices(reset.user, keep=None)
     reset.used_at = timezone.now()
     reset.save(update_fields=["used_at", "updated_at"])
+
+
+# ---------------------------------------------------------------- managing users (admins)
+
+
+def users_for(admin: User):
+    """Everyone on the server, with when they were last active. Admins only."""
+    if not admin.is_staff:
+        raise PermissionDenied("Only an admin can manage users.")
+    return (
+        User.objects.select_related("me")
+        .annotate(last_active=Max("devices__last_seen"))
+        .order_by(Lower("email"))
+    )
+
+
+@transaction.atomic
+def update_user(admin: User, user: User, changes: dict) -> User:
+    """Make someone an admin (or not), or deactivate them (their book is kept)."""
+    if not admin.is_staff:
+        raise PermissionDenied("Only an admin can manage users.")
+    if user.pk == admin.pk:
+        raise Conflict("You can't change your own admin rights or deactivate yourself.")
+    if "is_admin" in changes:
+        user.is_staff = changes["is_admin"]
+    if "is_active" in changes:
+        user.is_active = changes["is_active"]
+        if not user.is_active:
+            sign_out_other_devices(user, keep=None)
+    user.save(update_fields=["is_staff", "is_active"])
+    return user

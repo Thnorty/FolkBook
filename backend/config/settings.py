@@ -5,6 +5,7 @@ in the repository root), so the same image runs on any self-hosted server.
 """
 
 import os
+import tomllib
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -121,6 +122,11 @@ USE_TZ = True
 # The frontend owns `/assets/`; Django's own static files (admin) live under their own prefix.
 STATIC_URL = "django-static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# FolkBook is AGPL-licensed: everyone using a server can get its source, from a link
+# in the app. A fork that changes the code points this at its own repository.
+FOLKBOOK_SOURCE_URL = env("FOLKBOOK_SOURCE_URL", "https://github.com/Thnorty/FolkBook")
+FOLKBOOK_VERSION = tomllib.loads((BASE_DIR / "pyproject.toml").read_text())["project"]["version"]
 
 # Uploaded files (profile photos). Never served as public files: the API checks who may
 # see each one. In Docker this folder is the media_data volume; back it up with the database.

@@ -25,7 +25,11 @@ export function PeoplePage() {
   const { openNew } = usePersonForm()
   const setSearch = useCallback(
     (change: Partial<PeopleSearch>) =>
-      void navigate({ search: (current) => ({ ...current, ...change }), replace: true }),
+      void navigate({
+        // Annotated: with this many routes, TypeScript stops inferring it here.
+        search: (current: PeopleSearch) => ({ ...current, ...change }),
+        replace: true,
+      }),
     [navigate],
   )
   const search = useCallback((text: string) => setSearch({ q: text || undefined }), [setSearch])

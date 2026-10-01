@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
  * Appearance settings for this device: color theme and motion. Kept in localStorage
  * (per device, like the OS settings they override) and applied as data attributes
  * on <html>, which the CSS reads: data-theme="light|dark", data-motion="reduce".
- * Settings → Appearance (#28) will change them with setAppearance().
+ * Settings → Appearance changes them with setAppearance().
  */
 
 export type Appearance = {

@@ -10,9 +10,6 @@ export function createInvite(input: InviteInput = {}) {
   return unwrap(api.POST('/api/invites', { body: input }))
 }
 
-/** The full address to share for an invite's `path`. */
-export const inviteLink = (path: string) => `${window.location.origin}${path}`
-
 /** What an invite link offers, for someone opening it (no account needed). */
 export const invitePreviewQuery = (token: string) =>
   queryOptions({

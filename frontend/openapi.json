@@ -6,6 +6,29 @@
     "description": ""
   },
   "paths": {
+    "/api/about": {
+      "get": {
+        "operationId": "config_api_about",
+        "summary": "About",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Which FolkBook this is, and where its source code is.",
+        "tags": [
+          "system"
+        ]
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "config_api_health",
@@ -467,6 +490,112 @@
           },
           "required": true
         }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "operationId": "accounts_api_list_users",
+        "summary": "List Users",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedUserOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Everyone on this server. Admins only.",
+        "tags": [
+          "users"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/users/{user_id}": {
+      "patch": {
+        "operationId": "accounts_api_update_user",
+        "summary": "Update User",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Make someone an admin or not, or deactivate them. Not yourself.",
+        "tags": [
+          "users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
       }
     },
     "/api/invites": {
@@ -2912,6 +3041,24 @@
   },
   "components": {
     "schemas": {
+      "AboutOut": {
+        "properties": {
+          "version": {
+            "title": "Version",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "source_url"
+        ],
+        "title": "AboutOut",
+        "type": "object"
+      },
       "HealthOut": {
         "properties": {
           "status": {
@@ -3252,6 +3399,103 @@
           "password"
         ],
         "title": "ResetIn",
+        "type": "object"
+      },
+      "PagedUserOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedUserOut",
+        "type": "object"
+      },
+      "UserOut": {
+        "description": "Someone with an account here, as admins see them.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "is_admin": {
+            "title": "Is Admin",
+            "type": "boolean"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "last_active": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Active"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "is_admin",
+          "is_active",
+          "last_active"
+        ],
+        "title": "UserOut",
+        "type": "object"
+      },
+      "UserPatch": {
+        "properties": {
+          "is_admin": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Admin"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "title": "UserPatch",
         "type": "object"
       },
       "Color": {
