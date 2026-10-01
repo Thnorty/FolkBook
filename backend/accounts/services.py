@@ -1,16 +1,19 @@
 """Signing in and out, passwords and signed-in devices."""
 
 import datetime
+import hashlib
+import secrets
 
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.sessions.models import Session
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import validate_email
+from django.db import transaction
 from django.http import HttpRequest
 from django.utils import timezone
 
-from accounts.models import Device, FailedLogin, User
+from accounts.models import Device, FailedLogin, PasswordReset, User
 from core.api import Conflict
 from core.http import client_ip
 
@@ -21,6 +24,8 @@ FAILED_LOGIN_WINDOW = datetime.timedelta(minutes=15)
 # remembered session is renewed for another 400 days whenever it's used.
 # Sessions that aren't remembered end when the browser closes.
 REMEMBER_FOR = datetime.timedelta(days=400)
+# Reset links are handed over by an admin (by chat, in person), so they last a day.
+RESET_LINK_LASTS = datetime.timedelta(hours=24)
 # Don't write "last seen" on every request.
 LAST_SEEN_EVERY = datetime.timedelta(minutes=5)
 
@@ -138,3 +143,54 @@ def touch_device(request: HttpRequest) -> None:
     ).update(last_seen=now, ip=client_ip(request))
     if updated and not request.session.get_expire_at_browser_close():
         request.session.set_expiry(REMEMBER_FOR)
+
+
+# ---------------------------------------------------------------- password reset links
+
+
+class ResetUnusable(Exception):
+    """The reset link doesn't exist, was used, or expired. Callers say the same for all."""
+
+
+def _hash(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def create_reset_link(admin: User, user: User) -> tuple[PasswordReset, str]:
+    """A new one-time link for `user`; returns it with its token (shown once).
+
+    Older unused links for them stop working, so only the latest one counts.
+    """
+    if not admin.is_staff:
+        raise PermissionDenied("Only an admin can make reset links.")
+    now = timezone.now()
+    PasswordReset.objects.filter(user=user, used_at=None, expires_at__gt=now).update(expires_at=now)
+    token = secrets.token_urlsafe(24)
+    reset = PasswordReset.objects.create(
+        user=user, created_by=admin, token_hash=_hash(token), expires_at=now + RESET_LINK_LASTS
+    )
+    return reset, token
+
+
+def usable_reset(token: str, *, lock: bool = False) -> PasswordReset:
+    resets = PasswordReset.objects.select_related("user")
+    if lock:
+        resets = resets.select_for_update()
+    reset = resets.filter(
+        token_hash=_hash(token), used_at=None, expires_at__gt=timezone.now(), user__is_active=True
+    ).first()
+    if reset is None:
+        raise ResetUnusable
+    return reset
+
+
+@transaction.atomic
+def reset_password(token: str, password: str) -> None:
+    """Set a new password with a reset link, once. Signs the user out everywhere."""
+    reset = usable_reset(token, lock=True)
+    _check_password_rules(password, reset.user, field="password")
+    reset.user.set_password(password)
+    reset.user.save(update_fields=["password"])
+    sign_out_other_devices(reset.user, keep=None)
+    reset.used_at = timezone.now()
+    reset.save(update_fields=["used_at", "updated_at"])

@@ -344,6 +344,131 @@
         ]
       }
     },
+    "/api/auth/password-resets": {
+      "post": {
+        "operationId": "accounts_api_create_reset_link",
+        "summary": "Create Reset Link",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetLinkOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Admins: a one-time link for someone who forgot their password. Shown once.",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetLinkIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/password-resets/{token}": {
+      "get": {
+        "operationId": "accounts_api_preview_reset",
+        "summary": "Preview Reset",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPreviewOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Whose password a reset link is for. Looking changes nothing.",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "operationId": "accounts_api_reset_password",
+        "summary": "Reset Password",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Choose a new password with a reset link. Signs out every device; log in after.",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
     "/api/invites": {
       "get": {
         "operationId": "invites_api_list_invites",
@@ -3055,6 +3180,78 @@
           "count"
         ],
         "title": "PagedDeviceOut",
+        "type": "object"
+      },
+      "ResetLinkOut": {
+        "description": "Shown once, to the admin who made it.",
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "email",
+          "expires_at"
+        ],
+        "title": "ResetLinkOut",
+        "type": "object"
+      },
+      "ResetLinkIn": {
+        "properties": {
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "ResetLinkIn",
+        "type": "object"
+      },
+      "ResetPreviewOut": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "expires_at"
+        ],
+        "title": "ResetPreviewOut",
+        "type": "object"
+      },
+      "ResetIn": {
+        "properties": {
+          "password": {
+            "maxLength": 4096,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "ResetIn",
         "type": "object"
       },
       "Color": {
