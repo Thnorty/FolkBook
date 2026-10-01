@@ -208,7 +208,13 @@ def test_timeline_query_count_does_not_grow(api, world):
 def test_keep_in_touch_defaults_when_not_set(api, world):
     body = api.login(world.kaan).get(f"/keep-in-touch/{world.oskar.pk}").json()
 
-    assert body == {"interval_days": None, "snoozed_until": None, "stopped": False}
+    assert body == {
+        "interval_days": None,
+        "snoozed_until": None,
+        "stopped": False,
+        "default_interval_days": None,
+        "next_nudge_on": None,  # no interval: they never come up
+    }
 
 
 def test_each_user_has_their_own_keep_in_touch_setting(api, world):

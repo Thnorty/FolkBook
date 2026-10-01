@@ -59,6 +59,13 @@ function server(overrides: Overrides = {}) {
     body: 'Wants to move back to Izmir.',
     updated_at: '2026-09-01T10:00:00Z',
   }
+  let keepInTouch = {
+    interval_days: 60 as number | null,
+    snoozed_until: null,
+    stopped: false,
+    default_interval_days: 90,
+    next_nudge_on: '2099-01-01' as string | null,
+  }
   const writes: { method: string; path: string; body: unknown }[] = []
   const record = async (request: Request) =>
     writes.push({
@@ -121,8 +128,12 @@ function server(overrides: Overrides = {}) {
         ],
         count: 1,
       }),
-    'GET /api/keep-in-touch/emma': () =>
-      json({ interval_days: 60, snoozed_until: null, stopped: false }),
+    'GET /api/keep-in-touch/emma': () => json(keepInTouch),
+    'PUT /api/keep-in-touch/emma': async (request) => {
+      await record(request)
+      keepInTouch = { ...keepInTouch, ...(writes.at(-1)!.body as object), next_nudge_on: null }
+      return json(keepInTouch)
+    },
     ...overrides,
   })
   return writes
@@ -235,6 +246,38 @@ describe('profile page', () => {
     expect(
       await within(await section('Keep in touch')).findByText('Every 2 months'),
     ).toBeInTheDocument()
+  })
+
+  it('changes how often to keep in touch, and stops', async () => {
+    const writes = server()
+    renderApp('/people/emma')
+    const keep = await section('Keep in touch')
+    expect(await within(keep).findByText(/Next nudge in \d+ years?/)).toBeInTheDocument()
+
+    await userEvent.click(within(keep).getByRole('button', { name: 'Change' }))
+    const often = within(keep).getByRole('combobox', { name: 'How often' })
+    expect(
+      within(often).getByRole('option', { name: 'Your default (every 3 months)' }),
+    ).toBeInTheDocument()
+    await userEvent.selectOptions(often, 'Every week')
+    await waitFor(() =>
+      expect(within(keep).getByText('Every week', { selector: 'p' })).toBeInTheDocument(),
+    )
+    await userEvent.selectOptions(often, 'Never: stop reminding me')
+
+    expect(await within(keep).findByText('Not reminding you')).toBeInTheDocument()
+    expect(writes).toEqual([
+      {
+        method: 'PUT',
+        path: '/api/keep-in-touch/emma',
+        body: { interval_days: 7, snoozed_until: null, stopped: false },
+      },
+      {
+        method: 'PUT',
+        path: '/api/keep-in-touch/emma',
+        body: { interval_days: 7, snoozed_until: null, stopped: true },
+      },
+    ])
   })
 
   it('invites you to start when there is nothing yet', async () => {

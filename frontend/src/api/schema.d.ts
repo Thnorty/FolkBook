@@ -792,6 +792,44 @@ export interface paths {
         patch: operations["interactions_api_update_interaction"];
         trace?: never;
     };
+    "/api/keep-in-touch/due": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Due
+         * @description Who it's time to get in touch with. `today`: the user's own date (time zones).
+         */
+        get: operations["reminders_api_list_due"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/keep-in-touch/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Settings */
+        get: operations["reminders_api_get_settings"];
+        /** Save Settings */
+        put: operations["reminders_api_save_settings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/keep-in-touch/{person_id}": {
         parameters: {
             query?: never;
@@ -801,7 +839,7 @@ export interface paths {
         };
         /**
          * Get Keep In Touch
-         * @description The user's own setting; defaults when there is none yet.
+         * @description The user's own setting (defaults when there is none yet), and when they're next due.
          */
         get: operations["reminders_api_get_keep_in_touch"];
         /** Save Keep In Touch */
@@ -1593,6 +1631,53 @@ export interface components {
             occurred_on?: string | null;
             /** Note */
             note?: string | null;
+        };
+        /**
+         * NudgeOut
+         * @description Someone it's time to get in touch with.
+         */
+        NudgeOut: {
+            person: components["schemas"]["PersonRef"];
+            /** Interval Days */
+            interval_days: number;
+            /** Days Since */
+            days_since: number;
+            /** Last Talked On */
+            last_talked_on: string | null;
+            /** Hint */
+            hint: string;
+        };
+        /**
+         * ReminderSettingsSchema
+         * @description Keep-in-touch settings for everyone.
+         */
+        ReminderSettingsSchema: {
+            /**
+             * Nudges On
+             * @default true
+             */
+            nudges_on?: boolean;
+            /** Default Interval Days */
+            default_interval_days?: number | null;
+        };
+        /**
+         * KeepInTouchOut
+         * @description The setting, and what it works out to.
+         */
+        KeepInTouchOut: {
+            /** Interval Days */
+            interval_days?: number | null;
+            /** Snoozed Until */
+            snoozed_until?: string | null;
+            /**
+             * Stopped
+             * @default false
+             */
+            stopped?: boolean;
+            /** Default Interval Days */
+            default_interval_days: number | null;
+            /** Next Nudge On */
+            next_nudge_on: string | null;
         };
         /**
          * KeepInTouchSchema
@@ -2987,6 +3072,72 @@ export interface operations {
             };
         };
     };
+    reminders_api_list_due: {
+        parameters: {
+            query?: {
+                today?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NudgeOut"][];
+                };
+            };
+        };
+    };
+    reminders_api_get_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSettingsSchema"];
+                };
+            };
+        };
+    };
+    reminders_api_save_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderSettingsSchema"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSettingsSchema"];
+                };
+            };
+        };
+    };
     reminders_api_get_keep_in_touch: {
         parameters: {
             query?: never;
@@ -3004,7 +3155,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KeepInTouchSchema"];
+                    "application/json": components["schemas"]["KeepInTouchOut"];
                 };
             };
         };
@@ -3030,7 +3181,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["KeepInTouchSchema"];
+                    "application/json": components["schemas"]["KeepInTouchOut"];
                 };
             };
         };

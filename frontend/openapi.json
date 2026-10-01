@@ -2466,6 +2466,118 @@
         ]
       }
     },
+    "/api/keep-in-touch/due": {
+      "get": {
+        "operationId": "reminders_api_list_due",
+        "summary": "List Due",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "today",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Today"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NudgeOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "Who it's time to get in touch with. `today`: the user's own date (time zones).",
+        "tags": [
+          "reminders"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/keep-in-touch/settings": {
+      "get": {
+        "operationId": "reminders_api_get_settings",
+        "summary": "Get Settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderSettingsSchema"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "reminders"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "reminders_api_save_settings",
+        "summary": "Save Settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReminderSettingsSchema"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "reminders"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReminderSettingsSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/keep-in-touch/{person_id}": {
       "get": {
         "operationId": "reminders_api_get_keep_in_touch",
@@ -2488,13 +2600,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/KeepInTouchSchema"
+                  "$ref": "#/components/schemas/KeepInTouchOut"
                 }
               }
             }
           }
         },
-        "description": "The user's own setting; defaults when there is none yet.",
+        "description": "The user's own setting (defaults when there is none yet), and when they're next due.",
         "tags": [
           "reminders"
         ],
@@ -2525,7 +2637,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/KeepInTouchSchema"
+                  "$ref": "#/components/schemas/KeepInTouchOut"
                 }
               }
             }
@@ -4704,6 +4816,136 @@
           }
         },
         "title": "InteractionPatch",
+        "type": "object"
+      },
+      "NudgeOut": {
+        "description": "Someone it's time to get in touch with.",
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "interval_days": {
+            "title": "Interval Days",
+            "type": "integer"
+          },
+          "days_since": {
+            "title": "Days Since",
+            "type": "integer"
+          },
+          "last_talked_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Talked On"
+          },
+          "hint": {
+            "title": "Hint",
+            "type": "string"
+          }
+        },
+        "required": [
+          "person",
+          "interval_days",
+          "days_since",
+          "last_talked_on",
+          "hint"
+        ],
+        "title": "NudgeOut",
+        "type": "object"
+      },
+      "ReminderSettingsSchema": {
+        "description": "Keep-in-touch settings for everyone.",
+        "properties": {
+          "nudges_on": {
+            "default": true,
+            "title": "Nudges On",
+            "type": "boolean"
+          },
+          "default_interval_days": {
+            "anyOf": [
+              {
+                "maximum": 3650,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Interval Days"
+          }
+        },
+        "title": "ReminderSettingsSchema",
+        "type": "object"
+      },
+      "KeepInTouchOut": {
+        "description": "The setting, and what it works out to.",
+        "properties": {
+          "interval_days": {
+            "anyOf": [
+              {
+                "maximum": 3650,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Interval Days"
+          },
+          "snoozed_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozed Until"
+          },
+          "stopped": {
+            "default": false,
+            "title": "Stopped",
+            "type": "boolean"
+          },
+          "default_interval_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Interval Days"
+          },
+          "next_nudge_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Nudge On"
+          }
+        },
+        "required": [
+          "default_interval_days",
+          "next_nudge_on"
+        ],
+        "title": "KeepInTouchOut",
         "type": "object"
       },
       "KeepInTouchSchema": {

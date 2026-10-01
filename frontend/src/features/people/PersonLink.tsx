@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { PersonCard } from '@/components/notebook/PersonCard'
 import { Polaroid } from '@/components/notebook/Polaroid'
-import { formatDaysAgo } from '@/lib/dates'
+import { formatRelativeDay } from '@/lib/dates'
 import { isWideScreen } from '@/lib/media'
 import { cn } from '@/lib/utils'
 import type { FlyOrigin } from '@/motion/FlyFrom'
@@ -21,7 +21,7 @@ function detail(person: Person) {
 
 /** When you last talked, or a marker for people who still need details. */
 function Meta({ person }: { person: Person }) {
-  if (person.last_talked_on) return <>{formatDaysAgo(person.last_talked_on)}</>
+  if (person.last_talked_on) return <>{formatRelativeDay(person.last_talked_on)}</>
   if (person.needs_details) return <span className="text-accent">Needs details</span>
   return <span aria-label="Never talked">—</span>
 }
