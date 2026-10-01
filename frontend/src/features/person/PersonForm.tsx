@@ -9,13 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
 import { spacesQuery } from '@/features/spaces/queries'
 import { cn } from '@/lib/utils'
-import {
-  BirthdayFields,
-  ContactFields,
-  TagInput,
-  type BirthdayValue,
-  type ContactValue,
-} from './PersonFormFields'
+import { BirthdayFields, ContactFields, TagInput, type ContactValue } from './PersonFormFields'
+import { birthdayInput, type BirthdayValue } from './birthday'
 import { cropToBlob } from './photo'
 import { PhotoCropper } from './PhotoCropper'
 import type { PersonDetail, PersonInput } from './queries'
@@ -90,14 +85,12 @@ export function PersonForm({ person, onSubmit, onCancel, saving, error, formId }
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const day = Number(birthday.day)
-    const month = Number(birthday.month)
     onSubmit({
       fields: {
         name: name.trim(),
         how_we_met: howWeMet.trim(),
         work: work.trim(),
-        birthday: day && month ? { day, month, year: Number(birthday.year) || null } : null,
+        birthday: birthdayInput(birthday),
         // Tags and contact details belong to the owner: not sent at all otherwise.
         ...(ownsDetails && {
           tags,

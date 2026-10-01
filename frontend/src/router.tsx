@@ -8,7 +8,7 @@ import {
   redirect,
   type RouterHistory,
 } from '@tanstack/react-router'
-import { currentUserQuery } from './api/session'
+import { currentUserQuery, setupStatusQuery } from './api/session'
 import { AppLayout } from './app/AppLayout'
 import { safeRedirect } from './lib/redirect'
 import { LoginPage } from './pages/LoginPage'
@@ -18,7 +18,10 @@ import { SpacePage } from './features/spaces/SpacePage'
 import { SpacesPage } from './features/spaces/SpacesPage'
 import { TodayPage } from './features/today/TodayPage'
 import { validatePeopleSearch } from './features/people/search'
+import { InvitePage } from './pages/InvitePage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { SetupPage } from './pages/SetupPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
 type RouterContext = { queryClient: QueryClient }
@@ -36,8 +39,28 @@ const loginRoute = createRoute({
   beforeLoad: async ({ context, search }) => {
     const user = await context.queryClient.ensureQueryData(currentUserQuery)
     if (user) throw redirect({ href: safeRedirect(search.redirect) })
+    await needsNoSetup(context.queryClient)
   },
   component: LoginPage,
+})
+
+/** A brand-new server has no accounts yet: everything leads to the first run. */
+async function needsNoSetup(queryClient: QueryClient) {
+  // If the check itself fails, logging in is still the better guess than a setup page.
+  const { needed } = await queryClient
+    .ensureQueryData(setupStatusQuery)
+    .catch(() => ({ needed: false }))
+  if (needed) throw redirect({ to: '/setup' })
+}
+
+const setupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'setup',
+  beforeLoad: async ({ context }) => {
+    const { needed } = await context.queryClient.ensureQueryData(setupStatusQuery)
+    if (!needed) throw redirect({ to: '/' })
+  },
+  component: SetupPage,
 })
 
 /** Every page behind it needs a logged-in user; without one you land on /login. */
@@ -46,7 +69,10 @@ const appRoute = createRoute({
   id: 'app',
   beforeLoad: async ({ context, location }) => {
     const user = await context.queryClient.ensureQueryData(currentUserQuery)
-    if (!user) throw redirect({ to: '/login', search: { redirect: location.href } })
+    if (!user) {
+      await needsNoSetup(context.queryClient)
+      throw redirect({ to: '/login', search: { redirect: location.href } })
+    }
   },
   component: AppLayout,
 })
@@ -88,8 +114,25 @@ const appPages = [
   ),
 ]
 
+/** An invite link: open to anyone who has it, logged in or not. */
+const inviteRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'i/$token',
+  component: InvitePage,
+})
+
+/** A password reset link: open to anyone who has it. */
+const resetRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'reset/$token',
+  component: ResetPasswordPage,
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
+  setupRoute,
+  inviteRoute,
+  resetRoute,
   appRoute.addChildren(appPages),
   // The design system page, only while developing (the build leaves it out).
   ...(import.meta.env.DEV
