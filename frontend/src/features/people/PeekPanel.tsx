@@ -44,7 +44,7 @@ export function PeekPanel({ personId, flyFrom, onClose }: PeekPanelProps) {
         </button>
       </div>
       <div className="p-5">
-        <ProfileView personId={personId} compact flyFrom={flyFrom} />
+        <ProfileView personId={personId} compact flyFrom={flyFrom} onGone={onClose} />
       </div>
     </aside>
   )

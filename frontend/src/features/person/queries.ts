@@ -227,6 +227,18 @@ export function updatePerson(personId: string, changes: PersonChanges) {
   return unwrap(api.PATCH('/api/people/{person_id}', { ...path(personId), body: changes }))
 }
 
+/** Delete someone. They're hidden at once and can be brought back for a minute. */
+export function deletePerson(personId: string) {
+  return unwrap(api.DELETE('/api/people/{person_id}', path(personId)))
+}
+
+/** Undo a delete. */
+export async function restorePerson(queryClient: QueryClient, personId: string) {
+  const person = await unwrap(api.POST('/api/people/{person_id}/restore', path(personId)))
+  await refreshPeople(queryClient)
+  return person
+}
+
 /** After adding or changing someone: everything about people, and space counts. */
 export async function refreshPeople(queryClient: QueryClient) {
   await Promise.all([

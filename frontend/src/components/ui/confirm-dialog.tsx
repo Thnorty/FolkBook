@@ -1,4 +1,5 @@
 import { AlertDialog } from 'radix-ui'
+import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 
 type ConfirmDialogProps = {
@@ -9,6 +10,9 @@ type ConfirmDialogProps = {
   confirmLabel: string
   onConfirm: () => void
   busy?: boolean
+  cancelLabel?: string
+  /** More about what will happen, under the description (e.g. what goes with it). */
+  children?: ReactNode
 }
 
 /** "Are you sure?" for things that can't be undone. Cancel has the focus. */
@@ -20,6 +24,8 @@ export function ConfirmDialog({
   confirmLabel,
   onConfirm,
   busy = false,
+  cancelLabel = 'Cancel',
+  children,
 }: ConfirmDialogProps) {
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -30,9 +36,10 @@ export function ConfirmDialog({
           <AlertDialog.Description className="mt-2 text-ink-soft">
             {description}
           </AlertDialog.Description>
+          {children}
           <div className="mt-5 flex justify-end gap-2">
             <AlertDialog.Cancel asChild>
-              <Button variant="ghost">Cancel</Button>
+              <Button variant="ghost">{cancelLabel}</Button>
             </AlertDialog.Cancel>
             <Button
               className="bg-danger text-on-accent hover:bg-danger"

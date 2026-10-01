@@ -19,9 +19,11 @@ type ProfileHeaderProps = {
   pageTurn?: boolean
   /** In the peek panel: glide copies of the card's photo and name in from here instead. */
   flyFrom?: FlyOrigin | null
+  /** More actions, next to Edit. */
+  menu?: ReactNode
 }
 
-export function ProfileHeader({ person, pageTurn = true, flyFrom }: ProfileHeaderProps) {
+export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: ProfileHeaderProps) {
   const { openEdit } = usePersonForm()
   const travel = (id: string, from: DOMRect | undefined, content: ReactNode) =>
     pageTurn ? <Shared id={id}>{content}</Shared> : <FlyFrom from={from}>{content}</FlyFrom>
@@ -45,12 +47,15 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom }: ProfileHeade
             alt={person.name}
           />,
         )}
-        {person.can_edit && (
-          <Button variant="secondary" className="ml-auto" onClick={() => openEdit(person.id)}>
-            <Pencil aria-hidden />
-            Edit
-          </Button>
-        )}
+        <div className="ml-auto flex gap-2">
+          {person.can_edit && (
+            <Button variant="secondary" onClick={() => openEdit(person.id)}>
+              <Pencil aria-hidden />
+              Edit
+            </Button>
+          )}
+          {menu}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">

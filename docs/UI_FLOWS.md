@@ -202,7 +202,7 @@ Inspired by the kind of details collected on [Design Spells](https://designspell
 - **Long-press person card (mobile):** radial or popup quick menu: log interaction, add memory aid, open in graph
 - **Ink path in graph:** "How do I know…?" draws the path hop by hop like a pen stroke
 - **Tabbed dividers:** switching spaces slides the colored tab like a notebook divider
-- **Delete = tear out:** deleting a person tears the page away (with undo toast)
+- **Delete = tear out:** profile **⋯ → Tear out of the book…** → a confirm dialog lists what goes with them (connections, your memory aids, timeline and note, the spaces they leave) and warns who in a shared space will stop seeing them → the page tears away and a 10-second Undo toast appears
 - **Birthday occasion:** subtle confetti / doodle on a person's profile on their birthday
 - **Doodle empty states:** hand-drawn illustrations for empty Today, empty graph, no results
 - **Easter egg:** tapping your own "Me" polaroid a few times flips it to a hidden back side
