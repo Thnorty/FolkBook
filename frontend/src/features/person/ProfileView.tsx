@@ -76,6 +76,12 @@ export function ProfileView({ personId, compact = false, flyFrom, onGone }: Prof
         )}
       </div>
       <PageFade afterTurn={!compact} className="flex flex-col gap-9">
+        {!data.is_mine && (
+          // Someone else keeps the profile above; everything below is yours alone.
+          <p className="-mb-4 border-t border-line pt-4 type-label text-ink-faint">
+            Your side · only you see this
+          </p>
+        )}
         <RememberSection personId={personId} />
         <NotesSection personId={personId} firstName={firstName} />
         <ConnectionsSection personId={personId} />
