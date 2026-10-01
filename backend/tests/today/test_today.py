@@ -101,4 +101,5 @@ def test_recently_added_people_in_your_own_book(api, world):
     names = [person["name"] for person in response.json()["items"]]
     assert names[0] == "Newest" and "Old" not in names
     assert "Tom" not in names  # shared with Ela, not in her own book
+    assert "Ela" not in names  # her own Me, made with her account
     assert response.json()["items"][0]["added_at"].startswith(str(newest.created_at.date()))

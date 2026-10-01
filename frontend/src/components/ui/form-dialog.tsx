@@ -47,7 +47,7 @@ export function FormDialog({
           className={cn(
             'fixed z-30 flex flex-col overflow-hidden bg-paper md:inset-auto md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float',
             small
-              ? 'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-sheet shadow-float md:top-[18vh] md:max-w-md'
+              ? 'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-sheet shadow-float md:top-[8vh] md:max-h-[84vh] md:max-w-md'
               : 'inset-0 md:max-w-xl',
           )}
         >

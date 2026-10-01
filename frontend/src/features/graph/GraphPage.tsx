@@ -101,7 +101,7 @@ export function GraphPage() {
               <Maximize aria-hidden />
             </CanvasButton>
           </div>
-          <p className="pointer-events-none absolute bottom-3 left-3 type-meta text-ink-faint">
+          <p className="pointer-events-none absolute bottom-3 left-3 hidden type-meta text-ink-faint md:block">
             Click to open · double-click to focus · color = space
           </p>
         </div>
