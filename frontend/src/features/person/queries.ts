@@ -10,6 +10,8 @@ import type { components } from '@/api/schema'
 export type PersonDetail = components['schemas']['PersonDetailOut']
 export type MemoryAid = components['schemas']['MemoryAidOut']
 export type Interaction = components['schemas']['InteractionOut']
+export type InteractionInput = components['schemas']['InteractionIn']
+export type InteractionChanges = components['schemas']['InteractionPatch']
 export type Relationship = components['schemas']['RelationshipOut']
 export type FamilyRelation = components['schemas']['FamilyRelationOut']
 export type PersonInput = components['schemas']['PersonIn']
@@ -94,13 +96,51 @@ export async function saveNote(queryClient: QueryClient, personId: string, body:
 }
 
 export async function addMemoryAid(queryClient: QueryClient, personId: string, text: string) {
-  await unwrap(api.POST('/api/memory-aids', { body: { person_id: personId, text, pinned: false } }))
+  const aid = await unwrap(
+    api.POST('/api/memory-aids', { body: { person_id: personId, text, pinned: false } }),
+  )
   await queryClient.invalidateQueries({ queryKey: memoryAidsQuery(personId).queryKey })
+  return aid
 }
 
 export async function removeMemoryAid(queryClient: QueryClient, personId: string, aidId: string) {
   await unwrap(api.DELETE('/api/memory-aids/{aid_id}', { params: { path: { aid_id: aidId } } }))
   await queryClient.invalidateQueries({ queryKey: memoryAidsQuery(personId).queryKey })
+}
+
+const interactionPath = (interactionId: string) => ({
+  params: { path: { interaction_id: interactionId } },
+})
+
+/*
+ * Timeline writes. Afterwards refresh everything under ['people']: the timeline, and
+ * "last talked" on the profile and in the People list.
+ */
+
+export async function logInteraction(queryClient: QueryClient, input: InteractionInput) {
+  const interaction = await unwrap(api.POST('/api/interactions', { body: input }))
+  await queryClient.invalidateQueries({ queryKey: ['people'] })
+  return interaction
+}
+
+export async function updateInteraction(
+  queryClient: QueryClient,
+  interactionId: string,
+  changes: InteractionChanges,
+) {
+  const interaction = await unwrap(
+    api.PATCH('/api/interactions/{interaction_id}', {
+      ...interactionPath(interactionId),
+      body: changes,
+    }),
+  )
+  await queryClient.invalidateQueries({ queryKey: ['people'] })
+  return interaction
+}
+
+export async function deleteInteraction(queryClient: QueryClient, interactionId: string) {
+  await unwrap(api.DELETE('/api/interactions/{interaction_id}', interactionPath(interactionId)))
+  await queryClient.invalidateQueries({ queryKey: ['people'] })
 }
 
 export function createPerson(input: PersonInput) {

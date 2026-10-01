@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
+import { toast } from 'sonner'
 import { afterEach, vi } from 'vitest'
 
 // jsdom lacks pointer capture (toast swipes, Radix menus), scrollIntoView and
@@ -18,6 +19,7 @@ globalThis.ResizeObserver ??= class {
 }
 
 afterEach(() => {
+  toast.dismiss() // toasts live outside React, so one test's would show up in the next
   cleanup()
   vi.unstubAllGlobals()
 })

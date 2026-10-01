@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Outlet, useNavigate, useRouter, useRouterState } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { currentUserQuery, type CurrentUser } from '@/api/session'
+import { InteractionFormProvider } from '@/features/person/InteractionFormProvider'
 import { PersonFormProvider } from '@/features/person/PersonFormProvider'
 import { usePersonForm } from '@/features/person/usePersonForm'
 import { SpaceFormProvider } from '@/features/spaces/SpaceFormProvider'
@@ -27,7 +28,9 @@ export function AppLayout() {
   return (
     <PersonFormProvider>
       <SpaceFormProvider>
-        <Shell user={user} />
+        <InteractionFormProvider>
+          <Shell user={user} />
+        </InteractionFormProvider>
       </SpaceFormProvider>
     </PersonFormProvider>
   )

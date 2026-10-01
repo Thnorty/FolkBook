@@ -25,6 +25,13 @@ export function formatDaysAgo(isoDate: string, today: Date = new Date()): string
   return relative.format(-Math.floor(days / 365), 'year')
 }
 
+/** The calendar day `daysBack` days before `today`, where the user is, as the API writes it. */
+export function isoDay(daysBack = 0, today: Date = new Date()): string {
+  const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() - daysBack)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`
+}
+
 function ymd(isoDate: string): [number, number, number] {
   const [year, month, day] = isoDate.split('-').map(Number)
   return [year, month - 1, day]

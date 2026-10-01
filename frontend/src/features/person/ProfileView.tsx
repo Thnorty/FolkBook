@@ -64,7 +64,7 @@ export function ProfileView({ personId, compact = false, flyFrom }: ProfileViewP
         <RememberSection personId={personId} />
         <NotesSection personId={personId} firstName={firstName} />
         <ConnectionsSection personId={personId} />
-        <TimelineSection personId={personId} />
+        <TimelineSection personId={personId} canLog={!data.is_me} />
       </PageFade>
     </div>
   )

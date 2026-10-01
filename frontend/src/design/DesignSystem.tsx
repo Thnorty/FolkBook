@@ -5,8 +5,10 @@ import { SpaceChip, SpaceTab, type SpaceColor } from '@/components/notebook/spac
 import { StickyNote, type NoteColor } from '@/components/notebook/StickyNote'
 import { TimelineItem } from '@/components/notebook/TimelineItem'
 import { Button } from '@/components/ui/button'
+import { FormDialog } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { InteractionForm } from '@/features/person/InteractionForm'
 import { setAppearance, useAppearance, type Appearance } from '@/lib/appearance'
 import { notify } from '@/lib/notify'
 import { InkUnderline } from '@/motion/InkUnderline'
@@ -102,6 +104,39 @@ function InkDemo() {
         Save again
       </Button>
     </div>
+  )
+}
+
+function SmallFormDemo() {
+  const [open, setOpen] = useState(false)
+  const close = () => setOpen(false)
+  return (
+    <>
+      <Button variant="secondary" onClick={() => setOpen(true)}>
+        Open the log form
+      </Button>
+      {open && (
+        <FormDialog
+          small
+          title="Log with Emma"
+          formId="demo-log"
+          submitLabel="Save"
+          busy={false}
+          onClose={close}
+        >
+          <InteractionForm
+            formId="demo-log"
+            firstName="Emma"
+            saving={false}
+            onSubmit={() => {
+              close()
+              notify({ title: 'Logged: met Emma today', action: { label: 'Undo', onClick: close } })
+            }}
+            onCancel={close}
+          />
+        </FormDialog>
+      )}
+    </>
   )
 }
 
@@ -241,8 +276,20 @@ export default function DesignSystem() {
           <TimelineItem date="2026-09-12" kind="Coffee" title="Coffee at Kronotrop">
             Showed me Arda&apos;s dinosaur drawings. She&apos;s changing teams at work in October.
           </TimelineItem>
-          <TimelineItem date="2026-08-02" kind="Call" title="Birthday call" />
+          <TimelineItem
+            date="2026-08-02"
+            kind="Call"
+            title="Birthday call"
+            onOpen={() => notify({ title: 'Opens the entry' })}
+          />
         </ol>
+      </Section>
+
+      <Section title="Dialogs">
+        <p className="mb-4 type-small text-ink-soft">
+          A small form: a sheet from the bottom on phones, a small dialog on desktop (2o, 2p).
+        </p>
+        <SmallFormDemo />
       </Section>
 
       <Section title="Motion">

@@ -8,7 +8,7 @@ const twMerge = extendTailwindMerge({
     theme: {
       text: ['2xs', 'md', 'input', 'hand'],
       shadow: ['paper', 'note', 'photo', 'float', 'marker', 'ribbon'],
-      radius: ['tab', 'card'],
+      radius: ['tab', 'card', 'sheet'],
     },
   },
 })

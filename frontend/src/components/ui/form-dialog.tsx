@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { Dialog } from 'radix-ui'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 type FormDialogProps = {
   title: string
@@ -11,12 +12,14 @@ type FormDialogProps = {
   submitLabel: string
   busy: boolean
   onClose: () => void
+  /** A short form: a sheet from the bottom on phones and a small dialog on desktop (2o/2p). */
+  small?: boolean
   children: ReactNode
 }
 
 /**
  * A form in a dialog (screens 2a/2b, 4f/4g): centered with a title and ✕ on desktop;
- * a full-screen sheet on phones with Cancel · title · submit across the top.
+ * a full-screen page on phones with Cancel · title · submit across the top.
  */
 export function FormDialog({
   title,
@@ -24,6 +27,7 @@ export function FormDialog({
   submitLabel,
   busy,
   onClose,
+  small = false,
   children,
 }: FormDialogProps) {
   return (
@@ -40,13 +44,33 @@ export function FormDialog({
               document.querySelector<HTMLFormElement>(`#${formId}`)?.requestSubmit()
             }
           }}
-          className="fixed inset-0 z-30 flex flex-col overflow-hidden bg-paper md:inset-auto md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:max-w-xl md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float"
+          className={cn(
+            'fixed z-30 flex flex-col overflow-hidden bg-paper md:inset-auto md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float',
+            small
+              ? 'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-sheet shadow-float md:top-[18vh] md:max-w-md'
+              : 'inset-0 md:max-w-xl',
+          )}
         >
-          <div className="flex flex-none items-center gap-2 border-b border-line px-3 py-2 md:px-5 md:py-3">
-            <Button variant="ghost" className="md:hidden" onClick={onClose}>
-              Cancel
-            </Button>
-            <Dialog.Title className="flex-1 text-center type-heading md:text-left">
+          {small && (
+            <div
+              aria-hidden
+              className="mx-auto mt-2.5 h-1 w-10 flex-none rounded-full bg-line-strong md:hidden"
+            />
+          )}
+          <div
+            className={cn(
+              'flex flex-none items-center gap-2 px-3 py-2 md:px-5 md:py-3',
+              small ? 'pl-5 md:pb-0' : 'border-b border-line',
+            )}
+          >
+            {!small && (
+              <Button variant="ghost" className="md:hidden" onClick={onClose}>
+                Cancel
+              </Button>
+            )}
+            <Dialog.Title
+              className={cn('flex-1 type-heading md:text-left', !small && 'text-center')}
+            >
               {title}
             </Dialog.Title>
             <Button
@@ -64,32 +88,48 @@ export function FormDialog({
               </Button>
             </Dialog.Close>
           </div>
-          <div className="flex-1 overflow-y-auto px-4 py-5 md:px-5">{children}</div>
+          <div className={cn('flex-1 overflow-y-auto px-4 py-5 md:px-5', small && 'px-5 pt-3')}>
+            {children}
+          </div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
   )
 }
 
-/** The desktop footer of such a form: the shortcut hint, Cancel and the submit button. */
+/**
+ * The footer of such a form: the shortcut hint, Cancel and the submit button on desktop.
+ * Phones submit from the header, except in a small form, which ends in a wide button.
+ */
 export function FormDialogFooter({
   submitLabel,
   busy,
   onCancel,
   hint,
+  small = false,
 }: {
   submitLabel: string
   busy: boolean
   onCancel: () => void
   hint: ReactNode
+  small?: boolean
 }) {
   return (
-    <div className="hidden items-center gap-2 md:flex">
-      <span className="type-meta text-ink-faint">{hint}</span>
-      <Button type="button" variant="ghost" className="ml-auto" onClick={onCancel}>
+    <div className={cn('items-center gap-2 md:flex', small ? 'flex' : 'hidden')}>
+      <span className="hidden type-meta text-ink-faint md:inline">{hint}</span>
+      <Button
+        type="button"
+        variant="ghost"
+        className="ml-auto hidden md:inline-flex"
+        onClick={onCancel}
+      >
         Cancel
       </Button>
-      <Button type="submit" disabled={busy}>
+      <Button
+        type="submit"
+        disabled={busy}
+        className={cn(small && 'h-12 flex-1 md:h-9 md:flex-none')}
+      >
         {busy ? 'Saving…' : submitLabel}
       </Button>
     </div>

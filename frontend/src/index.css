@@ -45,6 +45,7 @@
 
   --radius-tab: 3px;
   --radius-card: 6px;
+  --radius-sheet: 14px; /* the top corners of a bottom sheet */
 }
 
 @theme inline {

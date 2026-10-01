@@ -1,4 +1,5 @@
 import type { components } from '@/api/schema'
+import { formatDaysAgo } from '@/lib/dates'
 
 /* Words shown for codes the API sends (relation types, timeline kinds). One place, so
    every screen says the same thing. Gendered names ("sister") come with #54. */
@@ -46,6 +47,25 @@ export const INTERACTION_KINDS: Record<Kind, string> = {
   message: 'Message',
   event: 'Event',
   custom: 'Other',
+}
+
+const DID: Partial<Record<Kind, string>> = { met: 'met', call: 'called', message: 'messaged' }
+
+/** A new timeline entry in a few words: "met Emma today", "Coffee with Emma yesterday". */
+export function loggedSummary(
+  {
+    kind,
+    label,
+    occurred_on,
+  }: Pick<components['schemas']['InteractionOut'], 'kind' | 'label' | 'occurred_on'>,
+  firstName: string,
+  today?: Date,
+): string {
+  const what =
+    DID[kind] && !label
+      ? `${DID[kind]} ${firstName}`
+      : `${label || INTERACTION_KINDS[kind]} with ${firstName}`
+  return `${what} ${formatDaysAgo(occurred_on, today)}`
 }
 
 /** How often to keep in touch: "Every week", "Every 2 months". */
