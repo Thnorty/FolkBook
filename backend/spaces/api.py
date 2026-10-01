@@ -2,7 +2,7 @@ from uuid import UUID
 
 from django.db.models import Count, Q, QuerySet
 from django.shortcuts import get_object_or_404
-from ninja import Router, Status
+from ninja import Query, Router, Status
 from ninja.pagination import PageNumberPagination, paginate
 
 from access.policy import (
@@ -12,12 +12,23 @@ from access.policy import (
     visible_spaces,
     visible_spaces_with_role,
 )
+from accounts.models import User
 from core.api import access_for
 from core.db import by_name
 from people.schemas import PersonRef
 from spaces import services
 from spaces.models import Space
-from spaces.schemas import SpaceIn, SpaceOut, SpacePatch, SpacePersonIn
+from spaces.schemas import (
+    AccountOut,
+    CandidateParams,
+    MemberOut,
+    RoleIn,
+    ShareIn,
+    SpaceIn,
+    SpaceOut,
+    SpacePatch,
+    SpacePersonIn,
+)
 
 router = Router(tags=["spaces"])
 
@@ -97,3 +108,51 @@ def list_hidden_people(request, space_id: UUID):
     access = access_for(request)
     space = visible_space(access, space_id)
     return hidden_people(access).filter(spaces=space).order_by(by_name(), "pk")
+
+
+# ---------------------------------------------------------------- members
+
+
+def _member_out(request, user, role: str) -> dict:
+    me = getattr(user, "me", None)
+    return {
+        "user_id": user.pk,
+        "name": me.name if me else user.email,
+        "email": user.email,
+        "role": role,
+        "is_you": user.pk == request.auth.pk,
+    }
+
+
+@router.get("/{space_id}/members", response=list[MemberOut])
+def list_members(request, space_id: UUID):
+    """Who can see this space: the owner, then members with their roles."""
+    space = visible_space(access_for(request), space_id)
+    return [_member_out(request, m["user"], m["role"]) for m in services.members_of(space)]
+
+
+@router.get("/{space_id}/share-candidates", response=list[AccountOut])
+def share_candidates(request, space_id: UUID, params: Query[CandidateParams]):
+    """Accounts on this server to share with: owner only, a name or email to search."""
+    access = access_for(request)
+    users = services.people_to_share_with(access, visible_space(access, space_id), params.q)
+    return [_member_out(request, user, "") for user in users]
+
+
+@router.post("/{space_id}/members", response={201: MemberOut})
+def share_space(request, space_id: UUID, payload: ShareIn):
+    """Share the space with an account on this server, as a viewer or editor."""
+    access = access_for(request)
+    space = visible_space(access, space_id)
+    user = get_object_or_404(User, pk=payload.user_id)
+    membership = services.share_with(access, space, user, payload.role)
+    return Status(201, _member_out(request, user, membership.role))
+
+
+@router.patch("/{space_id}/members/{uuid:user_id}", response=MemberOut)
+def change_member_role(request, space_id: UUID, user_id: UUID, payload: RoleIn):
+    access = access_for(request)
+    space = visible_space(access, space_id)
+    membership = get_object_or_404(space.memberships.select_related("user__me"), user_id=user_id)
+    services.change_role(access, membership, payload.role)
+    return _member_out(request, membership.user, membership.role)

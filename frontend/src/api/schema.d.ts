@@ -662,6 +662,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/spaces/{space_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Members
+         * @description Who can see this space: the owner, then members with their roles.
+         */
+        get: operations["spaces_api_list_members"];
+        put?: never;
+        /**
+         * Share Space
+         * @description Share the space with an account on this server, as a viewer or editor.
+         */
+        post: operations["spaces_api_share_space"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/spaces/{space_id}/share-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Share Candidates
+         * @description Accounts on this server to share with: owner only, a name or email to search.
+         */
+        get: operations["spaces_api_share_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/spaces/{space_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change Member Role */
+        patch: operations["spaces_api_change_member_role"];
+        trace?: never;
+    };
     "/api/relationships": {
         parameters: {
             query?: never;
@@ -1600,6 +1661,59 @@ export interface components {
             items: components["schemas"]["PersonRef"][];
             /** Count */
             count: number;
+        };
+        /**
+         * MemberOut
+         * @description Someone who can see a space: its owner, or a member and their role.
+         */
+        MemberOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Role */
+            role: string;
+            /** Is You */
+            is_you: boolean;
+        };
+        /** ShareIn */
+        ShareIn: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** @default viewer */
+            role?: components["schemas"]["Role"];
+        };
+        /** CandidateParams */
+        CandidateParams: {
+            /** Q */
+            q: string;
+        };
+        /**
+         * AccountOut
+         * @description An account on this server, to share a space with.
+         */
+        AccountOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+        };
+        /** RoleIn */
+        RoleIn: {
+            role: components["schemas"]["Role"];
         };
         /** PagedRelationshipOut */
         PagedRelationshipOut: {
@@ -3116,6 +3230,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PagedPersonRef"];
+                };
+            };
+        };
+    };
+    spaces_api_list_members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"][];
+                };
+            };
+        };
+    };
+    spaces_api_share_space: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+        };
+    };
+    spaces_api_share_candidates: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path: {
+                space_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountOut"][];
+                };
+            };
+        };
+    };
+    spaces_api_change_member_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberOut"];
                 };
             };
         };

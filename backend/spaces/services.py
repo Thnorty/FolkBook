@@ -4,6 +4,8 @@ from typing import Any
 
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Q
+from django.db.models.functions import Lower
 
 from access.policy import (
     Access,
@@ -11,9 +13,10 @@ from access.policy import (
     can_change_space_people,
     can_manage_space,
 )
+from accounts.models import User
 from core.api import Conflict
 from people.models import Person
-from spaces.models import Space
+from spaces.models import Space, SpaceMembership
 
 EDITABLE_FIELDS = ("name", "color", "description", "share_contact_details")
 
@@ -64,3 +67,55 @@ def _check_name_is_free(access: Access, name: str, exclude: Space | None = None)
         taken = taken.exclude(pk=exclude.pk)
     if taken.exists():
         raise Conflict(f"You already have a space called “{name}”.")
+
+
+# ---------------------------------------------------------------- members
+
+
+def members_of(space: Space) -> list[dict[str, Any]]:
+    """Everyone in the space, owner first, then members by name."""
+    owner = {"user": space.owner, "role": "owner"}
+    members = [
+        {"user": membership.user, "role": membership.role}
+        for membership in space.memberships.select_related("user__me")
+    ]
+    return [owner, *sorted(members, key=lambda member: _name(member["user"]).casefold())]
+
+
+def people_to_share_with(access: Access, space: Space, text: str):
+    """Accounts on this server matching `text` that aren't in the space yet. Owner only."""
+    if not can_manage_space(access, space):
+        raise PermissionDenied("Only the owner can share this space.")
+    taken = [space.owner_id, *space.memberships.values_list("user_id", flat=True)]
+    return (
+        User.objects.filter(is_active=True)
+        .exclude(pk__in=taken)
+        .filter(Q(email__icontains=text) | Q(me__name__unaccent__icontains=text))
+        .select_related("me")
+        .order_by(Lower("email"))[:8]
+    )
+
+
+@transaction.atomic
+def share_with(access: Access, space: Space, user: User, role: str) -> SpaceMembership:
+    """Add `user` as a member: they see the space's people and its links."""
+    if not can_manage_space(access, space):
+        raise PermissionDenied("Only the owner can share this space.")
+    if user.pk == space.owner_id or space.memberships.filter(user=user).exists():
+        raise Conflict(f"{_name(user)} is already in {space.name}.")
+    if not user.is_active:
+        raise Conflict(f"{_name(user)}'s account is deactivated.")
+    return SpaceMembership.objects.create(space=space, user=user, role=role)
+
+
+def change_role(access: Access, membership: SpaceMembership, role: str) -> SpaceMembership:
+    if not can_manage_space(access, membership.space):
+        raise PermissionDenied("Only the owner can change roles.")
+    membership.role = role
+    membership.save(update_fields=["role", "updated_at"])
+    return membership
+
+
+def _name(user: User) -> str:
+    me = getattr(user, "me", None)
+    return me.name if me else user.email
