@@ -1,9 +1,11 @@
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError, connection
 from ninja import NinjaAPI, Schema
 from ninja.security import django_auth
 
 from accounts.api import router as auth_router
+from accounts.api import users_router
 from core.api import Conflict, validation_detail
 from graph.api import router as graph_router
 from interactions.api import router as interactions_router
@@ -20,6 +22,7 @@ from today.api import router as today_router
 api = NinjaAPI(title="FolkBook API", version="0.1.0", auth=django_auth)
 api.add_router("/setup", setup_router)
 api.add_router("/auth", auth_router)
+api.add_router("/users", users_router)
 api.add_router("/invites", invites_router)
 api.add_router("/people", people_router)
 api.add_router("/spaces", spaces_router)
@@ -46,6 +49,17 @@ def validation_error(request, exc):
 @api.exception_handler(Conflict)
 def conflict(request, exc):
     return api.create_response(request, {"detail": str(exc)}, status=409)
+
+
+class AboutOut(Schema):
+    version: str
+    source_url: str  # where to get this server's source code (AGPL)
+
+
+@api.get("/about", response=AboutOut, tags=["system"], auth=None)
+def about(request):
+    """Which FolkBook this is, and where its source code is."""
+    return {"version": settings.FOLKBOOK_VERSION, "source_url": settings.FOLKBOOK_SOURCE_URL}
 
 
 class HealthOut(Schema):

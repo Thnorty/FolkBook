@@ -25,3 +25,15 @@ def test_health_reports_unavailable_database(monkeypatch):
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "database": "unavailable"}
+
+
+def test_about_says_the_version_and_where_the_source_is(client, settings):
+    settings.FOLKBOOK_SOURCE_URL = "https://example.com/my-fork"
+
+    body = client.get("/api/about").json()
+
+    assert body == {
+        "version": settings.FOLKBOOK_VERSION,
+        "source_url": "https://example.com/my-fork",
+    }
+    assert body["version"].count(".") == 2  # read from pyproject.toml, e.g. "0.1.0"

@@ -110,4 +110,4 @@ cd frontend && npm test && npm run typecheck && npm run lint && npm run format:c
 
 ## License
 
-FolkBook is free software under the [GNU Affero General Public License v3.0 or later](LICENSE). You can use, change and share it; if you run a changed version as a service for others, you have to offer them your changed source code too.
+FolkBook is free software under the [GNU Affero General Public License v3.0 or later](LICENSE). You can use, change and share it; if you run a changed version as a service for others, you have to offer them your changed source code too. The app links to its source code (Settings → About, and under the log-in page); if you run a changed FolkBook, set `FOLKBOOK_SOURCE_URL` in `.env` to where your changes are.
