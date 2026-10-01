@@ -16,6 +16,7 @@ import { PeoplePage } from './features/people/PeoplePage'
 import { ProfilePage } from './features/person/ProfilePage'
 import { SpacePage } from './features/spaces/SpacePage'
 import { SpacesPage } from './features/spaces/SpacesPage'
+import { TodayPage } from './features/today/TodayPage'
 import { validatePeopleSearch } from './features/people/search'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
@@ -60,11 +61,7 @@ function placeholder<const Path extends string>(path: Path, title: string, note:
 }
 
 const appPages = [
-  placeholder(
-    '/',
-    'Today',
-    'Birthdays, people to get back in touch with, and a memory to refresh.',
-  ),
+  createRoute({ getParentRoute: () => appRoute, path: '/', component: TodayPage }),
   createRoute({
     getParentRoute: () => appRoute,
     path: 'people',
