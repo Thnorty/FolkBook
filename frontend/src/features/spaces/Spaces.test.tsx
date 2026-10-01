@@ -91,6 +91,16 @@ function server() {
       const found = items.filter((p) => p.name.toLowerCase().includes(search))
       return json({ items: found, count: found.length })
     },
+    'GET /api/graph': () =>
+      json({
+        nodes: [
+          { id: 'me', name: 'Ela', is_me: true, spaces: [], photo_url: null },
+          { id: 'oskar', name: 'Oskar Lind', is_me: false, spaces: [CLIMBING], photo_url: null },
+          { id: 'ines', name: 'Ines Duarte', is_me: false, spaces: [CLIMBING], photo_url: null },
+          { id: 'tom', name: 'Tom', is_me: false, spaces: [], photo_url: null },
+        ],
+        edges: [],
+      }),
     'GET /api/spaces/s1/hidden-people': () =>
       json({ items: hidden.map((id) => ({ id, name: 'Ola Nowak' })), count: hidden.length }),
     'GET /api/spaces/s3/hidden-people': () => json({ items: [], count: 0 }),
@@ -155,6 +165,21 @@ describe('space page', () => {
     await waitFor(() =>
       expect(screen.queryByRole('region', { name: /Taken out/ })).not.toBeInTheDocument(),
     )
+  })
+
+  it('shows its people in a small graph, which opens a profile', async () => {
+    server()
+    const router = renderApp('/spaces/s1')
+
+    const graph = await screen.findByRole('region', { name: 'In the graph' })
+    expect(
+      within(graph)
+        .getAllByRole('button')
+        .map((node) => node.textContent),
+    ).toEqual(['Me', 'Oskar Lind', 'Ines Duarte'])
+    await userEvent.click(within(graph).getByRole('button', { name: 'Oskar Lind' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/people/oskar'))
   })
 
   it("has no Edit or Delete in someone else's space", async () => {

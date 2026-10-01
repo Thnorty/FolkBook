@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
+import { initials } from './faces'
 import { NO_FILTERS, toCanvas, type GraphData, type Palette } from './graphModel'
 
 const ME = { id: 'u1', email: 'ela@example.com', is_admin: false, me: { id: 'me', name: 'Ela' } }
@@ -19,6 +20,7 @@ const node = (
   name,
   is_me: isMe,
   spaces,
+  photo_url: null,
 })
 const edge = (id: string, source: string, target: string, type: string, extra = {}) => ({
   id,
@@ -181,5 +183,14 @@ describe('toCanvas', () => {
     const { nodes } = toCanvas(GRAPH, { ...NO_FILTERS, spaces: ['s2'] }, palette)
 
     expect(nodes.map((n) => n.id)).toEqual(['me', 'kerem'])
+  })
+})
+
+describe('initials', () => {
+  it('takes the first and last names, in any script case', () => {
+    expect(initials('Emma Yılmaz')).toBe('EY')
+    expect(initials('Ela')).toBe('E')
+    expect(initials('şükrü öztürk')).toBe('ŞÖ')
+    expect(initials('Anna Maria van der Berg')).toBe('AB')
   })
 })

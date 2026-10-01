@@ -4,6 +4,7 @@ import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 
+from people.models import Person
 from tests.factories import PersonFactory, RelationshipFactory
 
 pytestmark = pytest.mark.django_db
@@ -16,6 +17,7 @@ def test_the_graph_of_a_viewer(api, world):
     assert set(nodes) == {"Kaan", "Oskar", "Ines", "Ela", "Deniz"}
     assert nodes["Kaan"]["is_me"] and not nodes["Ela"]["is_me"]
     assert [s["name"] for s in nodes["Oskar"]["spaces"]] == ["Climbing club"]
+    assert nodes["Oskar"]["photo_url"] is None  # no photo: the app draws initials
     assert {edge["kind"] for edge in body["edges"]} == {"relationship", "space", "member"}
     assert len(body["edges"]) == 5
 
@@ -87,3 +89,13 @@ def test_no_paths_to_yourself(api, world):
 @pytest.mark.parametrize("path", ["/graph/paths/{}", "/graph/neighborhood/{}"])
 def test_people_you_cannot_see_are_not_found(api, world, path):
     assert api.login(world.ela).get(path.format(world.jin.pk)).status_code == 404
+
+
+def test_nodes_carry_the_small_photo(api, world):
+    Person.objects.filter(pk=world.oskar.pk).update(photo="photos/oskar/abc123.webp")
+
+    nodes = {node["name"]: node for node in api.login(world.ela).get("/graph").json()["nodes"]}
+
+    assert nodes["Oskar"]["photo_url"] == (
+        f"/api/people/{world.oskar.pk}/photo?v=abc123&size=thumbnail"
+    )

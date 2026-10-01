@@ -34,6 +34,7 @@ export type CanvasNode = {
   id: string
   label: string
   fill: string
+  icon?: string
   /** Me stays in the middle. */
   fx?: number
   fy?: number
@@ -56,7 +57,19 @@ function edgeLabel(edge: ApiEdge): string | undefined {
   return edge.former ? `former ${label}` : label
 }
 
-export function toCanvas(graph: GraphData, filters: Filters, palette: Palette) {
+/** A person's color: their first space's, ink for you, faint without a space. */
+export function nodeFill(node: ApiNode, palette: Palette): string {
+  if (node.is_me) return palette.me
+  return node.spaces[0] ? palette.space[node.spaces[0].color] : palette.noSpace
+}
+
+export function toCanvas(
+  graph: GraphData,
+  filters: Filters,
+  palette: Palette,
+  /** Drawn faces by id (photo or initials); without one a node is a plain dot. */
+  faces: Record<string, string> = {},
+) {
   const keepEdge = (edge: ApiEdge) =>
     !(filters.hideFormer && edge.former) &&
     !(filters.familyOnly && !(edge.kind === 'relationship' && FAMILY.has(edge.type ?? '')))
@@ -76,11 +89,8 @@ export function toCanvas(graph: GraphData, filters: Filters, palette: Palette) {
     nodes: nodes.map((node): CanvasNode => ({
       id: node.id,
       label: node.is_me ? 'Me' : node.name,
-      fill: node.is_me
-        ? palette.me
-        : node.spaces[0]
-          ? palette.space[node.spaces[0].color]
-          : palette.noSpace,
+      fill: nodeFill(node, palette),
+      icon: faces[node.id],
       ...(node.is_me && { fx: 0, fy: 0 }),
       data: { cluster: node.is_me ? null : (node.spaces[0]?.name ?? null), isMe: node.is_me },
     })),
