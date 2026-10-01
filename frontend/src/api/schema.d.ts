@@ -379,6 +379,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/people/{person_id}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hide Person
+         * @description Take someone shared with you out of your book. Nobody else is affected.
+         */
+        post: operations["people_api_hide_person"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/people/{person_id}/unhide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unhide Person
+         * @description Add someone you took out back to your book.
+         */
+        post: operations["people_api_unhide_person"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/people/{person_id}/restore": {
         parameters: {
             query?: never;
@@ -492,6 +532,26 @@ export interface paths {
         post?: never;
         /** Remove Person */
         delete: operations["spaces_api_remove_person"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/spaces/{space_id}/hidden-people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hidden People
+         * @description People in this space that you took out of your book, to add back.
+         */
+        get: operations["spaces_api_list_hidden_people"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1066,6 +1126,8 @@ export interface components {
             can_edit: boolean;
             /** Can Delete */
             can_delete: boolean;
+            /** Can Hide */
+            can_hide: boolean;
         };
         /** ContactMethodIn */
         ContactMethodIn: {
@@ -1226,6 +1288,13 @@ export interface components {
              * Format: uuid
              */
             person_id: string;
+        };
+        /** PagedPersonRef */
+        PagedPersonRef: {
+            /** Items */
+            items: components["schemas"]["PersonRef"][];
+            /** Count */
+            count: number;
         };
         /** PagedRelationshipOut */
         PagedRelationshipOut: {
@@ -2176,6 +2245,48 @@ export interface operations {
             };
         };
     };
+    people_api_hide_person: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    people_api_unhide_person: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailOut"];
+                };
+            };
+        };
+    };
     people_api_restore_person: {
         parameters: {
             query?: never;
@@ -2403,6 +2514,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    spaces_api_list_hidden_people: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number | null;
+            };
+            header?: never;
+            path: {
+                space_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedPersonRef"];
+                };
             };
         };
     };

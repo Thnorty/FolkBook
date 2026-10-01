@@ -5,9 +5,16 @@ from django.shortcuts import get_object_or_404
 from ninja import Router, Status
 from ninja.pagination import PageNumberPagination, paginate
 
-from access.policy import Access, visible_people, visible_spaces, visible_spaces_with_role
+from access.policy import (
+    Access,
+    hidden_people,
+    visible_people,
+    visible_spaces,
+    visible_spaces_with_role,
+)
 from core.api import access_for
 from core.db import by_name
+from people.schemas import PersonRef
 from spaces import services
 from spaces.models import Space
 from spaces.schemas import SpaceIn, SpaceOut, SpacePatch, SpacePersonIn
@@ -81,3 +88,12 @@ def remove_person(request, space_id: UUID, person_id: UUID):
     person = get_object_or_404(visible_people(access), pk=person_id)
     services.remove_person(access, visible_space(access, space_id), person)
     return Status(204, None)
+
+
+@router.get("/{space_id}/hidden-people", response=list[PersonRef])
+@paginate(PageNumberPagination, page_size=50)
+def list_hidden_people(request, space_id: UUID):
+    """People in this space that you took out of your book, to add back."""
+    access = access_for(request)
+    space = visible_space(access, space_id)
+    return hidden_people(access).filter(spaces=space).order_by(by_name(), "pk")

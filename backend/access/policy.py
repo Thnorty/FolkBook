@@ -27,7 +27,7 @@ from django.db.models import (
 
 from accounts.models import User
 from interactions.models import Interaction
-from people.models import ContactMethod, MemoryAid, Note, Person
+from people.models import ContactMethod, HiddenPerson, MemoryAid, Note, Person
 from relationships.models import Relationship
 from reminders.models import KeepInTouch
 from spaces.models import Space, SpaceMembership, SpacePerson
@@ -131,12 +131,27 @@ def _people_in(spaces: QuerySet[Space]) -> Q:
 # ---------------------------------------------------------------- people
 
 
-def visible_people(access: Access) -> QuerySet[Person]:
-    """Everyone the user can see: their own book, plus people in spaces they can see."""
+def _reachable_people(access: Access) -> QuerySet[Person]:
+    """Their own book plus people in spaces they can see, before anyone they hid."""
     own = Q(account=access.user)
     if not access.is_space_limited:
         own |= Q(owner=access.user)
     return Person.objects.filter(own | _people_in(visible_spaces(access)), deleted_at__isnull=True)
+
+
+def _hidden_by(access: Access) -> Exists:
+    return Exists(HiddenPerson.objects.filter(user=access.user, person=OuterRef("pk")))
+
+
+def visible_people(access: Access) -> QuerySet[Person]:
+    """Everyone the user can see: their own book, plus people in spaces they can see,
+    less shared people they took out of their book."""
+    return _reachable_people(access).exclude(_hidden_by(access))
+
+
+def hidden_people(access: Access) -> QuerySet[Person]:
+    """Shared people the user took out of their book, who they could add back."""
+    return _reachable_people(access).filter(_hidden_by(access))
 
 
 def can_see_person(access: Access, person: Person) -> bool:
@@ -172,6 +187,16 @@ def can_delete_person(access: Access, person: Person) -> bool:
         not access.read_only
         and person.owner_id == access.user.pk
         and person.account_id is None
+        and can_see_person(access, person)
+    )
+
+
+def can_hide_person(access: Access, person: Person) -> bool:
+    """Take a shared person out of your own book. Your own people get deleted instead."""
+    return (
+        not access.read_only
+        and not access.is_space_limited
+        and person.owner_id != access.user.pk
         and can_see_person(access, person)
     )
 
