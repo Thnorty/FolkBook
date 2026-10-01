@@ -137,7 +137,12 @@ const appPages = [
     path: 'people/$personId',
     component: ProfilePage,
   }),
-  placeholder('graph', 'Graph', 'How everyone you know is connected.'),
+  createRoute({
+    getParentRoute: () => appRoute,
+    path: 'graph',
+    // Loaded when opened: the WebGL graph (Reagraph, three.js) is most of the app's size.
+    component: lazyRouteComponent(() => import('./features/graph/GraphPage'), 'GraphPage'),
+  }),
   createRoute({ getParentRoute: () => appRoute, path: 'search', component: SearchPage }),
   createRoute({ getParentRoute: () => appRoute, path: 'spaces', component: SpacesPage }),
   createRoute({ getParentRoute: () => appRoute, path: 'spaces/$spaceId', component: SpacePage }),

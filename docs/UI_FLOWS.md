@@ -118,12 +118,12 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 4. **Ending a relationship** (divorce, left a job): end date or "Don't know" → status becomes *former*. The dialog lists who moves to "Former" with it (e.g. in-laws); derived in-laws update automatically. Parent links never end. Undo reopens it
 
 ### 3.9 Graph view
-- **Default:** you ("Me") in the center, people around, clustered by space (colored by space tab color)
-- **Filter bar:** spaces, relationship types, family only, "hide former"
-- **Tap a node:** preview card (photo, name, top memory aid) → open profile
-- **"How do I know…?":** search a person → the path from Me is drawn as an ink line, step by step (Me → Defne → Tom), with labels on each hop ("friend", "met at Hackathon 2026")
-- **Focus mode:** double-tap a person to center them and show only their neighborhood (1–2 hops)
-- **Mobile:** pinch/drag, bottom sheet for the preview card; desktop: hover previews, side panel
+- **Default:** you ("Me") pinned in the center, people around, clustered and colored by their first space; lines labelled with the relationship, former ones dashed
+- **Filter bar:** space chips (any number), "Family only" (family links and the people on them), "Hide former"
+- **Click a node:** desktop opens the same peek panel as People; phones get a bottom sheet (name, how you met, a memory aid → Open profile · Focus · Log). Click the canvas to close
+- **Focus mode:** double-click a person to show only them and the people one step away; "Show everyone" goes back
+- Zoom in / out / Fit buttons; empty graph: "Your graph starts with you"
+- Later: **"How do I know…?"** (the path from Me drawn as an ink line, #34), family tree (#36), folded space bubbles for big notebooks (#35)
 
 ### 3.10 Family tree mode
 - Toggle in Graph ("Network / Family tree") or from a profile ("View family tree")

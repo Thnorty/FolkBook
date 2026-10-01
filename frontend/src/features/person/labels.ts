@@ -67,7 +67,7 @@ export const PRONOUNS: Record<Pronouns, string> = {
 }
 
 /** What a stored link says about the other person: "friend", "met at Hackathon 2026". */
-export function linkLabel({ type, label }: components['schemas']['RelationshipOut']): string {
+export function linkLabel({ type, label }: { type: string; label: string }): string {
   if (type === 'met_at') return `met at ${label}`
   if (type === 'custom') return label
   return relationLabel(type)
