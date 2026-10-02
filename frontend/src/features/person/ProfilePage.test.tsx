@@ -15,6 +15,7 @@ const EMMA = {
   work: 'Designer at Loop',
   birthday: { day: 12, month: 3, year: null },
   tags: ['Galatasaray'],
+  pronouns: 'she',
   spaces: [{ id: 's1', name: 'Friends', color: 'sage' }],
   is_me: false,
   is_mine: true,
@@ -153,6 +154,7 @@ describe('profile page', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Emma Yılmaz' }),
     ).toBeInTheDocument()
+    expect(screen.getByText('she / her')).toBeInTheDocument()
     expect(screen.getByText('Met at university in Istanbul, 2015')).toBeInTheDocument()
     expect(screen.getByText('Designer at Loop')).toBeInTheDocument()
     expect(screen.getByText(/Birthday .*12/)).toBeInTheDocument()
@@ -353,6 +355,7 @@ describe('peek panel', () => {
 
     const panel = await screen.findByRole('complementary', { name: 'Peek' })
     expect(await within(panel).findByRole('heading', { name: 'Emma Yılmaz' })).toBeInTheDocument()
+    expect(within(panel).getByText('she / her')).toBeInTheDocument()
     expect(router.state.location.search).toEqual({ peek: 'emma' })
     expect(within(panel).getByRole('link', { name: 'Expand to page' })).toHaveAttribute(
       'href',
