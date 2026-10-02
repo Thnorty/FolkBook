@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Choice, pickedBoxClass } from '@/components/ui/choice'
-import { FormDialog, FormDialogFooter } from '@/components/ui/form-dialog'
+import { FormDialog, FooterNote, FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { labelClass } from '@/components/ui/label'
 import { isoDay } from '@/lib/dates'
@@ -120,7 +120,7 @@ export function EndConnectionDialog({
           submitLabel="Mark as former"
           busy={end.isPending}
           onCancel={onClose}
-          hint="Parent links never end."
+          start={<FooterNote>Parent links never end.</FooterNote>}
         />
       </form>
     </FormDialog>

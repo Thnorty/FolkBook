@@ -2,9 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import { useDeferredValue, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
-import { FormDialog, FormDialogFooter } from '@/components/ui/form-dialog'
+import { FormDialog, FooterNote, FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
-import { Kbd } from '@/components/ui/kbd'
 import { labelClass } from '@/components/ui/label'
 import { notify } from '@/lib/notify'
 import { peopleCount } from './labels'
@@ -161,11 +160,7 @@ export function ShareDialog({ space, onClose }: { space: Space; onClose: () => v
           submitLabel={pending.length > 0 ? `Share with ${peopleCount(pending.length)}` : 'Save'}
           busy={save.isPending}
           onCancel={onClose}
-          hint={
-            <>
-              Only accounts on this server · <Kbd shortcut={{ key: 'Enter', mod: true }} /> saves
-            </>
-          }
+          start={<FooterNote>Only accounts on this server</FooterNote>}
         />
       </form>
     </FormDialog>

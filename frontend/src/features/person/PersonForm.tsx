@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { Button } from '@/components/ui/button'
 import { FormDialogFooter } from '@/components/ui/form-dialog'
-import { Kbd } from '@/components/ui/kbd'
 import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
 import { SharedSpaceConfirm } from '@/features/spaces/SharedSpaceConfirm'
@@ -355,16 +354,7 @@ export function PersonForm({
         />
       )}
 
-      <FormDialogFooter
-        submitLabel="Save person"
-        busy={saving}
-        onCancel={onCancel}
-        hint={
-          <>
-            <Kbd shortcut={{ key: 'Enter', mod: true }} /> saves · Esc cancels
-          </>
-        }
-      />
+      <FormDialogFooter submitLabel="Save person" busy={saving} onCancel={onCancel} />
     </form>
   )
 }

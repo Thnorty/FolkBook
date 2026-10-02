@@ -5,7 +5,6 @@ import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import type { SpaceColor } from '@/components/notebook/spaces'
 import { FormDialog, FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
-import { Kbd } from '@/components/ui/kbd'
 import { Label, labelClass } from '@/components/ui/label'
 import { createSpace, refreshSpaces, spaceQuery, spacesQuery, updateSpace } from './queries'
 import { SpaceFormContext } from './useSpaceForm'
@@ -173,17 +172,7 @@ function SpaceForm({ initial, submitLabel, saving, error, onSubmit, onCancel }: 
         </p>
       )}
 
-      <FormDialogFooter
-        submitLabel={submitLabel}
-        busy={saving}
-        onCancel={onCancel}
-        hint={
-          <>
-            <Kbd shortcut={{ key: 'Enter', mod: true }} /> {initial ? 'saves' : 'creates'} · Esc
-            cancels
-          </>
-        }
-      />
+      <FormDialogFooter submitLabel={submitLabel} busy={saving} onCancel={onCancel} />
     </form>
   )
 }

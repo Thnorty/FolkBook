@@ -110,6 +110,8 @@ These rules are the product. Breaking one is a critical bug.
 - Keyboard shortcuts: `N` add person, `Shift+N` quick capture, `Ctrl/Cmd+K` command palette, `L` log an interaction (on a profile). Show `Ctrl` on Windows/Linux and `⌘` on macOS.
 - Components from shadcn/ui are restyled to the notebook design; don't ship default shadcn looks.
 - **Form warnings:** forms use plain HTML constraints (`required`, `minLength`, `type="email"`, `max`…); `<FieldWarnings>` (mounted once in `Providers`) replaces the browser's popups with our own bubble and wording. For any other warning about a field, call `warnAt(field, text)` from `src/lib/fieldWarnings.ts`. Never use `alert()` or the browser's bubbles.
+- **Form footers** (`FormDialogFooter`) show their shortcuts in tooltips on hover or focus (Save: Ctrl/⌘+Enter, Cancel: Esc), not as text; a short note can go in `start` with `FooterNote`. Use `Tooltip` from `src/components/ui/tooltip.tsx` for other hover labels.
+- **Esc** closes only the topmost thing: Radix dialogs and menus mark the key handled, and page-level Esc handlers go through `useShortcut`, which skips handled keys and typing.
 - **Dialogs** arrive with `animate-sheet-up` (phones) / `animate-dialog-in` (desktop) and `reduced:animate-fade-in`, defined in `src/index.css`; `FormDialog` and `ConfirmDialog` already do.
 
 ## Tests

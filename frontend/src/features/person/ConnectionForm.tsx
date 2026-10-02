@@ -5,7 +5,6 @@ import type { components } from '@/api/schema'
 import { Choice } from '@/components/ui/choice'
 import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
-import { Kbd } from '@/components/ui/kbd'
 import { labelClass } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { peopleListQuery } from '@/features/people/queries'
@@ -227,11 +226,6 @@ export function ConnectionForm({
         submitLabel={link ? 'Save' : 'Connect them'}
         busy={saving}
         onCancel={onCancel}
-        hint={
-          <>
-            <Kbd shortcut={{ key: 'Enter', mod: true }} /> saves · Esc cancels
-          </>
-        }
       />
     </form>
   )

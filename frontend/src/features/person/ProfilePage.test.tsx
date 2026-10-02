@@ -366,6 +366,30 @@ describe('peek panel', () => {
   })
 })
 
+describe('peek panel and Esc', () => {
+  it('closes only the dialog on top of it, then the panel itself', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('min-width'),
+      media: query,
+    }))
+    server({ 'GET /api/people': () => json({ items: [{ ...EMMA, spaces: [] }], count: 1 }) })
+    renderApp('/people?peek=emma')
+    const panel = await screen.findByRole('complementary', { name: 'Peek' })
+    const timeline = await within(panel).findByRole('region', { name: 'Timeline' })
+
+    await userEvent.click(within(timeline).getByRole('button', { name: /Log/ }))
+    await screen.findByRole('dialog', { name: 'Log with Emma' })
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('complementary', { name: 'Peek' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(screen.queryByRole('complementary', { name: 'Peek' })).not.toBeInTheDocument(),
+    )
+  })
+})
+
 describe('peek panel and the list', () => {
   it("keeps the card's photo and name in the list while the panel shows them", async () => {
     vi.stubGlobal('matchMedia', (query: string) => ({

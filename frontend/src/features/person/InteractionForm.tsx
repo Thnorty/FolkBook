@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Choice, pickedBoxClass } from '@/components/ui/choice'
 import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
-import { Kbd } from '@/components/ui/kbd'
 import { labelClass } from '@/components/ui/label'
 import { isoDay } from '@/lib/dates'
 import { warnAt } from '@/lib/fieldWarnings'
@@ -227,11 +226,6 @@ export function InteractionForm({
         submitLabel={interaction ? 'Save' : 'Save to timeline'}
         busy={saving}
         onCancel={onCancel}
-        hint={
-          <>
-            <Kbd shortcut={{ key: 'Enter', mod: true }} /> saves · Esc cancels
-          </>
-        }
       />
     </form>
   )

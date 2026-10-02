@@ -1,8 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import { Maximize2, X } from 'lucide-react'
-import { useEffect } from 'react'
 import { ProfileView } from '@/features/person/ProfileView'
+import { useShortcut } from '@/lib/shortcuts'
 import type { FlyOrigin } from '@/motion/FlyFrom'
+
+const CLOSE = { key: 'Escape' }
 
 type PeekPanelProps = {
   personId: string
@@ -13,11 +15,8 @@ type PeekPanelProps = {
 
 /** A person's profile beside the People list, on desktop (screen 1c). */
 export function PeekPanel({ personId, flyFrom, onClose }: PeekPanelProps) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  // Not when a dialog or menu on top closes first, or while typing in the panel.
+  useShortcut(CLOSE, onClose)
 
   return (
     <aside
