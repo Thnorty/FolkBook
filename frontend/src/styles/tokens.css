@@ -68,6 +68,9 @@
   /* Shadows */
   --shadow-color: light-dark(rgb(34 31 26 / 0.1), rgb(0 0 0 / 0.45));
   --shadow-color-tight: light-dark(rgb(34 31 26 / 0.1), rgb(0 0 0 / 0.3));
+
+  /* Behind dialogs: dims the page, darker at night (ink would lighten it in dark mode) */
+  --scrim: light-dark(rgb(34 31 26 / 0.25), rgb(0 0 0 / 0.55));
 }
 
 :root[data-theme='light'] {

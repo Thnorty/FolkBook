@@ -89,6 +89,7 @@
   --color-danger: var(--danger);
   --color-danger-hover: var(--danger-hover);
   --color-inverse: var(--inverse);
+  --color-scrim: var(--scrim);
   --color-on-inverse: var(--on-inverse);
   --color-on-inverse-soft: var(--on-inverse-soft);
   --color-inverse-accent: var(--inverse-accent);

@@ -39,7 +39,7 @@ export function FormDialog({
   return (
     <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-30 animate-fade-in bg-ink/25" />
+        <Dialog.Overlay className="fixed inset-0 z-30 animate-fade-in bg-scrim" />
         <Dialog.Content
           aria-describedby={undefined}
           // Ctrl/⌘+Enter submits from anywhere in the dialog, not just from inside the form
