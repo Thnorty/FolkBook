@@ -61,8 +61,8 @@ flowchart LR
 
 ### 3.3 Add a person (manual)
 1. "+" → **Add person**
-2. Minimal form: name (required), photo, "how we met", spaces (multi-select chips)
-3. "More details" expands: birthday, contact info, tags
+2. Minimal form: name (required), photo, pronouns (optional chips: not set · she · he · they), "how we met", spaces (multi-select chips)
+3. "More details" expands: work, birthday, contact info, tags
 4. Save → lands on the new profile with a hint: "Add something to remember about them"
 
 ### 3.4 Person profile (the most important screen)

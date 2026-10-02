@@ -111,7 +111,7 @@ describe('adding someone', () => {
     await userEvent.click(within(form).getByRole('button', { name: /More details/ }))
     await userEvent.type(within(form).getByLabelText('Day'), '14')
     await userEvent.selectOptions(within(form).getByLabelText('Month'), '6')
-    await userEvent.selectOptions(within(form).getByLabelText('Pronouns'), 'he / him')
+    await userEvent.click(within(form).getByRole('radio', { name: 'he / him' }))
     await userEvent.click(within(form).getByRole('button', { name: /Add a phone/ }))
     await userEvent.type(within(form).getByLabelText('Contact 1'), '+46 70 555 12 90')
     await userEvent.type(within(form).getByLabelText('Tags'), 'designer{Enter}climbing,')
