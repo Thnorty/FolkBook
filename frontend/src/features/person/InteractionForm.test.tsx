@@ -235,6 +235,18 @@ describe('logging an interaction', () => {
     ])
   })
 
+  it('shows the shortcuts when hovering Save and Cancel', async () => {
+    server()
+    renderApp('/people/emma')
+    const timeline = await screen.findByRole('region', { name: 'Timeline' })
+    await userEvent.click(within(timeline).getByRole('button', { name: /Log/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Log with Emma' })
+
+    await userEvent.hover(within(dialog).getByRole('button', { name: 'Save to timeline' }))
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Ctrl+Enter')
+  })
+
   it("isn't offered on your own page", async () => {
     server()
     renderApp('/people/me')

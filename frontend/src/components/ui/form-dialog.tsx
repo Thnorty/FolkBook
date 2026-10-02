@@ -2,7 +2,13 @@ import { X } from 'lucide-react'
 import { Dialog } from 'radix-ui'
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
+import { Kbd } from '@/components/ui/kbd'
+import { Tooltip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+
+/** Ctrl/⌘+Enter submits from anywhere in the dialog; Esc closes it. */
+const SUBMIT = { key: 'Enter', mod: true }
+const CANCEL = { key: 'Esc' }
 
 type FormDialogProps = {
   title: string
@@ -98,30 +104,28 @@ export function FormDialog({
 }
 
 /**
- * The footer of such a form: the shortcut hint, Cancel and the submit button on desktop.
- * Phones submit from the header, except in a small form, which ends in a wide button.
- * `start` (e.g. Delete) takes the bottom left; the hint then goes under the buttons.
+ * The footer of such a form: Cancel and the submit button on desktop, their shortcuts
+ * (Esc, Ctrl/⌘+Enter) in tooltips. Phones submit from the header, except in a small
+ * form, which ends in a wide button. `start` (e.g. Delete, or a short note) takes the
+ * bottom left.
  */
 export function FormDialogFooter({
   submitLabel,
   busy,
   onCancel,
-  hint,
   small = false,
   start,
 }: {
   submitLabel: string
   busy: boolean
   onCancel: () => void
-  hint: ReactNode
   small?: boolean
   start?: ReactNode
 }) {
-  const hintText = <span className="hidden type-meta text-ink-faint md:inline">{hint}</span>
   return (
-    <div className={cn('flex-col gap-2 md:flex', small ? 'flex' : 'hidden')}>
-      <div className="flex items-center gap-2">
-        {start ?? hintText}
+    <div className={cn('items-center gap-2 md:flex', small ? 'flex' : 'hidden')}>
+      {start}
+      <Tooltip content={<Kbd shortcut={CANCEL} />}>
         <Button
           type="button"
           variant="ghost"
@@ -130,6 +134,8 @@ export function FormDialogFooter({
         >
           Cancel
         </Button>
+      </Tooltip>
+      <Tooltip content={<Kbd shortcut={SUBMIT} />}>
         <Button
           type="submit"
           disabled={busy}
@@ -137,8 +143,12 @@ export function FormDialogFooter({
         >
           {busy ? 'Saving…' : submitLabel}
         </Button>
-      </div>
-      {start && <div className="hidden justify-end md:flex">{hintText}</div>}
+      </Tooltip>
     </div>
   )
+}
+
+/** A short note at the footer's left, e.g. "Parent links never end." */
+export function FooterNote({ children }: { children: ReactNode }) {
+  return <span className="hidden type-meta text-ink-faint md:inline">{children}</span>
 }
