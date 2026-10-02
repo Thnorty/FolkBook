@@ -3,6 +3,7 @@ import { ChevronDown, ImagePlus, Trash2 } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { Button } from '@/components/ui/button'
+import { Choice } from '@/components/ui/choice'
 import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
@@ -219,6 +220,27 @@ export function PersonForm({
         />
       </div>
 
+      <fieldset>
+        <legend className={labelClass}>
+          Pronouns <span className="font-mono tracking-normal normal-case">optional</span>
+        </legend>
+        <div className="flex flex-wrap gap-1.5">
+          {(['', ...Object.keys(PRONOUNS)] as (Pronouns | '')[]).map((option) => (
+            <Choice
+              key={option || 'unset'}
+              name="pronouns"
+              checked={pronouns === option}
+              onChange={() => setPronouns(option)}
+            >
+              {option ? PRONOUNS[option] : 'Not set'}
+            </Choice>
+          ))}
+        </div>
+        <p className="mt-1.5 type-small text-ink-faint">
+          Lets FolkBook say “sister” or “father-in-law” instead of “sibling” or “parent-in-law”.
+        </p>
+      </fieldset>
+
       <div>
         <Label htmlFor="person-met">How we met</Label>
         <Input
@@ -286,7 +308,7 @@ export function PersonForm({
         >
           <span className="font-medium">More details</span>
           <span className="type-meta text-ink-faint">
-            work · birthday · pronouns{ownsDetails && ' · contact · tags'}
+            work · birthday{ownsDetails && ' · contact · tags'}
           </span>
           <ChevronDown
             aria-hidden
@@ -306,25 +328,6 @@ export function PersonForm({
               />
             </div>
             <BirthdayFields value={birthday} onChange={setBirthday} />
-            <div>
-              <Label htmlFor="person-pronouns">Pronouns</Label>
-              <select
-                id="person-pronouns"
-                value={pronouns}
-                onChange={(event) => setPronouns(event.target.value as Pronouns | '')}
-                className="h-11 w-full rounded-card border border-line-input bg-card px-3 text-input outline-none focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-focus-glow md:h-10"
-              >
-                <option value="">Not set</option>
-                {(Object.keys(PRONOUNS) as Pronouns[]).map((option) => (
-                  <option key={option} value={option}>
-                    {PRONOUNS[option]}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1.5 type-small text-ink-faint">
-                Optional. Lets FolkBook say “sister” instead of “sibling”.
-              </p>
-            </div>
             {ownsDetails && (
               <>
                 <ContactFields value={contacts} onChange={setContacts} />
