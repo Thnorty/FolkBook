@@ -255,6 +255,30 @@ describe('profile page', () => {
     ).toBeInTheDocument()
   })
 
+  it('says when they are snoozed, and wakes them up', async () => {
+    const snoozed = {
+      interval_days: 7,
+      snoozed_until: '2099-10-09',
+      stopped: false,
+      default_interval_days: null,
+      next_nudge_on: '2099-10-09',
+    }
+    const writes = server({ 'GET /api/keep-in-touch/emma': () => json(snoozed) })
+    renderApp('/people/emma')
+    const keep = await section('Keep in touch')
+
+    expect(await within(keep).findByText(/Snoozed until .*2099/)).toBeInTheDocument()
+    await userEvent.click(within(keep).getByRole('button', { name: 'Wake up' }))
+
+    await waitFor(() =>
+      expect(writes.at(-1)).toMatchObject({
+        method: 'PUT',
+        path: '/api/keep-in-touch/emma',
+        body: { snoozed_until: null },
+      }),
+    )
+  })
+
   it('changes how often to keep in touch, and stops', async () => {
     const writes = server()
     renderApp('/people/emma')

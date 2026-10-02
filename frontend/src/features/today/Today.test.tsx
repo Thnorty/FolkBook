@@ -224,7 +224,7 @@ describe('Today', () => {
     ])
   })
 
-  it('shows another memory aid, and hides them once you got it', async () => {
+  it('shows another memory aid', async () => {
     server()
     renderApp('/')
     const remember = await section('Remember?')
@@ -232,11 +232,7 @@ describe('Today', () => {
 
     await userEvent.click(within(remember).getByRole('button', { name: 'Show another' }))
     expect(await within(remember).findByText('Loves figs')).toBeInTheDocument()
-    await userEvent.click(within(remember).getByRole('button', { name: 'Got it' }))
-
-    await waitFor(() =>
-      expect(screen.queryByRole('region', { name: 'Remember?' })).not.toBeInTheDocument(),
-    )
+    expect(within(remember).queryByRole('button', { name: 'Got it' })).not.toBeInTheDocument()
   })
 
   it('remembers on this device that a shared space was dismissed', async () => {

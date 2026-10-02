@@ -146,7 +146,7 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 Sections, each hidden when empty; with nothing at all, an empty state (Add someone · Quick capture). Dates come from the device, so "today" follows the user's time zone.
 1. **Birthdays** (today and the next 7 days): "Turns 34 today" → *Wish* logs "Birthday wishes" in one tap (Undo)
 2. **Keep in touch:** nudge cards (see DECISIONS for when someone is due), with a pinned memory aid as a hint → *We talked* (logs "Talked" today) · *Snooze* (a week) · *Stop*; each with Undo
-3. **Remember?** a random memory aid on a sticky note → *Got it* · *Show another*
+3. **Remember?** a random memory aid on a sticky note → *Show another*
 4. **Sharing ended:** people who left your book because of someone else, and who you kept (§3.14)
 5. **Shared with you:** spaces others shared with you → *Open space* · *Dismiss* (remembered on this device)
 6. **Fill in the blanks:** people without "how you know them" → *Start with Anna →* · *See all*
