@@ -8,6 +8,7 @@ import type { ReactNode } from 'react'
 import { FlyFrom, type FlyOrigin } from '@/motion/FlyFrom'
 import { Shared } from '@/motion/PageTurn'
 import { sharedPerson } from '@/motion/sharedIds'
+import { PRONOUNS } from './labels'
 import type { PersonDetail } from './queries'
 import { usePersonForm } from './usePersonForm'
 
@@ -66,6 +67,9 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
           sharedPerson.name(person.id),
           flyFrom?.name,
           <h1 className="type-display">{person.name}</h1>,
+        )}
+        {person.pronouns && (
+          <p className="type-small text-ink-faint">{PRONOUNS[person.pronouns]}</p>
         )}
         {person.how_we_met && <p className="text-ink-soft">{person.how_we_met}</p>}
         {person.last_talked_on && (
