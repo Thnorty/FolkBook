@@ -5,13 +5,16 @@ from access.policy import (
     can_create_relationship,
     can_delete_person,
     can_edit_person,
+    can_leave_space,
     can_write_private,
+    visible_access_ended,
     visible_contact_methods,
     visible_notes,
     visible_people,
     visible_relationships,
     visible_spaces,
 )
+from people.models import AccessEnded
 
 
 def names(queryset) -> set[str]:
@@ -41,6 +44,14 @@ def test_private_notes_are_hidden_unless_allowed(world):
     assert visible_notes(with_private).count() == 1
 
 
+def test_access_ended_cards_are_private(world):
+    AccessEnded.objects.create(user=world.ela, reason="removed", by="Defne", lost_count=2)
+
+    assert visible_access_ended(Access.for_user(world.ela)).count() == 1
+    assert not visible_access_ended(Access.limited(world.ela)).exists()
+    assert not visible_access_ended(Access.for_user(world.deniz)).exists()
+
+
 def test_read_only_access_can_change_nothing(world):
     key = Access.limited(world.ela, include_private=True)
 
@@ -48,6 +59,7 @@ def test_read_only_access_can_change_nothing(world):
     assert not can_delete_person(key, world.oskar)
     assert not can_write_private(key, world.oskar)
     assert not can_create_relationship(key, world.oskar, world.ines)
+    assert not can_leave_space(key, world.hackathon)
 
 
 def test_writable_limited_access_can_only_link_inside_its_spaces(world):

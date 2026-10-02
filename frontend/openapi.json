@@ -919,6 +919,16 @@
           },
           {
             "in": "query",
+            "name": "kept",
+            "schema": {
+              "default": false,
+              "title": "Kept",
+              "type": "boolean"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
             "name": "page",
             "schema": {
               "default": 1,
@@ -958,7 +968,7 @@
             }
           }
         },
-        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.\n`recent`: people added to your own book in the last 30 days, newest first.\n\n`search` matches names, how you met, work, tags, spaces and your own notes and\nmemory aids, ignoring case and accents.",
+        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.\n`recent`: people added to your own book in the last 30 days, newest first.\n`kept`: your copies of people you lost sight of.\n\n`search` matches names, how you met, work, tags, spaces and your own notes and\nmemory aids, ignoring case and accents.",
         "tags": [
           "people"
         ],
@@ -2045,6 +2055,156 @@
           },
           "required": true
         },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "spaces_api_remove_member",
+        "summary": "Remove Member",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "description": "The owner removes a member. They keep copies of anyone they wrote about.",
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}/stop-sharing": {
+      "post": {
+        "operationId": "spaces_api_stop_sharing",
+        "summary": "Stop Sharing",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "description": "The owner removes every member: the space is private again.",
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}/leave-preview": {
+      "get": {
+        "operationId": "spaces_api_leave_preview",
+        "summary": "Leave Preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeavePreviewOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "What leaving would do: who you'd keep a copy of, and how many others would go.",
+        "tags": [
+          "spaces"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/spaces/{space_id}/leave": {
+      "post": {
+        "operationId": "spaces_api_leave_space",
+        "summary": "Leave Space",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "space_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Space Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeftOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Stop seeing a space shared with you. Copies of anyone you wrote about stay.",
+        "tags": [
+          "spaces"
+        ],
         "security": [
           {
             "SessionAuth": []
@@ -3240,6 +3400,69 @@
         ]
       }
     },
+    "/api/today/access-ended": {
+      "get": {
+        "operationId": "today_api_list_access_ended",
+        "summary": "List Access Ended",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccessEndedOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "description": "People who left your book because of someone else, newest first, until dismissed.",
+        "tags": [
+          "today"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/today/access-ended/{notice_id}": {
+      "delete": {
+        "operationId": "today_api_dismiss_access_ended",
+        "summary": "Dismiss Access Ended",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notice_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Notice Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "today"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/search": {
       "get": {
         "operationId": "search_api_search_everything",
@@ -3997,6 +4220,31 @@
         "title": "Birthday",
         "type": "object"
       },
+      "KeptOut": {
+        "description": "Where a kept copy came from: \"was shared by Defne in Hackathon 2026 until 22 Sep\".",
+        "properties": {
+          "from_owner": {
+            "title": "From Owner",
+            "type": "string"
+          },
+          "space": {
+            "title": "Space",
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_owner",
+          "space",
+          "at"
+        ],
+        "title": "KeptOut",
+        "type": "object"
+      },
       "PagedPersonOut": {
         "properties": {
           "items": {
@@ -4120,6 +4368,16 @@
             "format": "date-time",
             "title": "Added At",
             "type": "string"
+          },
+          "kept": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeptOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -4137,7 +4395,8 @@
           "needs_details",
           "last_talked_on",
           "pronouns",
-          "added_at"
+          "added_at",
+          "kept"
         ],
         "title": "PersonOut",
         "type": "object"
@@ -4317,6 +4576,16 @@
             "title": "Added At",
             "type": "string"
           },
+          "kept": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KeptOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "contact_methods": {
             "items": {
               "$ref": "#/components/schemas/ContactMethodOut"
@@ -4353,6 +4622,7 @@
           "last_talked_on",
           "pronouns",
           "added_at",
+          "kept",
           "contact_methods",
           "can_edit",
           "can_delete",
@@ -4998,6 +5268,76 @@
           "role"
         ],
         "title": "RoleIn",
+        "type": "object"
+      },
+      "KeptPreviewOut": {
+        "description": "Someone you'd keep a copy of, and what you wrote about them (screen 5a).",
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "integer"
+          },
+          "memory_aids": {
+            "title": "Memory Aids",
+            "type": "integer"
+          },
+          "interactions": {
+            "title": "Interactions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "person",
+          "notes",
+          "memory_aids",
+          "interactions"
+        ],
+        "title": "KeptPreviewOut",
+        "type": "object"
+      },
+      "LeavePreviewOut": {
+        "properties": {
+          "kept": {
+            "items": {
+              "$ref": "#/components/schemas/KeptPreviewOut"
+            },
+            "title": "Kept",
+            "type": "array"
+          },
+          "leaving": {
+            "title": "Leaving",
+            "type": "integer"
+          },
+          "own_people": {
+            "title": "Own People",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kept",
+          "leaving",
+          "own_people"
+        ],
+        "title": "LeavePreviewOut",
+        "type": "object"
+      },
+      "LeftOut": {
+        "properties": {
+          "kept": {
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            },
+            "title": "Kept",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kept"
+        ],
+        "title": "LeftOut",
         "type": "object"
       },
       "PagedRelationshipOut": {
@@ -6055,6 +6395,71 @@
         ],
         "title": "RememberOut",
         "type": "object"
+      },
+      "AccessEndedOut": {
+        "description": "People left your book because of someone else (screen 4n). The app words it:\n\"Defne stopped sharing Hackathon 2026. You kept 3 people you had notes on.\"",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/Reason"
+          },
+          "by": {
+            "title": "By",
+            "type": "string"
+          },
+          "space": {
+            "title": "Space",
+            "type": "string"
+          },
+          "about": {
+            "title": "About",
+            "type": "string"
+          },
+          "lost": {
+            "title": "Lost",
+            "type": "integer"
+          },
+          "kept": {
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            },
+            "title": "Kept",
+            "type": "array"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reason",
+          "by",
+          "space",
+          "about",
+          "lost",
+          "kept",
+          "at"
+        ],
+        "title": "AccessEndedOut",
+        "type": "object"
+      },
+      "Reason": {
+        "enum": [
+          "removed",
+          "stopped_sharing",
+          "space_deleted",
+          "member_left",
+          "person_removed",
+          "person_deleted"
+        ],
+        "title": "Reason",
+        "type": "string"
       },
       "SearchParams": {
         "properties": {

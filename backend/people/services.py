@@ -20,9 +20,18 @@ from access.policy import (
     can_write_private,
     visible_spaces,
 )
+from accounts.models import User
 from core.api import Conflict
-from people import photos
-from people.models import ContactMethod, HiddenPerson, MemoryAid, Note, Person, Tag
+from people import kept, photos
+from people.models import (
+    AccessEnded,
+    ContactMethod,
+    HiddenPerson,
+    MemoryAid,
+    Note,
+    Person,
+    Tag,
+)
 from spaces import services as spaces
 from spaces.models import Space
 
@@ -47,7 +56,7 @@ def create_person(access: Access, data: dict[str, Any]) -> Person:
     _apply_basic(person, data)
     person.full_clean()
     person.save()
-    _set_tags(person, data.get("tags", []))
+    set_tags(person, data.get("tags", []))
     _set_contact_methods(person, data.get("contact_methods", []))
     for space in _spaces(access, data.get("space_ids", [])):
         if not can_add_person_to_space(access, person, space):
@@ -67,7 +76,7 @@ def update_person(access: Access, person: Person, changes: dict[str, Any]) -> Pe
     person.full_clean()
     person.save()
     if "tags" in changes:
-        _set_tags(person, changes["tags"])
+        set_tags(person, changes["tags"])
     if "contact_methods" in changes:
         _set_contact_methods(person, changes["contact_methods"])
     if "space_ids" in changes:
@@ -97,6 +106,13 @@ def unhide_person(access: Access, person: Person) -> None:
     HiddenPerson.objects.filter(user=access.user, person=person).delete()
 
 
+def dismiss_access_ended(access: Access, notice: AccessEnded) -> None:
+    """Take an "access ended" card off Today. The kept copies stay."""
+    if access.read_only:
+        raise PermissionDenied("This access can't change your book.")
+    notice.delete()
+
+
 def restore_person(access: Access, person: Person) -> Person:
     """Undo a delete, as long as it hasn't been made final yet."""
     if person.deleted_at is None or person.deleted_at < timezone.now() - UNDO_WINDOW:
@@ -107,13 +123,30 @@ def restore_person(access: Access, person: Person) -> Person:
 
 
 def purge_deleted_people(now: datetime.datetime | None = None) -> int:
-    """Delete for good everyone deleted more than UNDO_WINDOW ago. Returns how many."""
+    """Delete for good everyone deleted more than UNDO_WINDOW ago. Returns how many.
+
+    Other users who wrote about them keep a copy with what they wrote; the owner's
+    notes, memory aids, timeline and links go with them.
+    """
     cutoff = (now or timezone.now()) - UNDO_WINDOW
     purged = 0
-    for person in Person.objects.filter(deleted_at__lt=cutoff):
+    for person in Person.objects.filter(deleted_at__lt=cutoff).select_related("owner__me"):
         with transaction.atomic():
             files = _photo_files(person)
-            person.delete()  # notes, memory aids, timeline and links go with them
+            writers = User.objects.filter(pk__in=kept.writers_about(person)).exclude(
+                pk=person.owner_id
+            )
+            change = kept.Change(
+                by=person.owner, reason=kept.Reason.PERSON_DELETED, about=person.name
+            )
+            # Visible again for a moment (inside this transaction only), so the writers
+            # lose sight of them and keep copies before anything is deleted.
+            deleted_at, person.deleted_at = person.deleted_at, None
+            person.save(update_fields=["deleted_at"])
+            with kept.keeping_copies(writers.select_related("me"), change):
+                person.deleted_at = deleted_at
+                person.save(update_fields=["deleted_at"])
+            person.delete()
             _delete_after_commit(files)
         purged += 1
     return purged
@@ -171,7 +204,7 @@ def _apply_basic(person: Person, data: dict[str, Any]) -> None:
         person.birth_year = birthday.get("year")
 
 
-def _set_tags(person: Person, names: Iterable[str]) -> None:
+def set_tags(person: Person, names: Iterable[str]) -> None:
     """Tags belong to the person's owner; reuse theirs, ignoring case."""
     tags = []
     for name in dict.fromkeys(n.strip() for n in names if n.strip()):

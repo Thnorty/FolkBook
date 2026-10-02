@@ -68,3 +68,38 @@ class AccountOut(Schema):
     user_id: UUID
     name: str
     email: str
+
+
+class KeptPreviewOut(Schema):
+    """Someone you'd keep a copy of, and what you wrote about them (screen 5a)."""
+
+    person: PersonRef
+    notes: int
+    memory_aids: int
+    interactions: int
+
+    @staticmethod
+    def resolve_person(obj):
+        return obj
+
+    @staticmethod
+    def resolve_notes(obj):
+        return obj.note_count
+
+    @staticmethod
+    def resolve_memory_aids(obj):
+        return obj.memory_aid_count
+
+    @staticmethod
+    def resolve_interactions(obj):
+        return obj.interaction_count
+
+
+class LeavePreviewOut(Schema):
+    kept: list[KeptPreviewOut]  # copies you'd keep: you wrote about them
+    leaving: int  # the others, who'd leave your book
+    own_people: int  # people from your own book who'd leave the space with you
+
+
+class LeftOut(Schema):
+    kept: list[PersonRef]  # your new copies

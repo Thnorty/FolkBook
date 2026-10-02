@@ -50,6 +50,14 @@ def photo_of(person) -> dict | None:
     return {"url": url, "thumbnail_url": f"{url}&size=thumbnail", "caption": person.photo_caption}
 
 
+class KeptOut(Schema):
+    """Where a kept copy came from: "was shared by Defne in Hackathon 2026 until 22 Sep"."""
+
+    from_owner: str  # whose book they were in
+    space: str  # the space they were shared in; empty when the owner deleted them
+    at: datetime.datetime
+
+
 class PersonOut(Schema):
     """The basic profile, as the viewer is allowed to see it."""
 
@@ -73,6 +81,13 @@ class PersonOut(Schema):
         return obj.pronouns or None
 
     added_at: datetime.datetime  # when they came into their owner's book
+    kept: KeptOut | None  # your own copy of someone you lost sight of
+
+    @staticmethod
+    def resolve_kept(obj, context):
+        if obj.kept_at is None or obj.owner_id != context["request"].auth.pk:
+            return None
+        return {"from_owner": obj.kept_from, "space": obj.kept_space, "at": obj.kept_at}
 
     @staticmethod
     def resolve_added_at(obj):

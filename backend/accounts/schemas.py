@@ -86,8 +86,7 @@ class UserOut(Schema):
 
     @staticmethod
     def resolve_name(obj):
-        me = getattr(obj, "me", None)
-        return me.name if me else obj.email
+        return obj.display_name
 
     @staticmethod
     def resolve_is_admin(obj):

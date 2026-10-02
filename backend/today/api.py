@@ -3,14 +3,18 @@
 import datetime
 from uuid import UUID
 
+from django.db.models import Prefetch
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Field, Query, Router, Schema, Status
 
-from access.policy import visible_memory_aids
+from access.policy import visible_access_ended, visible_memory_aids, visible_people
 from core.api import access_for
+from core.db import by_name
+from people import services
 from people.api import people_for
 from today.birthdays import upcoming_birthdays
-from today.schemas import BirthdayOut, RememberOut
+from today.schemas import AccessEndedOut, BirthdayOut, RememberOut
 
 router = Router(tags=["today"])
 
@@ -35,3 +39,20 @@ def remember(request, skip: UUID | None = None):
     # With only one, show it again rather than nothing.
     aid = (skip and aids.exclude(pk=skip).first()) or aids.first()
     return Status(200, {"aid": aid, "person": aid.person}) if aid else Status(204, None)
+
+
+@router.get("/access-ended", response=list[AccessEndedOut])
+def list_access_ended(request):
+    """People who left your book because of someone else, newest first, until dismissed."""
+    access = access_for(request)
+    kept = Prefetch("kept", visible_people(access).order_by(by_name(), "pk"), to_attr="kept_shown")
+    return visible_access_ended(access).prefetch_related(kept)[:20]
+
+
+@router.delete("/access-ended/{notice_id}", response={204: None})
+def dismiss_access_ended(request, notice_id: UUID):
+    access = access_for(request)
+    services.dismiss_access_ended(
+        access, get_object_or_404(visible_access_ended(access), pk=notice_id)
+    )
+    return Status(204, None)
