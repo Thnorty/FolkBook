@@ -4,6 +4,7 @@ import { DropdownMenu } from 'radix-ui'
 import { useState, type RefObject } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass } from '@/components/ui/menu'
 import { spacesQuery, type Space } from '@/features/spaces/queries'
 import { notify, type Notice } from '@/lib/notify'
@@ -78,7 +79,7 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
 
   return (
     <>
-      <DropdownMenu.Root>
+      <MenuRoot>
         <DropdownMenu.Trigger asChild>
           <Button variant="secondary" aria-label="More" className="px-3">
             <MoreHorizontal aria-hidden />
@@ -101,7 +102,7 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
             )}
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+      </MenuRoot>
 
       <ConfirmDialog
         open={confirming === 'tear'}

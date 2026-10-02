@@ -4,6 +4,7 @@ import { MoreHorizontal, Plus } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass, menuSeparatorClass } from '@/components/ui/menu'
 import { notify } from '@/lib/notify'
 import { cn } from '@/lib/utils'
@@ -131,7 +132,7 @@ function Rows({ rows, actions }: { rows: Row[]; actions: RowActions }) {
 function RowMenu({ row, link, actions }: { row: Row; link: Relationship; actions: RowActions }) {
   const firstName = row.name.split(' ')[0]
   return (
-    <DropdownMenu.Root>
+    <MenuRoot>
       <DropdownMenu.Trigger asChild>
         <Button variant="ghost" aria-label={`${row.name}: change or end`} className="w-9 px-0">
           <MoreHorizontal aria-hidden />
@@ -167,7 +168,7 @@ function RowMenu({ row, link, actions }: { row: Row; link: Relationship; actions
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+    </MenuRoot>
   )
 }
 

@@ -6,6 +6,7 @@ import { lazy, Suspense, useCallback, useState } from 'react'
 import { ApiError } from '@/api/errors'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass, menuSeparatorClass } from '@/components/ui/menu'
 import { NoMatch, PeopleResults } from '@/features/people/PeopleResults'
 import { SearchBox } from '@/features/people/SearchBox'
@@ -186,7 +187,7 @@ function MemberRowMenu({ space, member }: { space: Space; member: Member }) {
 
   return (
     <>
-      <DropdownMenu.Root>
+      <MenuRoot>
         <DropdownMenu.Trigger asChild>
           <Button
             variant="ghost"
@@ -210,7 +211,7 @@ function MemberRowMenu({ space, member }: { space: Space; member: Member }) {
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+      </MenuRoot>
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
@@ -229,7 +230,7 @@ function MemberMenu({ space }: { space: Space }) {
   const [leaving, setLeaving] = useState(false)
   return (
     <>
-      <DropdownMenu.Root>
+      <MenuRoot>
         <DropdownMenu.Trigger asChild>
           <Button variant="secondary" aria-label="Space actions">
             <MoreHorizontal aria-hidden />
@@ -245,7 +246,7 @@ function MemberMenu({ space }: { space: Space }) {
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+      </MenuRoot>
       {leaving && <LeaveDialog space={space} onClose={() => setLeaving(false)} />}
     </>
   )
@@ -321,7 +322,7 @@ function SpaceMenu({ space }: { space: Space }) {
 
   return (
     <>
-      <DropdownMenu.Root>
+      <MenuRoot>
         <DropdownMenu.Trigger asChild>
           <Button variant="secondary" aria-label="Space actions">
             <MoreHorizontal aria-hidden />
@@ -349,7 +350,7 @@ function SpaceMenu({ space }: { space: Space }) {
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+      </MenuRoot>
       <ConfirmDialog
         open={confirming === 'delete'}
         onOpenChange={(open) => setConfirming(open ? 'delete' : null)}
