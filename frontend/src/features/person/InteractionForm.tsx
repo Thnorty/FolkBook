@@ -58,12 +58,12 @@ export function InteractionForm({
   const keepSelection = () => {
     const box = noteBox.current
     if (!box) return
-    box.focus()
     const line = memoryLine(note, box.selectionStart, box.selectionEnd)
     if (!line) {
       warnAt(box, 'Select the words you want on a sticky note first.')
       return
     }
+    box.focus()
     if (!memoryAids.includes(line)) setMemoryAids([...memoryAids, line])
   }
 

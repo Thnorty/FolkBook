@@ -20,6 +20,8 @@ type FormDialogProps = {
   onClose: () => void
   /** A short form: a sheet from the bottom on phones and a small dialog on desktop (2o/2p). */
   small?: boolean
+  /** False while it animates out (useClosing); it's open as long as it's shown otherwise. */
+  open?: boolean
   children: ReactNode
 }
 
@@ -34,12 +36,13 @@ export function FormDialog({
   busy,
   onClose,
   small = false,
+  open = true,
   children,
 }: FormDialogProps) {
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
+    <Dialog.Root open={open} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-30 animate-fade-in bg-scrim" />
+        <Dialog.Overlay className="fixed inset-0 z-30 animate-fade-in bg-scrim data-[state=closed]:animate-fade-out" />
         <Dialog.Content
           aria-describedby={undefined}
           // Ctrl/⌘+Enter submits from anywhere in the dialog, not just from inside the form
@@ -51,7 +54,7 @@ export function FormDialog({
             }
           }}
           className={cn(
-            'fixed z-30 flex animate-sheet-up flex-col overflow-hidden bg-paper reduced:animate-fade-in md:inset-auto md:animate-dialog-in md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float',
+            'fixed z-30 flex animate-sheet-up flex-col overflow-hidden bg-paper data-[state=closed]:animate-sheet-down reduced:animate-fade-in reduced:data-[state=closed]:animate-fade-out md:inset-auto md:animate-dialog-in md:data-[state=closed]:animate-dialog-out md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float',
             small
               ? 'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-sheet shadow-float md:top-[8vh] md:max-h-[84vh] md:max-w-md'
               : 'inset-0 md:max-w-xl',

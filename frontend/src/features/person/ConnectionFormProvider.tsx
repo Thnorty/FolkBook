@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { notify } from '@/lib/notify'
+import { useClosing } from '@/motion/useClosing'
 import { ConnectionForm, type ConnectionFormResult } from './ConnectionForm'
 import { linkFor } from './connectionKinds'
 import {
@@ -21,6 +22,7 @@ type Open = { personId: string; link?: Relationship }
 /** Makes the connect form available anywhere below it (useConnectionForm). */
 export function ConnectionFormProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState<Open | null>(null)
+  const [shown, closing] = useClosing(open)
   const controls = useMemo(
     () => ({
       openConnect: (personId: string) => setOpen({ personId }),
@@ -32,12 +34,17 @@ export function ConnectionFormProvider({ children }: { children: ReactNode }) {
   return (
     <ConnectionFormContext.Provider value={controls}>
       {children}
-      {open && <ConnectionDialog {...open} onClose={() => setOpen(null)} />}
+      {shown && <ConnectionDialog {...shown} open={!closing} onClose={() => setOpen(null)} />}
     </ConnectionFormContext.Provider>
   )
 }
 
-function ConnectionDialog({ personId, link, onClose }: Open & { onClose: () => void }) {
+function ConnectionDialog({
+  personId,
+  link,
+  open,
+  onClose,
+}: Open & { open: boolean; onClose: () => void }) {
   const queryClient = useQueryClient()
   const person = useQuery(personQuery(personId)).data
   const firstName = person?.name.split(' ')[0] ?? ''
@@ -96,6 +103,7 @@ function ConnectionDialog({ personId, link, onClose }: Open & { onClose: () => v
       formId={FORM_ID}
       submitLabel={link ? 'Save' : 'Connect'}
       busy={save.isPending}
+      open={open}
       onClose={onClose}
     >
       {person ? (

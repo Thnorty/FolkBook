@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { FormDialog, FooterNote, FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { labelClass } from '@/components/ui/label'
+import { pickerListClass } from '@/components/ui/menu'
 import { notify } from '@/lib/notify'
 import { peopleCount } from './labels'
 import {
@@ -25,7 +26,16 @@ const SELECT =
 type Pending = { userId: string; name: string; email: string; role: Role }
 
 /** Share a space with accounts on this server, and choose what they see (screens 4h, 4i). */
-export function ShareDialog({ space, onClose }: { space: Space; onClose: () => void }) {
+export function ShareDialog({
+  space,
+  open = true,
+  onClose,
+}: {
+  space: Space
+  /** False while it animates out. */
+  open?: boolean
+  onClose: () => void
+}) {
   const queryClient = useQueryClient()
   const members = (useQuery(membersQuery(space.id)).data ?? []).filter(
     (member) => member.role !== 'owner',
@@ -66,6 +76,7 @@ export function ShareDialog({ space, onClose }: { space: Space; onClose: () => v
       formId={FORM_ID}
       submitLabel={pending.length > 0 ? 'Share' : 'Save'}
       busy={save.isPending}
+      open={open}
       onClose={onClose}
     >
       <form id={FORM_ID} onSubmit={submit} className="flex flex-col gap-5">
@@ -195,7 +206,7 @@ function AccountSearch({
         autoComplete="off"
       />
       {q.length >= 2 && (
-        <ul aria-label="Accounts" className="mt-1.5 flex flex-col">
+        <ul aria-label="Accounts" className={pickerListClass}>
           {found.length === 0 && (
             <li className="px-2 py-2 type-small text-ink-faint">No one else here matches.</li>
           )}

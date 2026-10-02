@@ -14,6 +14,7 @@ import { unhidePerson } from '@/features/person/queries'
 import { notify } from '@/lib/notify'
 import { usePageTitle } from '@/lib/usePageTitle'
 import { cn } from '@/lib/utils'
+import { useClosing } from '@/motion/useClosing'
 import { ownership, peopleCount } from './labels'
 import { LeaveDialog } from './LeaveDialog'
 import {
@@ -41,6 +42,7 @@ export function SpacePage() {
   const space = useQuery(spaceQuery(spaceId))
   const [search, setSearch] = useState('')
   const [sharing, setSharing] = useState(false)
+  const [shareShown, shareClosing] = useClosing(sharing || null)
   const clear = useCallback(() => setSearch(''), [])
   usePageTitle(space.data?.name ?? 'Space')
 
@@ -132,7 +134,9 @@ export function SpacePage() {
           Open the graph →
         </Link>
       </div>
-      {sharing && <ShareDialog space={data} onClose={() => setSharing(false)} />}
+      {shareShown && (
+        <ShareDialog space={data} open={!shareClosing} onClose={() => setSharing(false)} />
+      )}
     </div>
   )
 }

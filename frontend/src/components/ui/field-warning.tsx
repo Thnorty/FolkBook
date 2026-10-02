@@ -47,9 +47,15 @@ export function FieldWarnings() {
     field.addEventListener('input', clear)
     field.addEventListener('select', clear)
     field.addEventListener('blur', clear)
+    // A click or tap anywhere, or Esc, moves on too (and a closing dialog takes it along).
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && clear()
+    document.addEventListener('pointerdown', clear, true)
+    document.addEventListener('keydown', onKey, true)
     window.addEventListener('scroll', redraw, true)
     window.addEventListener('resize', redraw)
     return () => {
+      document.removeEventListener('pointerdown', clear, true)
+      document.removeEventListener('keydown', onKey, true)
       field.removeAttribute('aria-invalid')
       field.removeEventListener('input', clear)
       field.removeEventListener('select', clear)
@@ -60,7 +66,7 @@ export function FieldWarnings() {
   }, [warning])
 
   if (!warning?.field.isConnected) return null
-  const box = warning.field.getBoundingClientRect()
+  const box = (warning.anchor ?? warning.field).getBoundingClientRect()
   const left = Math.max(GUTTER, Math.min(box.left, window.innerWidth - GUTTER - WIDTH))
   return createPortal(
     <div

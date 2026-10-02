@@ -6,6 +6,7 @@ import type { SpaceColor } from '@/components/notebook/spaces'
 import { FormDialog, FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
+import { useClosing } from '@/motion/useClosing'
 import { createSpace, refreshSpaces, spaceQuery, spacesQuery, updateSpace } from './queries'
 import { SpaceFormContext } from './useSpaceForm'
 
@@ -15,6 +16,7 @@ const COLORS: SpaceColor[] = ['sage', 'ochre', 'clay', 'plum', 'teal', 'slate']
 /** Makes the create / edit space form available anywhere below it (useSpaceForm). */
 export function SpaceFormProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState<{ spaceId?: string } | null>(null)
+  const [shown, closing] = useClosing(open)
   const controls = useMemo(
     () => ({
       openNew: () => setOpen({}),
@@ -25,12 +27,22 @@ export function SpaceFormProvider({ children }: { children: ReactNode }) {
   return (
     <SpaceFormContext.Provider value={controls}>
       {children}
-      {open && <SpaceFormDialog spaceId={open.spaceId} onClose={() => setOpen(null)} />}
+      {shown && (
+        <SpaceFormDialog spaceId={shown.spaceId} open={!closing} onClose={() => setOpen(null)} />
+      )}
     </SpaceFormContext.Provider>
   )
 }
 
-function SpaceFormDialog({ spaceId, onClose }: { spaceId?: string; onClose: () => void }) {
+function SpaceFormDialog({
+  spaceId,
+  open,
+  onClose,
+}: {
+  spaceId?: string
+  open: boolean
+  onClose: () => void
+}) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const space = useQuery({ ...spaceQuery(spaceId ?? ''), enabled: Boolean(spaceId) })
@@ -53,6 +65,7 @@ function SpaceFormDialog({ spaceId, onClose }: { spaceId?: string; onClose: () =
       formId={FORM_ID}
       submitLabel={verb}
       busy={save.isPending}
+      open={open}
       onClose={onClose}
     >
       {editing && !space.data ? (

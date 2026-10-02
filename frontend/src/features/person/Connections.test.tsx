@@ -186,11 +186,12 @@ describe('connecting people', () => {
       await within(dialog).findByRole('button', { name: 'Create “Arda” as a new person' }),
     )
     save(dialog)
-    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+    expect(await screen.findByRole('alert')).toHaveTextContent(
       "Pick how they're connected to Emma.",
     )
 
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Child of Emma' }))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument() // picking clears it
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Step' }))
     expect(within(dialog).queryByRole('radio', { name: 'Friends' })).not.toBeInTheDocument()
     save(dialog)

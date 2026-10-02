@@ -109,11 +109,11 @@ These rules are the product. Breaking one is a critical bug.
 - **Appearance settings** (theme, reduced motion) belong to the device: `src/lib/appearance.ts` keeps them in localStorage and sets `data-theme` / `data-motion` on `<html>`. Read them with `useAppearance()`, change them with `setAppearance()`.
 - Keyboard shortcuts: `N` add person, `Shift+N` quick capture, `Ctrl/Cmd+K` command palette, `L` log an interaction (on a profile). Show `Ctrl` on Windows/Linux and `⌘` on macOS.
 - Components from shadcn/ui are restyled to the notebook design; don't ship default shadcn looks.
-- **Form warnings:** forms use plain HTML constraints (`required`, `minLength`, `type="email"`, `max`…); `<FieldWarnings>` (mounted once in `Providers`) replaces the browser's popups with our own bubble and wording. For any other warning about a field, call `warnAt(field, text)` from `src/lib/fieldWarnings.ts`. Never use `alert()` or the browser's bubbles.
+- **Form warnings:** forms use plain HTML constraints (`required`, `minLength`, `type="email"`, `max`…); `<FieldWarnings>` (mounted once in `Providers`) replaces the browser's popups with our own bubble and wording. For any other warning made in the browser (e.g. "Pick who first."), call `warnAt(field, text, anchor?)` from `src/lib/fieldWarnings.ts`; errors from the server stay as text in the form. Never use `alert()` or the browser's bubbles.
 - **Form footers** (`FormDialogFooter`) show their shortcuts in tooltips on hover or focus (Save: Ctrl/⌘+Enter, Cancel: Esc), not as text; a short note can go in `start` with `FooterNote`. Use `Tooltip` from `src/components/ui/tooltip.tsx` for other hover labels.
 - **Dropdown menus** start with `MenuRoot` (`src/components/ui/menu-root.tsx`), never `DropdownMenu.Root`: it's non-modal, so an open menu doesn't lock scrolling and make the scrollbar flicker.
 - **Esc** closes only the topmost thing: Radix dialogs and menus mark the key handled, and page-level Esc handlers go through `useShortcut`, which skips handled keys and typing.
-- **Dialogs** arrive with `animate-sheet-up` (phones) / `animate-dialog-in` (desktop) and `reduced:animate-fade-in`, defined in `src/index.css`; `FormDialog` and `ConfirmDialog` already do.
+- **Dialogs** come and go with `animate-sheet-up` / `animate-sheet-down` (phones), `animate-dialog-in` / `animate-dialog-out` (desktop) and plain fades with reduced motion, defined in `src/index.css`; `FormDialog` and `ConfirmDialog` already do. To let a dialog animate out, keep it mounted while it closes: `const [shown, closing] = useClosing(open)` from `src/motion/useClosing.ts`, then `{shown && <SomeDialog open={!closing} …/>}`.
 
 ## Tests
 

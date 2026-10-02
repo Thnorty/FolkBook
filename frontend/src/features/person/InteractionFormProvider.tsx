@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import { useMemo, useState, type ReactNode } from 'react'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { notify } from '@/lib/notify'
+import { useClosing } from '@/motion/useClosing'
 import { InteractionForm, type InteractionFormResult } from './InteractionForm'
 import { loggedSummary } from './labels'
 import {
@@ -23,6 +24,7 @@ type Open = { personId: string; interaction?: Interaction }
 /** Makes the log form available anywhere below it (useInteractionForm). */
 export function InteractionFormProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState<Open | null>(null)
+  const [shown, closing] = useClosing(open)
   const controls = useMemo(
     () => ({
       openLog: (personId: string) => setOpen({ personId }),
@@ -35,12 +37,17 @@ export function InteractionFormProvider({ children }: { children: ReactNode }) {
   return (
     <InteractionFormContext.Provider value={controls}>
       {children}
-      {open && <InteractionDialog {...open} onClose={() => setOpen(null)} />}
+      {shown && <InteractionDialog {...shown} open={!closing} onClose={() => setOpen(null)} />}
     </InteractionFormContext.Provider>
   )
 }
 
-function InteractionDialog({ personId, interaction, onClose }: Open & { onClose: () => void }) {
+function InteractionDialog({
+  personId,
+  interaction,
+  open,
+  onClose,
+}: Open & { open: boolean; onClose: () => void }) {
   const queryClient = useQueryClient()
   const person = useQuery(personQuery(personId)).data
   const firstName = person?.name.split(' ')[0] ?? ''
@@ -89,6 +96,7 @@ function InteractionDialog({ personId, interaction, onClose }: Open & { onClose:
       formId={FORM_ID}
       submitLabel="Save"
       busy={save.isPending || remove.isPending}
+      open={open}
       onClose={onClose}
     >
       {person ? (

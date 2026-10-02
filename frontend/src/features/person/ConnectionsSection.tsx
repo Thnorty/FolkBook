@@ -8,6 +8,7 @@ import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass, menuSeparatorClass } from '@/components/ui/menu'
 import { notify } from '@/lib/notify'
 import { cn } from '@/lib/utils'
+import { useClosing } from '@/motion/useClosing'
 import { EndConnectionDialog } from './EndConnectionDialog'
 import { linkLabel, relationLabel } from './labels'
 import { ProfileSection } from './ProfileSection'
@@ -211,6 +212,7 @@ export function ConnectionsSection({ personId }: { personId: string }) {
   const formerOpen = showFormer ?? formerRows.length <= OPEN_FORMER_UP_TO
   const currentCount = familyRows.length + otherRows.length
   const [ending, setEnding] = useState<Relationship | null>(null)
+  const [endShown, endClosing] = useClosing(ending)
 
   const actions: RowActions = {
     onChange: (link) => openChange(personId, link),
@@ -293,11 +295,12 @@ export function ConnectionsSection({ personId }: { personId: string }) {
           </Link>
         </div>
       )}
-      {ending && person && (
+      {endShown && person && (
         <EndConnectionDialog
           personId={personId}
           personName={person.name}
-          link={ending}
+          link={endShown}
+          open={!endClosing}
           onClose={() => setEnding(null)}
         />
       )}

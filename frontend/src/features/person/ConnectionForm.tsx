@@ -1,13 +1,16 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
-import { useDeferredValue, useState, type FormEvent, type ReactNode } from 'react'
+import { useDeferredValue, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import type { components } from '@/api/schema'
 import { Choice } from '@/components/ui/choice'
 import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { labelClass } from '@/components/ui/label'
+import { pickerListClass } from '@/components/ui/menu'
 import { Button } from '@/components/ui/button'
 import { peopleListQuery } from '@/features/people/queries'
+import { warnAt } from '@/lib/fieldWarnings'
+import { cn } from '@/lib/utils'
 import { spacesQuery } from '@/features/spaces/queries'
 import {
   KIND_GROUPS,
@@ -70,15 +73,21 @@ export function ConnectionForm({
   const [startedOn, setStartedOn] = useState(link?.started_on ?? '')
   // Until you pick one, a link goes in a space both people share, if there is one.
   const [pickedSpace, setPickedSpace] = useState<string | null>(null)
-  const [missing, setMissing] = useState('')
   const sharedSpaces = useSharedSpaces(person, other)
   const spaceId = pickedSpace ?? sharedSpaces[0]?.id ?? ''
-  const shownMissing = other && kind ? '' : missing
+  const kinds = useRef<HTMLDivElement>(null)
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!other || !kind) {
-      setMissing(other ? `Pick how they're connected to ${firstName}.` : 'Pick who first.')
+    if (!other) {
+      const who = event.currentTarget.querySelector<HTMLInputElement>('#connect-who')
+      if (who) warnAt(who, 'Pick who first.')
+      return
+    }
+    if (!kind) {
+      const group = kinds.current
+      const firstRow = group?.querySelector<HTMLElement>('fieldset > div')
+      if (group) warnAt(group, `Pick how they're connected to ${firstName}.`, firstRow ?? group)
       return
     }
     onSubmit({
@@ -128,56 +137,61 @@ export function ConnectionForm({
         <PersonPicker exclude={person.id} onPick={setOther} />
       )}
 
-      <Group title="Family">
-        {kindChoices(KIND_GROUPS.family)}
-        {kind && needsParentType(kind) ? (
-          <fieldset className="mt-3">
-            <legend className={labelClass}>Which kind of parent</legend>
-            <div className="flex gap-1.5">
-              {(Object.keys(PARENT_TYPES) as ParentType[]).map((option) => (
-                <Choice
-                  key={option}
-                  name="parent-type"
-                  look="box"
-                  className="flex-1 md:flex-none"
-                  checked={parentType === option}
-                  onChange={() => setParentType(option)}
-                >
-                  {PARENT_TYPES[option]}
-                </Choice>
-              ))}
-            </div>
-          </fieldset>
-        ) : (
+      <div ref={kinds} className="flex flex-col gap-5">
+        <Group title="Family">
+          {kindChoices(KIND_GROUPS.family)}
+          {kind && needsParentType(kind) ? (
+            <fieldset className="mt-3">
+              <legend className={labelClass}>Which kind of parent</legend>
+              <div className="flex gap-1.5">
+                {(Object.keys(PARENT_TYPES) as ParentType[]).map((option) => (
+                  <Choice
+                    key={option}
+                    name="parent-type"
+                    look="box"
+                    className="flex-1 md:flex-none"
+                    checked={parentType === option}
+                    onChange={() => setParentType(option)}
+                  >
+                    {PARENT_TYPES[option]}
+                  </Choice>
+                ))}
+              </div>
+            </fieldset>
+          ) : (
+            <Hint>
+              Parents and partners are the load-bearing ones: siblings, cousins, grandparents and
+              in-laws get worked out from them.
+            </Hint>
+          )}
+        </Group>
+
+        <Group title="Other family" meta="when you don't know the parents">
+          {kindChoices(KIND_GROUPS.otherFamily)}
           <Hint>
-            Parents and partners are the load-bearing ones: siblings, cousins, grandparents and
-            in-laws get worked out from them.
+            Saved as a direct link. If you add their parents later, FolkBook works this out by
+            itself.
           </Hint>
-        )}
-      </Group>
+        </Group>
 
-      <Group title="Other family" meta="when you don't know the parents">
-        {kindChoices(KIND_GROUPS.otherFamily)}
-        <Hint>
-          Saved as a direct link. If you add their parents later, FolkBook works this out by itself.
-        </Hint>
-      </Group>
-
-      <Group title="Social">
-        {kindChoices(KIND_GROUPS.social)}
-        {kind && needsLabel(kind) && (
-          <Input
-            aria-label={kind === 'met_at' ? 'Where did they meet?' : 'What are they to each other?'}
-            placeholder={kind === 'met_at' ? 'Hackathon 2026' : 'Bandmate, neighbour…'}
-            value={label}
-            onChange={(event) => setLabel(event.target.value)}
-            required
-            maxLength={200}
-            autoFocus
-            className="mt-3"
-          />
-        )}
-      </Group>
+        <Group title="Social">
+          {kindChoices(KIND_GROUPS.social)}
+          {kind && needsLabel(kind) && (
+            <Input
+              aria-label={
+                kind === 'met_at' ? 'Where did they meet?' : 'What are they to each other?'
+              }
+              placeholder={kind === 'met_at' ? 'Hackathon 2026' : 'Bandmate, neighbour…'}
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              required
+              maxLength={200}
+              autoFocus
+              className="mt-3"
+            />
+          )}
+        </Group>
+      </div>
 
       <div className="flex flex-wrap gap-5">
         <div>
@@ -215,9 +229,9 @@ export function ConnectionForm({
         )}
       </div>
 
-      {(error || shownMissing) && (
+      {error && (
         <p role="alert" className="type-small text-danger">
-          {error || shownMissing}
+          {error}
         </p>
       )}
 
@@ -287,7 +301,7 @@ function PersonPicker({ exclude, onPick }: { exclude: string; onPick: (other: Ot
         autoFocus
       />
       {deferred && (
-        <ul aria-label="People" className="mt-1.5 flex flex-col">
+        <ul aria-label="People" className={pickerListClass}>
           {matches.map((match) => (
             <li key={match.id}>
               <button
@@ -302,7 +316,7 @@ function PersonPicker({ exclude, onPick }: { exclude: string; onPick: (other: Ot
               </button>
             </li>
           ))}
-          <li>
+          <li className={cn(matches.length > 0 && 'mt-1 border-t border-line pt-1')}>
             <button
               type="button"
               onClick={() => onPick({ newName: search.trim() })}

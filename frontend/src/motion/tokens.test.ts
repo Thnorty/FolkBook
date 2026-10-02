@@ -10,6 +10,13 @@ describe('motion tokens', () => {
     expect(ink).toBeLessThanOrEqual(LIMITS.decorative)
   })
 
+  it('give dialogs the same exit time in CSS as in the code that waits for it', () => {
+    const css = readFileSync('src/index.css', 'utf8')
+    const exit = css.match(/--animate-sheet-down: sheet-down (\d+)ms/)?.[1]
+
+    expect(Number(exit)).toBe(DURATION.dialogOut * 1000)
+  })
+
   it('use the same ease in CSS as in Motion', () => {
     const css = readFileSync('src/index.css', 'utf8')
     const ease = css.match(/--ease-notebook: cubic-bezier\(([^)]+)\)/)?.[1]
