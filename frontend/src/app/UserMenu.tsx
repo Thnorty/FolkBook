@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
 import type { CurrentUser } from '@/api/session'
 import { logOut } from '@/api/session'
+import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass, menuSeparatorClass } from '@/components/ui/menu'
 import { notify } from '@/lib/notify'
 
@@ -16,7 +17,7 @@ export function UserMenu({ user }: { user: CurrentUser }) {
     logOut(queryClient).catch((error: Error) => notify({ title: error.message }))
 
   return (
-    <DropdownMenu.Root>
+    <MenuRoot>
       <DropdownMenu.Trigger className="flex w-full cursor-pointer items-center gap-2.5 rounded-card px-1.5 py-1.5 text-left hover:bg-hover">
         <span
           aria-hidden
@@ -36,6 +37,6 @@ export function UserMenu({ user }: { user: CurrentUser }) {
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+    </MenuRoot>
   )
 }

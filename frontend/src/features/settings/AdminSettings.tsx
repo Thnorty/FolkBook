@@ -9,6 +9,7 @@ import { Choice } from '@/components/ui/choice'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { CopyLink } from '@/components/ui/copy-link'
 import { labelClass } from '@/components/ui/label'
+import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass } from '@/components/ui/menu'
 import { createInvite } from '@/features/invites/queries'
 import { appLink } from '@/lib/links'
@@ -95,7 +96,7 @@ function UserMenu({ user, onReset }: { user: User; onReset: () => void }) {
 
   return (
     <>
-      <DropdownMenu.Root>
+      <MenuRoot>
         <DropdownMenu.Trigger asChild>
           <Button variant="ghost" aria-label={`${user.name}: manage`} className="w-9 px-0">
             <MoreHorizontal aria-hidden />
@@ -129,7 +130,7 @@ function UserMenu({ user, onReset }: { user: User; onReset: () => void }) {
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+      </MenuRoot>
       <ConfirmDialog
         open={deactivating}
         onOpenChange={setDeactivating}
