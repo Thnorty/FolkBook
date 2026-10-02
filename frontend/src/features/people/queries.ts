@@ -29,12 +29,33 @@ export const needsDetailsCountQuery = queryOptions({
   },
 })
 
-export type PeopleFilters = { search?: string; space?: string; needsDetails?: boolean }
+/** How many kept copies you have; the Kept filter shows only when there are some. */
+export const keptCountQuery = queryOptions({
+  queryKey: ['people', 'count', 'kept'],
+  queryFn: async ({ signal }) => {
+    const page = await unwrap(
+      api.GET('/api/people', { params: { query: { page_size: 1, kept: true } }, signal }),
+    )
+    return page.count
+  },
+})
+
+export type PeopleFilters = {
+  search?: string
+  space?: string
+  needsDetails?: boolean
+  kept?: boolean
+}
 
 /** The People list, 50 at a time, filtered and searched on the server. */
-export function peopleListQuery({ search = '', space, needsDetails = false }: PeopleFilters) {
+export function peopleListQuery({
+  search = '',
+  space,
+  needsDetails = false,
+  kept = false,
+}: PeopleFilters) {
   return infiniteQueryOptions({
-    queryKey: ['people', 'list', { search, space, needsDetails }],
+    queryKey: ['people', 'list', { search, space, needsDetails, kept }],
     initialPageParam: 1,
     // While a new search loads, keep showing the last results instead of a loading line.
     placeholderData: keepPreviousData,
@@ -42,7 +63,13 @@ export function peopleListQuery({ search = '', space, needsDetails = false }: Pe
       unwrap(
         api.GET('/api/people', {
           params: {
-            query: { page: pageParam, search, space: space ?? null, needs_details: needsDetails },
+            query: {
+              page: pageParam,
+              search,
+              space: space ?? null,
+              needs_details: needsDetails,
+              kept,
+            },
           },
           signal,
         }),

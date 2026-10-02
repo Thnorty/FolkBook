@@ -63,6 +63,12 @@ def test_the_copy_is_yours_alone_and_marked_kept(api, world):
     assert api.login(world.deniz).get("/people", kept=True).json()["items"][0]["id"] == str(copy.pk)
 
 
+def test_a_copy_is_not_someone_you_recently_added(api, world):
+    api.login(world.deniz).post(f"/spaces/{world.climbing.pk}/leave")
+
+    assert names(api.login(world.deniz).get("/people", recent=True)) == {"Yuki"}
+
+
 def test_nothing_changes_for_the_others(api, world):
     api.login(world.deniz).post(f"/spaces/{world.climbing.pk}/leave")
 

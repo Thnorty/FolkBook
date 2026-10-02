@@ -405,7 +405,8 @@ export interface paths {
         /**
          * List People
          * @description Everyone the user can see, by name. `needs_details`: no "how we met" yet.
-         *     `recent`: people added to your own book in the last 30 days, newest first.
+         *     `recent`: people added to your own book in the last 30 days, newest first (not kept
+         *     copies: you didn't add those).
          *     `kept`: your copies of people you lost sight of.
          *
          *     `search` matches names, how you met, work, tags, spaces and your own notes and

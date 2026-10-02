@@ -2,6 +2,7 @@ import { Mail, Pencil, Phone, UsersRound } from 'lucide-react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { SpaceChip } from '@/components/notebook/spaces'
 import { Button } from '@/components/ui/button'
+import { KeptFrom } from '@/features/kept/KeptFrom'
 import { formatBirthday, formatRelativeDay } from '@/lib/dates'
 import type { ReactNode } from 'react'
 import { FlyFrom, type FlyOrigin } from '@/motion/FlyFrom'
@@ -36,6 +37,7 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
   return (
     <header className="flex flex-col gap-4">
       {!person.is_mine && person.owner && <SharedBy person={person} owner={person.owner.name} />}
+      {person.kept && <KeptFrom personId={person.id} kept={person.kept} />}
       <div className="flex items-end gap-5">
         {travel(
           sharedPerson.photo(person.id),

@@ -77,6 +77,7 @@ These rules are the product. Breaking one is a critical bug.
   - When a static path segment sits next to a parameter (`/devices/sign-out-others` next to `/devices/{id}`), type the parameter (`{uuid:id}`) so the static path isn't swallowed.
 - **Auth for the app:** session cookies. The frontend calls `GET /api/auth/csrf` once, then sends the `csrftoken` cookie's value as the `X-CSRFToken` header on every write (also on login). The token changes on login, so read it again afterwards.
 - Timestamps in UTC; format dates for the user on the frontend.
+- **Ending access:** any change that can make users lose sight of people (leaving or unsharing a space, taking someone out of one, deleting someone) runs inside `people.kept.keeping_copies`, so users keep copies of the people they wrote about.
 - **Background jobs:** anything slow or scheduled (sending email, AI calls that don't need an answer right away, housekeeping) is a Django task: `@task` in `<app>/tasks.py`, enqueued from a service with `.enqueue()`. Periodic jobs go in `PERIODIC_JOBS` in `jobs/scheduler.py`. Jobs must be safe to run twice. Test them by calling `.call()`.
 - Names are Unicode (Yılmaz, Şen, Ayşe). Search and sorting must handle this correctly.
 

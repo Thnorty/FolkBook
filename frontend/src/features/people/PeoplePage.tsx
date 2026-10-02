@@ -14,13 +14,20 @@ import { EmptyBook } from './EmptyBook'
 import { PeekPanel } from './PeekPanel'
 import { FilterChips, SpaceBanner } from './Filters'
 import { NoMatch, PeopleResults } from './PeopleResults'
-import { needsDetailsCountQuery, peopleCountQuery } from './queries'
+import { keptCountQuery, needsDetailsCountQuery, peopleCountQuery } from './queries'
 import { SearchBox } from './SearchBox'
 import type { PeopleSearch } from './search'
 
 /** Everyone in your notebook (screens 1c, 4c, 4d, 6h). */
 export function PeoplePage() {
-  const { q = '', space, needs = false, view, peek } = useSearch({ from: '/app/people' })
+  const {
+    q = '',
+    space,
+    needs = false,
+    kept = false,
+    view,
+    peek,
+  } = useSearch({ from: '/app/people' })
   const navigate = useNavigate({ from: '/people' })
   const { openNew } = usePersonForm()
   const setSearch = useCallback(
@@ -43,8 +50,9 @@ export function PeoplePage() {
 
   const total = useQuery(peopleCountQuery).data
   const needsCount = useQuery(needsDetailsCountQuery).data
+  const keptCount = useQuery(keptCountQuery).data
   const spaces = useQuery(spacesQuery).data?.items ?? []
-  const filtered = Boolean(q || space || needs)
+  const filtered = Boolean(q || space || needs || kept)
   const pickedSpace = spaces.find((item) => item.id === space)
   const grid = view === 'grid'
 
@@ -99,8 +107,14 @@ export function PeoplePage() {
             space={space}
             needsDetails={needs}
             needsDetailsCount={needsCount}
+            kept={kept}
+            keptCount={keptCount}
             onChange={(filters) =>
-              setSearch({ space: filters.space, needs: filters.needsDetails || undefined })
+              setSearch({
+                space: filters.space,
+                needs: filters.needsDetails || undefined,
+                kept: filters.kept || undefined,
+              })
             }
           />
           {pickedSpace && <SpaceBanner space={pickedSpace} />}
@@ -108,13 +122,15 @@ export function PeoplePage() {
 
         <div className="mt-5">
           <PeopleResults
-            filters={{ search: q, space, needsDetails: needs }}
+            filters={{ search: q, space, needsDetails: needs, kept }}
             grid={grid}
             onPeek={openPeek}
             empty={
               filtered ? (
                 <NoMatch
-                  onClear={() => setSearch({ q: undefined, space: undefined, needs: undefined })}
+                  onClear={() =>
+                    setSearch({ q: undefined, space: undefined, needs: undefined, kept: undefined })
+                  }
                 />
               ) : (
                 <EmptyBook />

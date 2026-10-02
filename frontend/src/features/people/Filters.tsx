@@ -42,15 +42,19 @@ type FilterChipsProps = {
   space?: string
   needsDetails: boolean
   needsDetailsCount?: number
-  onChange: (filters: { space?: string; needsDetails?: boolean }) => void
+  kept: boolean
+  keptCount?: number
+  onChange: (filters: { space?: string; needsDetails?: boolean; kept?: boolean }) => void
 }
 
-/** All · Needs details · one chip per space. Picking one replaces the other. */
+/** All · Needs details · Kept (if any) · one chip per space. Picking one replaces the other. */
 export function FilterChips({
   spaces,
   space,
   needsDetails,
   needsDetailsCount,
+  kept,
+  keptCount,
   onChange,
 }: FilterChipsProps) {
   return (
@@ -59,12 +63,17 @@ export function FilterChips({
       aria-label="Filter"
       className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0"
     >
-      <Chip pressed={!space && !needsDetails} onClick={() => onChange({})}>
+      <Chip pressed={!space && !needsDetails && !kept} onClick={() => onChange({})}>
         All
       </Chip>
       <Chip pressed={needsDetails} onClick={() => onChange({ needsDetails: !needsDetails })}>
         Needs details{needsDetailsCount ? ` · ${needsDetailsCount}` : ''}
       </Chip>
+      {(kept || Boolean(keptCount)) && (
+        <Chip pressed={kept} onClick={() => onChange({ kept: !kept })}>
+          Kept{keptCount ? ` · ${keptCount}` : ''}
+        </Chip>
+      )}
       {spaces.map((item) => (
         <Chip
           key={item.id}
