@@ -80,6 +80,11 @@ class Person(BaseModel):
     # Deleting first hides someone for a short while, so it can be undone; then a
     # job deletes them for good (people.services.purge_deleted_people).
     deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    # A kept copy: the owner had notes on someone shared with them, then lost sight of
+    # them (people/kept.py). Says where it came from; it's an ordinary person otherwise.
+    kept_at = models.DateTimeField(null=True, blank=True)
+    kept_from = models.CharField(max_length=200, blank=True)  # whose book it was in
+    kept_space = models.CharField(max_length=100, blank=True)  # blank: they deleted it
 
     class Meta:
         verbose_name_plural = "people"
@@ -195,3 +200,33 @@ class HiddenPerson(BaseModel):
 
     def __str__(self) -> str:
         return f"{self.person} hidden by {self.user}"
+
+
+class AccessEnded(BaseModel):
+    """Someone else's change took people out of the user's book: "Defne stopped sharing
+    Hackathon 2026. You kept 3 people you had notes on." Shown on Today until dismissed.
+    """
+
+    class Reason(models.TextChoices):
+        REMOVED = "removed"  # the owner removed you from the space
+        STOPPED_SHARING = "stopped_sharing"
+        SPACE_DELETED = "space_deleted"
+        MEMBER_LEFT = "member_left"  # `about` left the space, or was removed
+        PERSON_REMOVED = "person_removed"  # `about` was taken out of the space
+        PERSON_DELETED = "person_deleted"  # `by` deleted `about`
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    reason = models.CharField(max_length=20, choices=Reason.choices)
+    # Names as they were, so the message still reads right if they change or go.
+    by = models.CharField(max_length=200)
+    space = models.CharField(max_length=100, blank=True)
+    about = models.CharField(max_length=200, blank=True)
+    lost_count = models.PositiveIntegerField(help_text="People who left the book, kept or not.")
+    kept = models.ManyToManyField(Person, blank=True, related_name="+")
+
+    class Meta:
+        verbose_name_plural = "access ended"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.get_reason_display()} for {self.user}"

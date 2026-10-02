@@ -10,6 +10,7 @@ from access.policy import (
     can_delete_person,
     can_edit_person,
     can_edit_relationship,
+    can_leave_space,
     can_manage_space,
     can_write_private,
 )
@@ -72,21 +73,22 @@ def test_can_delete_person(world, who, target, allowed):
 
 
 @pytest.mark.parametrize(
-    ("who", "space", "manage", "change_people"),
+    ("who", "space", "manage", "change_people", "leave"),
     [
-        ("ela", "climbing", True, True),
-        ("deniz", "climbing", False, True),
-        ("kaan", "climbing", False, False),
-        ("sofia", "climbing", False, False),
-        ("ela", "hackathon", False, False),
-        ("defne", "hackathon", True, True),
+        ("ela", "climbing", True, True, False),  # the owner deletes it instead
+        ("deniz", "climbing", False, True, True),
+        ("kaan", "climbing", False, False, True),
+        ("sofia", "climbing", False, False, False),
+        ("ela", "hackathon", False, False, True),
+        ("defne", "hackathon", True, True, False),
     ],
 )
-def test_space_permissions(world, who, space, manage, change_people):
+def test_space_permissions(world, who, space, manage, change_people, leave):
     a, s = access(world, who), getattr(world, space)
 
     assert can_manage_space(a, s) == manage
     assert can_change_space_people(a, s) == change_people
+    assert can_leave_space(a, s) == leave
 
 
 @pytest.mark.parametrize(

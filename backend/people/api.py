@@ -102,9 +102,12 @@ def list_people(
     needs_details: bool = False,
     search: str = "",
     recent: bool = False,
+    kept: bool = False,
 ):
     """Everyone the user can see, by name. `needs_details`: no "how we met" yet.
-    `recent`: people added to your own book in the last 30 days, newest first.
+    `recent`: people added to your own book in the last 30 days, newest first (not kept
+    copies: you didn't add those).
+    `kept`: your copies of people you lost sight of.
 
     `search` matches names, how you met, work, tags, spaces and your own notes and
     memory aids, ignoring case and accents.
@@ -115,10 +118,12 @@ def list_people(
         people = people.filter(spaces__in=visible_spaces(access).filter(pk=space))
     if needs_details:
         people = people.filter(needs_details=True)
+    if kept:
+        people = people.filter(owner=access.user, kept_at__isnull=False)
     if recent:
         since = timezone.now() - RECENT
         people = (
-            people.filter(owner=access.user, created_at__gte=since)
+            people.filter(owner=access.user, created_at__gte=since, kept_at__isnull=True)
             .exclude(account=access.user)  # your own Me isn't someone you added
             .order_by("-created_at")
         )

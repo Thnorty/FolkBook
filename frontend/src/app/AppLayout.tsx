@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Outlet, useNavigate, useRouter, useRouterState } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { currentUserQuery, type CurrentUser } from '@/api/session'
+import { useAccessEndedToasts } from '@/features/kept/useAccessEndedToasts'
 import { ConnectionFormProvider } from '@/features/person/ConnectionFormProvider'
 import { InteractionFormProvider } from '@/features/person/InteractionFormProvider'
 import { PersonFormProvider } from '@/features/person/PersonFormProvider'
@@ -44,6 +45,7 @@ function Shell({ user }: { user: CurrentUser }) {
   const { openNew } = usePersonForm()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const pathname = useRouterState({ select: (state) => state.location.pathname })
+  useAccessEndedToasts()
 
   useShortcut(
     SHORTCUTS.palette,

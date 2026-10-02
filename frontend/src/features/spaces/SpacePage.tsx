@@ -14,12 +14,18 @@ import { notify } from '@/lib/notify'
 import { usePageTitle } from '@/lib/usePageTitle'
 import { cn } from '@/lib/utils'
 import { ownership, peopleCount } from './labels'
+import { LeaveDialog } from './LeaveDialog'
 import {
+  changeRole,
   deleteSpace,
   hiddenPeopleQuery,
   membersQuery,
   refreshSpaces,
+  removeMember,
   spaceQuery,
+  stopSharing,
+  type Member,
+  type Role,
   type Space,
 } from './queries'
 import { ShareDialog } from './ShareDialog'
@@ -81,7 +87,7 @@ export function SpacePage() {
             )}
           </p>
         </div>
-        {data.role === 'owner' && (
+        {data.role === 'owner' ? (
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setSharing(true)}>
               <UsersRound aria-hidden />
@@ -89,6 +95,8 @@ export function SpacePage() {
             </Button>
             <SpaceMenu space={data} />
           </div>
+        ) : (
+          <MemberMenu space={data} />
         )}
       </header>
 
@@ -113,7 +121,7 @@ export function SpacePage() {
           }
         />
         <HiddenPeople spaceId={spaceId} />
-        {data.member_count > 0 && <Members spaceId={spaceId} />}
+        {data.member_count > 0 && <Members space={data} />}
         {data.people_count > 0 && (
           <Suspense fallback={null}>
             <SpaceGraph spaceId={spaceId} />
@@ -128,24 +136,118 @@ export function SpacePage() {
   )
 }
 
-/** Who can see this space, and as what. */
-function Members({ spaceId }: { spaceId: string }) {
-  const members = useQuery(membersQuery(spaceId)).data ?? []
+/** Who can see this space, and as what. The owner can change roles or remove people (5c). */
+function Members({ space }: { space: Space }) {
+  const members = useQuery(membersQuery(space.id)).data ?? []
+  const owner = space.role === 'owner'
   return (
     <section aria-labelledby="space-members" className="flex flex-col gap-2">
       <h2 id="space-members" className="type-label text-ink-faint">
         Who sees this space
       </h2>
-      <ul className="flex flex-wrap gap-x-4 gap-y-1">
+      <ul
+        className={owner ? 'flex flex-col divide-y divide-line' : 'flex flex-wrap gap-x-4 gap-y-1'}
+      >
         {members.map((member) => (
-          <li key={member.user_id}>
-            {member.name}
-            {member.is_you && ' (you)'}
-            <span className="ml-1.5 type-meta text-ink-faint">{member.role}</span>
+          <li key={member.user_id} className={cn(owner && 'flex items-center gap-2 py-1.5')}>
+            <span>
+              {member.name}
+              {member.is_you && ' (you)'}
+              <span className="ml-1.5 type-meta text-ink-faint">{member.role}</span>
+            </span>
+            {owner && member.role !== 'owner' && <MemberRowMenu space={space} member={member} />}
           </li>
         ))}
       </ul>
     </section>
+  )
+}
+
+/** Make editor or viewer, or remove from the space (screens 5c, 5d). */
+function MemberRowMenu({ space, member }: { space: Space; member: Member }) {
+  const queryClient = useQueryClient()
+  const [confirming, setConfirming] = useState(false)
+  const first = member.name.split(' ')[0]
+  const other: Role = member.role === 'editor' ? 'viewer' : 'editor'
+  const role = useMutation({
+    mutationFn: () => changeRole(space.id, member.user_id, other),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: membersQuery(space.id).queryKey }),
+    onError: (error) => notify({ title: error.message }),
+  })
+  const remove = useMutation({
+    mutationFn: () => removeMember(space.id, member.user_id),
+    onSuccess: async () => {
+      setConfirming(false)
+      await refreshSpaces(queryClient)
+      notify({ title: `${first} no longer sees ${space.name}` })
+    },
+    onError: (error) => notify({ title: error.message }),
+  })
+
+  return (
+    <>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button
+            variant="ghost"
+            className="ml-auto w-9 px-0"
+            aria-label={`${member.name}: actions`}
+          >
+            <MoreHorizontal aria-hidden />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content align="end" sideOffset={6} className={menuContentClass}>
+            <DropdownMenu.Item className={menuItemClass} onSelect={() => role.mutate()}>
+              Make {other}
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator className={menuSeparatorClass} />
+            <DropdownMenu.Item
+              className={cn(menuItemClass, 'text-danger')}
+              onSelect={() => setConfirming(true)}
+            >
+              Remove from {space.name}…
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={`Remove ${first} from ${space.name}?`}
+        description={`${first} stops seeing this space today. Anyone ${first} wrote notes on stays in ${first}'s book as a kept copy — you won't see who.`}
+        confirmLabel={`Remove ${first}`}
+        busy={remove.isPending}
+        onConfirm={() => remove.mutate()}
+      />
+    </>
+  )
+}
+
+/** Leave a space shared with you (screens 5a, 5b). */
+function MemberMenu({ space }: { space: Space }) {
+  const [leaving, setLeaving] = useState(false)
+  return (
+    <>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button variant="secondary" aria-label="Space actions">
+            <MoreHorizontal aria-hidden />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content align="end" sideOffset={6} className={menuContentClass}>
+            <DropdownMenu.Item
+              className={cn(menuItemClass, 'text-danger')}
+              onSelect={() => setLeaving(true)}
+            >
+              Leave space…
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      {leaving && <LeaveDialog space={space} onClose={() => setLeaving(false)} />}
+    </>
   )
 }
 
@@ -187,16 +289,16 @@ function HiddenPeople({ spaceId }: { spaceId: string }) {
   )
 }
 
-/** Edit and Delete, for the owner. Sharing comes with #29. */
+/** Edit, Stop sharing and Delete, for the owner. */
 function SpaceMenu({ space }: { space: Space }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { openEdit } = useSpaceForm()
-  const [confirming, setConfirming] = useState(false)
+  const [confirming, setConfirming] = useState<'delete' | 'unshare' | null>(null)
   const remove = useMutation({
     mutationFn: () => deleteSpace(space.id),
     onSuccess: async () => {
-      setConfirming(false)
+      setConfirming(null)
       await navigate({ to: '/spaces' })
       await refreshSpaces(queryClient)
       notify({
@@ -206,6 +308,16 @@ function SpaceMenu({ space }: { space: Space }) {
     },
     onError: (error) => notify({ title: error.message }),
   })
+  const unshare = useMutation({
+    mutationFn: () => stopSharing(space.id),
+    onSuccess: async () => {
+      setConfirming(null)
+      await refreshSpaces(queryClient)
+      notify({ title: `${space.name} is private again` })
+    },
+    onError: (error) => notify({ title: error.message }),
+  })
+  const members = space.member_count
 
   return (
     <>
@@ -221,9 +333,17 @@ function SpaceMenu({ space }: { space: Space }) {
               Edit space
             </DropdownMenu.Item>
             <DropdownMenu.Separator className={menuSeparatorClass} />
+            {members > 0 && (
+              <DropdownMenu.Item
+                className={cn(menuItemClass, 'text-danger')}
+                onSelect={() => setConfirming('unshare')}
+              >
+                Stop sharing…
+              </DropdownMenu.Item>
+            )}
             <DropdownMenu.Item
               className={cn(menuItemClass, 'text-danger')}
-              onSelect={() => setConfirming(true)}
+              onSelect={() => setConfirming('delete')}
             >
               Delete space…
             </DropdownMenu.Item>
@@ -231,13 +351,22 @@ function SpaceMenu({ space }: { space: Space }) {
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
       <ConfirmDialog
-        open={confirming}
-        onOpenChange={setConfirming}
+        open={confirming === 'delete'}
+        onOpenChange={(open) => setConfirming(open ? 'delete' : null)}
         title={`Delete ${space.name}?`}
-        description="Its people and links stay in your notebook; only the space goes. Anyone it's shared with loses it too."
+        description="Its people and links stay in your notebook; only the space goes. Anyone it's shared with loses it too, keeping copies of anyone they wrote notes on."
         confirmLabel="Delete space"
         busy={remove.isPending}
         onConfirm={() => remove.mutate()}
+      />
+      <ConfirmDialog
+        open={confirming === 'unshare'}
+        onOpenChange={(open) => setConfirming(open ? 'unshare' : null)}
+        title={`Stop sharing ${space.name}?`}
+        description={`${members === 1 ? 'Its member stops' : `All ${members} members stop`} seeing it today. They keep copies of anyone they wrote notes on — you won't see who. The space and its people stay yours.`}
+        confirmLabel="Stop sharing"
+        busy={unshare.isPending}
+        onConfirm={() => unshare.mutate()}
       />
     </>
   )

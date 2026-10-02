@@ -107,7 +107,7 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
   The dialog also has the contact-details toggle (off by default) and lists members with a role picker; the space page shows "Who sees this space". Only accounts on this server
 - **Adding someone to a shared space:** first-time confirmation ("Tom will be visible to 4 people", with who they are) and "Don't ask again" for that space, remembered on the device
 - **Shared indicator:** people icon on the space tab everywhere it appears
-- **Leave / unshare:** owner removes a member or a member leaves. Referenced people become the member's own copies with their notes kept (§3.14)
+- **Leave / unshare:** a member leaves from the space's ⋯ menu (a dialog lists who they'd keep a copy of); the owner removes a member from the member's ⋯ in "Who sees this space", or picks ⋯ → Stop sharing. People they wrote notes on become their own kept copies (§3.14)
 
 ### 3.8 Relationships
 1. Profile → Connections **+ Add** → pick person (search, or create someone new by name) → pick type
@@ -145,9 +145,10 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 1. **Birthdays** (today and the next 7 days): "Turns 34 today" → *Wish* logs "Birthday wishes" in one tap (Undo)
 2. **Keep in touch:** nudge cards (see DECISIONS for when someone is due), with a pinned memory aid as a hint → *We talked* (logs "Talked" today) · *Snooze* (a week) · *Stop*; each with Undo
 3. **Remember?** a random memory aid on a sticky note → *Got it* · *Show another*
-4. **Shared with you:** spaces others shared with you → *Open space* · *Dismiss* (remembered on this device)
-5. **Fill in the blanks:** people without "how you know them" → *Start with Anna →* · *See all*
-6. **Recently added:** people added to your book in the last 30 days
+4. **Sharing ended:** people who left your book because of someone else, and who you kept (§3.14)
+5. **Shared with you:** spaces others shared with you → *Open space* · *Dismiss* (remembered on this device)
+6. **Fill in the blanks:** people without "how you know them" → *Start with Anna →* · *See all*
+7. **Recently added:** people added to your book in the last 30 days
 
 ### 3.13 Search
 - One search over names, how you met, work, tags, spaces, and your own notes and memory aids (only what you can see; accents and case don't matter)
@@ -156,9 +157,10 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 - Desktop: `Ctrl/Cmd + K` palette; phones: the same as a Search page (button on Today)
 
 ### 3.14 Access revoked
-- When a space is unshared or you leave it: toast + Today card:
-  *"Defne stopped sharing Hackathon 2026. You kept 3 people you had notes on."*
-- Kept people become your own copies (marked "copied from Defne's space")
+- When someone else ends your access (stops sharing, removes you, deletes the space, or takes out or deletes someone you wrote about): a toast once per device + a Today card until dismissed:
+  *"Defne stopped sharing Hackathon 2026. You kept 3 people you had notes on."* with the kept people, *Review kept people* · *Dismiss*
+- When you leave yourself, the toast says who you kept
+- Kept people become your own copies: marked **Kept** on their profile with *"Kept copy · was shared by Defne in Hackathon 2026 until 22 Sep 2026"* and *Add to a space*; People has a **Kept** filter while you have any
 
 ### 3.15 Settings
 - **Profile & account:** Me profile, password, sessions

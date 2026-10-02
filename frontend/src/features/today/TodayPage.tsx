@@ -6,6 +6,8 @@ import { PageHeader } from '@/components/PageHeader'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { StickyNote } from '@/components/notebook/StickyNote'
 import { Button } from '@/components/ui/button'
+import { AccessEndedCards } from '@/features/kept/AccessEndedCards'
+import { accessEndedQuery } from '@/features/kept/queries'
 import { countOf, intervalLabel } from '@/features/person/labels'
 import { ProfileSection as Section } from '@/features/person/ProfileSection'
 import {
@@ -47,7 +49,7 @@ function attempt(failed: string, write: () => Promise<unknown>) {
   write().catch((error: Error) => notify({ title: failed, description: error.message }))
 }
 
-/** The home screen: what's worth your attention today (screens 1e, 1f, 6g). */
+/** The home screen: what's worth your attention today (screens 1e, 1f, 4n, 6g). */
 export function TodayPage() {
   const today = isoDay()
   const birthdays = useQuery(birthdaysQuery(today))
@@ -55,6 +57,7 @@ export function TodayPage() {
   const blanks = useQuery(blanksQuery)
   const recent = useQuery(recentQuery)
   const spaces = useQuery(spacesQuery)
+  const ended = useQuery(accessEndedQuery)
   const [skip, setSkip] = useState<string | null>(null)
   const remember = useQuery(rememberQuery(skip))
   const [rememberDone, setRememberDone] = useState(false)
@@ -64,6 +67,7 @@ export function TodayPage() {
     (space) => space.role !== 'owner' && !dismissed.includes(space.id),
   )
   const sections = {
+    ended: ended.data ?? [],
     birthdays: birthdays.data ?? [],
     due: due.data ?? [],
     remember: rememberDone ? null : (remember.data ?? null),
@@ -71,9 +75,12 @@ export function TodayPage() {
     blanks: blanks.data,
     recent: recent.data?.items ?? [],
   }
-  const loaded = [birthdays, due, blanks, recent, spaces, remember].every((q) => !q.isPending)
+  const loaded = [birthdays, due, blanks, recent, spaces, remember, ended].every(
+    (q) => !q.isPending,
+  )
   const empty =
     loaded &&
+    sections.ended.length === 0 &&
     sections.birthdays.length === 0 &&
     sections.due.length === 0 &&
     !sections.remember &&
@@ -108,6 +115,7 @@ export function TodayPage() {
       ) : (
         <div className="mt-6 grid gap-9 lg:grid-cols-2 lg:gap-x-12">
           <div className="flex flex-col gap-9">
+            {sections.ended.length > 0 && <AccessEndedCards notices={sections.ended} />}
             {sections.birthdays.length > 0 && (
               <Birthdays birthdays={sections.birthdays} today={today} />
             )}

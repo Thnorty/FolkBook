@@ -405,7 +405,9 @@ export interface paths {
         /**
          * List People
          * @description Everyone the user can see, by name. `needs_details`: no "how we met" yet.
-         *     `recent`: people added to your own book in the last 30 days, newest first.
+         *     `recent`: people added to your own book in the last 30 days, newest first (not kept
+         *     copies: you didn't add those).
+         *     `kept`: your copies of people you lost sight of.
          *
          *     `search` matches names, how you met, work, tags, spaces and your own notes and
          *     memory aids, ignoring case and accents.
@@ -716,11 +718,75 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Remove Member
+         * @description The owner removes a member. They keep copies of anyone they wrote about.
+         */
+        delete: operations["spaces_api_remove_member"];
         options?: never;
         head?: never;
         /** Change Member Role */
         patch: operations["spaces_api_change_member_role"];
+        trace?: never;
+    };
+    "/api/spaces/{space_id}/stop-sharing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop Sharing
+         * @description The owner removes every member: the space is private again.
+         */
+        post: operations["spaces_api_stop_sharing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/spaces/{space_id}/leave-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Leave Preview
+         * @description What leaving would do: who you'd keep a copy of, and how many others would go.
+         */
+        get: operations["spaces_api_leave_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/spaces/{space_id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leave Space
+         * @description Stop seeing a space shared with you. Copies of anyone you wrote about stay.
+         */
+        post: operations["spaces_api_leave_space"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/relationships": {
@@ -1057,6 +1123,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/today/access-ended": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Access Ended
+         * @description People who left your book because of someone else, newest first, until dismissed.
+         */
+        get: operations["today_api_list_access_ended"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/today/access-ended/{notice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Dismiss Access Ended */
+        delete: operations["today_api_dismiss_access_ended"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search": {
         parameters: {
             query?: never;
@@ -1369,6 +1472,21 @@ export interface components {
             /** Year */
             year?: number | null;
         };
+        /**
+         * KeptOut
+         * @description Where a kept copy came from: "was shared by Defne in Hackathon 2026 until 22 Sep".
+         */
+        KeptOut: {
+            /** From Owner */
+            from_owner: string;
+            /** Space */
+            space: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
         /** PagedPersonOut */
         PagedPersonOut: {
             /** Items */
@@ -1413,6 +1531,7 @@ export interface components {
              * Format: date-time
              */
             added_at: string;
+            kept: components["schemas"]["KeptOut"] | null;
         };
         /** PhotoOut */
         PhotoOut: {
@@ -1483,6 +1602,7 @@ export interface components {
              * Format: date-time
              */
             added_at: string;
+            kept: components["schemas"]["KeptOut"] | null;
             /** Contact Methods */
             contact_methods: components["schemas"]["ContactMethodOut"][];
             /** Can Edit */
@@ -1714,6 +1834,33 @@ export interface components {
         /** RoleIn */
         RoleIn: {
             role: components["schemas"]["Role"];
+        };
+        /**
+         * KeptPreviewOut
+         * @description Someone you'd keep a copy of, and what you wrote about them (screen 5a).
+         */
+        KeptPreviewOut: {
+            person: components["schemas"]["PersonRef"];
+            /** Notes */
+            notes: number;
+            /** Memory Aids */
+            memory_aids: number;
+            /** Interactions */
+            interactions: number;
+        };
+        /** LeavePreviewOut */
+        LeavePreviewOut: {
+            /** Kept */
+            kept: components["schemas"]["KeptPreviewOut"][];
+            /** Leaving */
+            leaving: number;
+            /** Own People */
+            own_people: number;
+        };
+        /** LeftOut */
+        LeftOut: {
+            /** Kept */
+            kept: components["schemas"]["PersonRef"][];
         };
         /** PagedRelationshipOut */
         PagedRelationshipOut: {
@@ -2106,6 +2253,39 @@ export interface components {
             aid: components["schemas"]["MemoryAidOut"];
             person: components["schemas"]["PersonRef"];
         };
+        /**
+         * AccessEndedOut
+         * @description People left your book because of someone else (screen 4n). The app words it:
+         *     "Defne stopped sharing Hackathon 2026. You kept 3 people you had notes on."
+         */
+        AccessEndedOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            reason: components["schemas"]["Reason"];
+            /** By */
+            by: string;
+            /** Space */
+            space: string;
+            /** About */
+            about: string;
+            /** Lost */
+            lost: number;
+            /** Kept */
+            kept: components["schemas"]["PersonRef"][];
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+        };
+        /**
+         * Reason
+         * @enum {string}
+         */
+        Reason: "removed" | "stopped_sharing" | "space_deleted" | "member_left" | "person_removed" | "person_deleted";
         /** SearchParams */
         SearchParams: {
             /** Q */
@@ -2727,6 +2907,7 @@ export interface operations {
                 needs_details?: boolean;
                 search?: string;
                 recent?: boolean;
+                kept?: boolean;
                 page?: number;
                 page_size?: number | null;
             };
@@ -3306,6 +3487,27 @@ export interface operations {
             };
         };
     };
+    spaces_api_remove_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     spaces_api_change_member_role: {
         parameters: {
             query?: never;
@@ -3329,6 +3531,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemberOut"];
+                };
+            };
+        };
+    };
+    spaces_api_stop_sharing: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    spaces_api_leave_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeavePreviewOut"];
+                };
+            };
+        };
+    };
+    spaces_api_leave_space: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                space_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeftOut"];
                 };
             };
         };
@@ -3935,6 +4201,46 @@ export interface operations {
                     "application/json": components["schemas"]["RememberOut"];
                 };
             };
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    today_api_list_access_ended: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessEndedOut"][];
+                };
+            };
+        };
+    };
+    today_api_dismiss_access_ended: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             /** @description No Content */
             204: {
                 headers: {

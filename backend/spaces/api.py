@@ -21,6 +21,8 @@ from spaces.models import Space
 from spaces.schemas import (
     AccountOut,
     CandidateParams,
+    LeavePreviewOut,
+    LeftOut,
     MemberOut,
     RoleIn,
     ShareIn,
@@ -114,10 +116,9 @@ def list_hidden_people(request, space_id: UUID):
 
 
 def _member_out(request, user, role: str) -> dict:
-    me = getattr(user, "me", None)
     return {
         "user_id": user.pk,
-        "name": me.name if me else user.email,
+        "name": user.display_name,
         "email": user.email,
         "role": role,
         "is_you": user.pk == request.auth.pk,
@@ -156,3 +157,36 @@ def change_member_role(request, space_id: UUID, user_id: UUID, payload: RoleIn):
     membership = get_object_or_404(space.memberships.select_related("user__me"), user_id=user_id)
     services.change_role(access, membership, payload.role)
     return _member_out(request, membership.user, membership.role)
+
+
+@router.delete("/{space_id}/members/{uuid:user_id}", response={204: None})
+def remove_member(request, space_id: UUID, user_id: UUID):
+    """The owner removes a member. They keep copies of anyone they wrote about."""
+    access = access_for(request)
+    space = visible_space(access, space_id)
+    membership = get_object_or_404(space.memberships.select_related("user__me"), user_id=user_id)
+    services.remove_member(access, membership)
+    return Status(204, None)
+
+
+@router.post("/{space_id}/stop-sharing", response={204: None})
+def stop_sharing(request, space_id: UUID):
+    """The owner removes every member: the space is private again."""
+    access = access_for(request)
+    services.stop_sharing(access, visible_space(access, space_id))
+    return Status(204, None)
+
+
+@router.get("/{space_id}/leave-preview", response=LeavePreviewOut)
+def leave_preview(request, space_id: UUID):
+    """What leaving would do: who you'd keep a copy of, and how many others would go."""
+    access = access_for(request)
+    lost, kept, own = services.what_leaving_loses(access, visible_space(access, space_id))
+    return {"kept": kept, "leaving": lost - len(kept), "own_people": own}
+
+
+@router.post("/{space_id}/leave", response=LeftOut)
+def leave_space(request, space_id: UUID):
+    """Stop seeing a space shared with you. Copies of anyone you wrote about stay."""
+    access = access_for(request)
+    return {"kept": services.leave(access, visible_space(access, space_id))}

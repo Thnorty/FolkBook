@@ -19,6 +19,7 @@ const person = (id: string, name: string, extra: Record<string, unknown> = {}) =
   owner: { id: 'me', name: 'Ela' },
   needs_details: false,
   last_talked_on: null,
+  kept: null as object | null,
   ...extra,
 })
 
@@ -61,6 +62,7 @@ function server(people = EVERYONE) {
         (p) =>
           p.name.toLowerCase().includes(search) &&
           (query.get('needs_details') !== 'true' || p.needs_details) &&
+          (query.get('kept') !== 'true' || p.kept) &&
           (!query.get('space') || p.spaces.some((s) => s.id === query.get('space'))),
       )
       const size = Number(query.get('page_size') ?? 50)
@@ -124,6 +126,24 @@ describe('People list', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Needs details · 1' }))
 
     await waitFor(async () => expect(await cards()).toEqual(['Anna Kowalska']))
+  })
+
+  it('filters to kept copies, only when there are some', async () => {
+    const kept = { from_owner: 'Defne', space: 'Hackathon 2026', at: '2026-09-22T09:00:00Z' }
+    server([...EVERYONE, person('tom', 'Tom Bergqvist', { how_we_met: 'Hackathon', kept })])
+    renderApp('/people')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Kept · 1' }))
+
+    await waitFor(async () => expect(await cards()).toEqual(['Tom Bergqvist']))
+  })
+
+  it('has no Kept filter without kept copies', async () => {
+    server()
+    renderApp('/people')
+
+    expect(await screen.findByRole('button', { name: 'Needs details · 1' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Kept/ })).not.toBeInTheDocument()
   })
 
   it('filters by space and links to the space page', async () => {

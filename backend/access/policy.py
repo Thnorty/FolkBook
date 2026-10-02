@@ -27,7 +27,7 @@ from django.db.models import (
 
 from accounts.models import User
 from interactions.models import Interaction
-from people.models import ContactMethod, HiddenPerson, MemoryAid, Note, Person
+from people.models import AccessEnded, ContactMethod, HiddenPerson, MemoryAid, Note, Person
 from relationships.models import Relationship
 from reminders.models import KeepInTouch
 from spaces.models import Space, SpaceMembership, SpacePerson
@@ -216,6 +216,15 @@ def can_manage_space(access: Access, space: Space) -> bool:
     return not access.read_only and space_role(access, space) == "owner"
 
 
+def can_leave_space(access: Access, space: Space) -> bool:
+    """Members can leave; the owner deletes the space instead."""
+    return (
+        not access.read_only
+        and not access.is_space_limited
+        and space_role(access, space) in ("editor", "viewer")
+    )
+
+
 def can_change_space_people(access: Access, space: Space) -> bool:
     return editable_spaces(access).filter(pk=space.pk).exists()
 
@@ -302,6 +311,13 @@ def visible_interactions(access: Access) -> QuerySet[Interaction]:
 
 def visible_keep_in_touch(access: Access) -> QuerySet[KeepInTouch]:
     return _private(KeepInTouch.objects.all(), access, author_field="user")
+
+
+def visible_access_ended(access: Access) -> QuerySet[AccessEnded]:
+    """The user's own "access ended" notices. They name who was kept, so they're private."""
+    if not access.include_private:
+        return AccessEnded.objects.none()
+    return AccessEnded.objects.filter(user=access.user)
 
 
 def can_write_private(access: Access, person: Person) -> bool:

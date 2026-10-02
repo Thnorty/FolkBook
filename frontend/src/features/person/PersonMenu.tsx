@@ -124,8 +124,8 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
             <strong className="font-medium">
               {firstName} is in {space.name}, a shared space.
             </strong>{' '}
-            {others(space)} will no longer see {firstName} there, and their own notes about{' '}
-            {firstName} are deleted too.
+            {others(space)} will no longer see {firstName} there. Their own notes about {firstName}{' '}
+            are theirs and stay put.
           </p>
         ))}
       </ConfirmDialog>

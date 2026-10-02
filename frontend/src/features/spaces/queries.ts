@@ -78,6 +78,33 @@ export function changeRole(spaceId: string, userId: string, role: Role) {
   )
 }
 
+export function removeMember(spaceId: string, userId: string) {
+  return unwrap(
+    api.DELETE('/api/spaces/{space_id}/members/{user_id}', {
+      params: { path: { space_id: spaceId, user_id: userId } },
+    }),
+  )
+}
+
+/** Remove every member: the space is the owner's alone again. */
+export function stopSharing(spaceId: string) {
+  return unwrap(api.POST('/api/spaces/{space_id}/stop-sharing', path(spaceId)))
+}
+
+/** What leaving would do: who you'd keep a copy of, and how many others would go. */
+export const leavePreviewQuery = (spaceId: string) =>
+  queryOptions({
+    queryKey: ['spaces', spaceId, 'leave-preview'],
+    queryFn: ({ signal }) =>
+      unwrap(api.GET('/api/spaces/{space_id}/leave-preview', { ...path(spaceId), signal })),
+    staleTime: 0,
+  })
+
+/** Leave a space shared with you; returns the copies you kept. */
+export function leaveSpace(spaceId: string) {
+  return unwrap(api.POST('/api/spaces/{space_id}/leave', path(spaceId)))
+}
+
 export function createSpace(input: SpaceInput) {
   return unwrap(api.POST('/api/spaces', { body: input }))
 }

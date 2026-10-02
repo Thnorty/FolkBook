@@ -182,14 +182,17 @@ describe('space page', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/people/oskar'))
   })
 
-  it("has no Edit or Delete in someone else's space", async () => {
+  it("has no Edit or Delete in someone else's space, only Leave", async () => {
     server()
     renderApp('/spaces/s3')
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Hackathon 2026' }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Space actions' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Share' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Space actions' }))
+    const items = await screen.findAllByRole('menuitem')
+    expect(items.map((item) => item.textContent)).toEqual(['Leave space…'])
   })
 
   it('edits the space', async () => {

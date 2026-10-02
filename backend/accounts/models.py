@@ -72,6 +72,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self) -> str:
         return self.email
 
+    @property
+    def display_name(self) -> str:
+        """The name on their Me, or their email if there's no Me."""
+        me = getattr(self, "me", None)
+        return me.name if me else self.email
+
 
 class Device(BaseModel):
     """A signed-in browser (one per session), so users can see and end their sessions."""
