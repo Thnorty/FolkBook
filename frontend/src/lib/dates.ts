@@ -11,6 +11,23 @@ export function formatDay(isoDate: string): string {
   return dayFormat.format(new Date(`${isoDate}T00:00:00Z`))
 }
 
+const timeFormat = new Intl.DateTimeFormat(undefined, {
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZone: 'UTC',
+})
+
+/** A time of day from the API ("14:30:00") in the user's locale, e.g. "14:30" or "2:30 PM". */
+export function formatTime(isoTime: string): string {
+  return timeFormat.format(new Date(`1970-01-01T${isoTime}Z`))
+}
+
+/** The time of day on the device's clock, as the API writes it ("14:30"). */
+export function isoTime(now: Date = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${pad(now.getHours())}:${pad(now.getMinutes())}`
+}
+
 const DAY = 24 * 60 * 60 * 1000
 const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
 

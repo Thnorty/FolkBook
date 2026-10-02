@@ -107,13 +107,18 @@ describe('logging an interaction', () => {
 
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Call' }))
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Yesterday' }))
-    await userEvent.type(
-      within(dialog).getByRole('textbox', { name: /Note/ }),
-      "Long call. Arda's into dinosaurs.",
+    const note = within(dialog).getByRole('textbox', { name: /Note/ })
+    const keep = within(dialog).getByRole('button', { name: 'Turn selection into a memory aid' })
+    await userEvent.type(note, "Long call. Arda's into dinosaurs.")
+    await userEvent.click(keep)
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Select the words you want on a sticky note first.',
     )
-    await userEvent.click(
-      within(dialog).getByRole('button', { name: 'Turn a line into a memory aid' }),
-    )
+    const start = (note as HTMLTextAreaElement).value.indexOf('Arda')
+    ;(note as HTMLTextAreaElement).setSelectionRange(start, start + "Arda's into dinosaurs.".length)
+    fireEvent.select(note)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    await userEvent.click(keep)
     const toAdd = within(dialog).getByRole('list', { name: 'Sticky notes to add' })
     expect(within(toAdd).getByText("Arda's into dinosaurs")).toBeInTheDocument()
     saveShortcut(dialog)
@@ -130,6 +135,7 @@ describe('logging an interaction', () => {
           kind: 'call',
           label: '',
           occurred_on: '2026-09-22',
+          occurred_at: null,
           note: "Long call. Arda's into dinosaurs.",
         },
       },
@@ -148,7 +154,7 @@ describe('logging an interaction', () => {
     ])
   })
 
-  it('asks what it was for Other, and logs any earlier day', async () => {
+  it('asks what it was for Other, and logs any earlier day and time', async () => {
     const writes = server()
     renderApp('/people/emma')
     const timeline = await screen.findByRole('region', { name: 'Timeline' })
@@ -156,10 +162,17 @@ describe('logging an interaction', () => {
     await userEvent.click(within(timeline).getByRole('button', { name: /Log/ }))
     const dialog = await screen.findByRole('dialog', { name: 'Log with Emma' })
     await userEvent.click(within(dialog).getByRole('radio', { name: 'Other…' }))
-    await userEvent.type(within(dialog).getByRole('textbox', { name: 'What was it?' }), 'Dinner')
+    const what = within(dialog).getByRole('textbox', { name: 'What was it?' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save to timeline' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Fill this in first.')
+    expect(what).toHaveFocus()
+    expect(what).toHaveAttribute('aria-invalid', 'true')
+    await userEvent.type(what, 'Dinner')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     fireEvent.change(within(dialog).getByLabelText('Another day'), {
       target: { value: '2026-09-01' },
     })
+    fireEvent.change(within(dialog).getByLabelText('Time'), { target: { value: '19:30' } })
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save to timeline' }))
 
     await waitFor(() =>
@@ -168,6 +181,7 @@ describe('logging an interaction', () => {
         kind: 'custom',
         label: 'Dinner',
         occurred_on: '2026-09-01',
+        occurred_at: '19:30',
         note: '',
       }),
     )
@@ -202,6 +216,7 @@ describe('logging an interaction', () => {
           kind: 'met',
           label: 'Coffee at Kronotrop',
           occurred_on: '2026-09-12',
+          occurred_at: null,
           note: 'Dinosaur drawings, and a T. rex.',
         },
       },

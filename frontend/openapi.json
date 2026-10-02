@@ -6032,6 +6032,18 @@
             "title": "Occurred On",
             "type": "string"
           },
+          "occurred_at": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred At"
+          },
           "note": {
             "title": "Note",
             "type": "string"
@@ -6043,6 +6055,7 @@
           "kind",
           "label",
           "occurred_on",
+          "occurred_at",
           "note"
         ],
         "title": "InteractionOut",
@@ -6089,6 +6102,18 @@
             "format": "date",
             "title": "Occurred On",
             "type": "string"
+          },
+          "occurred_at": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred At"
           },
           "note": {
             "default": "",
@@ -6140,6 +6165,18 @@
               }
             ],
             "title": "Occurred On"
+          },
+          "occurred_at": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred At"
           },
           "note": {
             "anyOf": [

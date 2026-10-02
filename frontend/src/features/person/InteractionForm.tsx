@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Kbd } from '@/components/ui/kbd'
 import { labelClass } from '@/components/ui/label'
 import { isoDay } from '@/lib/dates'
+import { warnAt } from '@/lib/fieldWarnings'
 import { cn } from '@/lib/utils'
 import { INTERACTION_KINDS } from './labels'
 import { memoryLine } from './memoryLine'
@@ -49,16 +50,22 @@ export function InteractionForm({
   const [kind, setKind] = useState(interaction?.kind ?? 'met')
   const [label, setLabel] = useState(interaction?.label ?? '')
   const [day, setDay] = useState(interaction?.occurred_on ?? today)
+  // "14:30:00" from the API; the time field shows and sends "14:30".
+  const [time, setTime] = useState(interaction?.occurred_at?.slice(0, 5) ?? '')
   const [note, setNote] = useState(interaction?.note ?? '')
   const [memoryAids, setMemoryAids] = useState<string[]>([])
   const noteBox = useRef<HTMLTextAreaElement>(null)
 
-  const keepLine = () => {
+  const keepSelection = () => {
     const box = noteBox.current
     if (!box) return
-    const line = memoryLine(note, box.selectionStart, box.selectionEnd)
-    if (line && !memoryAids.includes(line)) setMemoryAids([...memoryAids, line])
     box.focus()
+    const line = memoryLine(note, box.selectionStart, box.selectionEnd)
+    if (!line) {
+      warnAt(box, 'Select the words you want on a sticky note first.')
+      return
+    }
+    if (!memoryAids.includes(line)) setMemoryAids([...memoryAids, line])
   }
 
   const submit = (event: FormEvent) => {
@@ -69,6 +76,7 @@ export function InteractionForm({
         // Only "Other" is named here; other kinds keep a name given elsewhere (e.g. an import).
         label: kind === 'custom' ? label.trim() : (interaction?.label ?? ''),
         occurred_on: day,
+        occurred_at: time || null,
         note: note.trim(),
       },
       memoryAids,
@@ -134,6 +142,19 @@ export function InteractionForm({
             className={cn('w-auto flex-none', day !== today && day !== yesterday && pickedBoxClass)}
           />
         </div>
+        <div className="mt-2 flex items-center gap-2">
+          <label htmlFor={`${formId}-time`} className="type-small text-ink-soft">
+            Time
+          </label>
+          <Input
+            id={`${formId}-time`}
+            type="time"
+            value={time}
+            onChange={(event) => setTime(event.target.value)}
+            className="w-auto"
+          />
+          <span className="font-mono text-xs text-ink-faint">optional</span>
+        </div>
       </fieldset>
 
       <div>
@@ -153,13 +174,15 @@ export function InteractionForm({
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <button
             type="button"
-            onClick={keepLine}
+            // Keeps the focus, and so the selection, in the note.
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={keepSelection}
             disabled={!note.trim()}
-            title="Puts the sentence you're in, or what you selected, on a sticky note"
+            title="Select words in the note, then put them on a sticky note"
             className="flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-note-yellow px-3 text-sm font-medium text-note-ink disabled:cursor-not-allowed disabled:opacity-50 md:h-8"
           >
             <Plus aria-hidden className="size-3.5" />
-            Turn a line into a memory aid
+            Turn selection into a memory aid
           </button>
           {memoryAids.length > 0 && (
             <ul aria-label="Sticky notes to add" className="contents">
@@ -186,15 +209,21 @@ export function InteractionForm({
 
       {error && <p className="type-small text-danger">{error}</p>}
 
-      {onDelete && (
-        <Button type="button" variant="danger" className="self-start" onClick={onDelete}>
-          <Trash2 aria-hidden />
-          Delete this entry
-        </Button>
-      )}
-
       <FormDialogFooter
         small
+        start={
+          onDelete && (
+            <Button
+              type="button"
+              variant="danger"
+              aria-label="Delete this entry"
+              onClick={onDelete}
+            >
+              <Trash2 aria-hidden />
+              Delete
+            </Button>
+          )
+        }
         submitLabel={interaction ? 'Save' : 'Save to timeline'}
         busy={saving}
         onCancel={onCancel}

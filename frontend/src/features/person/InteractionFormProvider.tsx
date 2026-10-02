@@ -118,9 +118,9 @@ async function undoLog(queryClient: QueryClient, entry: Interaction, aids: Memor
 
 function relog(
   queryClient: QueryClient,
-  { person_id, kind, label, occurred_on, note }: Interaction,
+  { person_id, kind, label, occurred_on, occurred_at, note }: Interaction,
 ) {
-  return logInteraction(queryClient, { person_id, kind, label, occurred_on, note })
+  return logInteraction(queryClient, { person_id, kind, label, occurred_on, occurred_at, note })
 }
 
 async function undo(action: () => Promise<unknown>) {

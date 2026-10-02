@@ -20,7 +20,7 @@ import {
 import { usePersonForm } from '@/features/person/usePersonForm'
 import { spacesQuery, type Space } from '@/features/spaces/queries'
 import { peopleCount } from '@/features/spaces/labels'
-import { formatDay, formatRelativeDay, isoDay } from '@/lib/dates'
+import { formatDay, formatRelativeDay, isoDay, isoTime } from '@/lib/dates'
 import { notify } from '@/lib/notify'
 import {
   birthdaysQuery,
@@ -208,6 +208,7 @@ function Birthdays({ birthdays, today }: { birthdays: Birthday[]; today: string 
         kind: 'message',
         label: 'Birthday wishes',
         occurred_on: today,
+        occurred_at: isoTime(),
       })
       notify({
         title: `Logged: birthday wishes to ${firstName(birthday.person.name)}`,
@@ -275,6 +276,7 @@ function KeepInTouch({ nudges, today }: { nudges: Nudge[]; today: string }) {
         kind: 'custom',
         label: 'Talked',
         occurred_on: today,
+        occurred_at: isoTime(),
       })
       notify({
         title: `Logged: talked with ${firstName(nudge.person.name)} today`,

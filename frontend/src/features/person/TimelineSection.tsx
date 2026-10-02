@@ -47,6 +47,7 @@ export function TimelineSection({ personId, canLog }: TimelineSectionProps) {
               <TimelineItem
                 key={item.id}
                 date={item.occurred_on}
+                time={item.occurred_at}
                 kind={INTERACTION_KINDS[item.kind]}
                 title={item.label || INTERACTION_KINDS[item.kind]}
                 onOpen={() => openEntry(item)}

@@ -133,8 +133,10 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 - Tap an empty slot ("Add mother") to fill in missing family
 
 ### 3.11 Log an interaction
-- From profile: **Log** (or `L`) → type (met, call, message, event, other) → date (today, yesterday or any earlier day) → note
-- **Turn a line into a memory aid:** puts the sentence the cursor is in (or the selection) on a sticky note, added when the entry is saved
+- From profile: **Log** (or `L`) → type (met, call, message, event, other) → date (today, yesterday or any earlier day) → time (optional) → note
+- **Turn selection into a memory aid:** puts the words selected in the note on a sticky note, added when the entry is saved; with nothing selected it says to select some first
+- When changing an entry, **Delete** sits at the bottom left; the shortcut hint moves under the buttons
+- One-tap logs from Today (*Wish*, *We talked*) record the time too
 - Saving shows an Undo toast (undo also removes sticky notes made from the note)
 - Tap an entry on the timeline to change or delete it; deleting also has Undo
 - From Today's nudge card: one-tap "We talked" → optional note

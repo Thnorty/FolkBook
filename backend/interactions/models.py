@@ -20,10 +20,16 @@ class Interaction(BaseModel):
     kind = models.CharField(max_length=10, choices=InteractionKind.choices)
     label = models.CharField(max_length=100, blank=True, help_text="Title, e.g. “Coffee”.")
     occurred_on = models.DateField()
+    # Optional, as the user's own clock read it: no time zone, like the day itself.
+    occurred_at = models.TimeField(null=True, blank=True)
     note = models.TextField(blank=True)
 
     class Meta:
-        ordering = ["-occurred_on", "-created_at"]
+        ordering = [
+            "-occurred_on",
+            models.F("occurred_at").desc(nulls_last=True),
+            "-created_at",
+        ]
         constraints = [
             models.CheckConstraint(
                 condition=~models.Q(kind="custom") | ~models.Q(label=""),
