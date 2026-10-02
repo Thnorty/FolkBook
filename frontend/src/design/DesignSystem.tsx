@@ -25,7 +25,17 @@ import { sharedPerson } from '@/motion/sharedIds'
  * spirit of design screen 1a. It isn't part of the built app.
  */
 
-const SURFACES = ['paper', 'card', 'ink', 'ink-soft', 'ink-faint', 'accent', 'danger', 'inverse']
+const SURFACES = [
+  'paper',
+  'card',
+  'ink',
+  'ink-soft',
+  'ink-faint',
+  'accent',
+  'danger',
+  'inverse',
+  'scrim',
+]
 const SPACE_COLORS: SpaceColor[] = ['sage', 'ochre', 'clay', 'plum', 'teal', 'slate']
 const NOTE_COLORS: NoteColor[] = ['yellow', 'pink', 'green', 'blue']
 

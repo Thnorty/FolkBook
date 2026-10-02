@@ -161,7 +161,7 @@ function ResetLinkDialog({
   return (
     <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-ink/25" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-scrim" />
         <Dialog.Content
           aria-describedby={undefined}
           className="fixed top-1/2 left-1/2 z-40 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-card border border-line bg-paper p-5 shadow-float"
