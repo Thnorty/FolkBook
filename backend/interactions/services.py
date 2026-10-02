@@ -8,7 +8,7 @@ from access.policy import Access, can_write_private
 from interactions.models import Interaction
 from people.models import Person
 
-EDITABLE_FIELDS = ("kind", "label", "occurred_on", "note")
+EDITABLE_FIELDS = ("kind", "label", "occurred_on", "occurred_at", "note")
 
 
 def log_interaction(access: Access, person: Person, data: dict[str, Any]) -> Interaction:

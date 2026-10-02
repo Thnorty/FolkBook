@@ -180,6 +180,7 @@ describe('Today', () => {
           kind: 'message',
           label: 'Birthday wishes',
           occurred_on: '2026-09-22',
+          occurred_at: expect.stringMatching(/^\d\d:\d\d$/), // now
         },
       },
       { method: 'DELETE', path: '/api/interactions/i9', body: null },
@@ -202,7 +203,13 @@ describe('Today', () => {
       {
         method: 'POST',
         path: '/api/interactions',
-        body: { person_id: 'deniz', kind: 'custom', label: 'Talked', occurred_on: '2026-09-22' },
+        body: {
+          person_id: 'deniz',
+          kind: 'custom',
+          label: 'Talked',
+          occurred_on: '2026-09-22',
+          occurred_at: expect.stringMatching(/^\d\d:\d\d$/),
+        },
       },
       {
         method: 'PUT',

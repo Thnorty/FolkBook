@@ -2118,6 +2118,8 @@ export interface components {
              * Format: date
              */
             occurred_on: string;
+            /** Occurred At */
+            occurred_at: string | null;
             /** Note */
             note: string;
         };
@@ -2146,6 +2148,8 @@ export interface components {
              * Format: date
              */
             occurred_on: string;
+            /** Occurred At */
+            occurred_at?: string | null;
             /**
              * Note
              * @default
@@ -2159,6 +2163,8 @@ export interface components {
             label?: string | null;
             /** Occurred On */
             occurred_on?: string | null;
+            /** Occurred At */
+            occurred_at?: string | null;
             /** Note */
             note?: string | null;
         };

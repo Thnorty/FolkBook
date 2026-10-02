@@ -33,7 +33,7 @@ export function FormDialog({
   return (
     <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-30 bg-ink/25" />
+        <Dialog.Overlay className="fixed inset-0 z-30 animate-fade-in bg-ink/25" />
         <Dialog.Content
           aria-describedby={undefined}
           // Ctrl/⌘+Enter submits from anywhere in the dialog, not just from inside the form
@@ -45,7 +45,7 @@ export function FormDialog({
             }
           }}
           className={cn(
-            'fixed z-30 flex flex-col overflow-hidden bg-paper md:inset-auto md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float',
+            'fixed z-30 flex animate-sheet-up flex-col overflow-hidden bg-paper reduced:animate-fade-in md:inset-auto md:animate-dialog-in md:top-[6vh] md:left-1/2 md:max-h-[88vh] md:w-[calc(100vw-2rem)] md:-translate-x-1/2 md:rounded-card md:border md:border-line md:shadow-float',
             small
               ? 'inset-x-0 bottom-0 max-h-[92dvh] rounded-t-sheet shadow-float md:top-[8vh] md:max-h-[84vh] md:max-w-md'
               : 'inset-0 md:max-w-xl',
@@ -100,6 +100,7 @@ export function FormDialog({
 /**
  * The footer of such a form: the shortcut hint, Cancel and the submit button on desktop.
  * Phones submit from the header, except in a small form, which ends in a wide button.
+ * `start` (e.g. Delete) takes the bottom left; the hint then goes under the buttons.
  */
 export function FormDialogFooter({
   submitLabel,
@@ -107,31 +108,37 @@ export function FormDialogFooter({
   onCancel,
   hint,
   small = false,
+  start,
 }: {
   submitLabel: string
   busy: boolean
   onCancel: () => void
   hint: ReactNode
   small?: boolean
+  start?: ReactNode
 }) {
+  const hintText = <span className="hidden type-meta text-ink-faint md:inline">{hint}</span>
   return (
-    <div className={cn('items-center gap-2 md:flex', small ? 'flex' : 'hidden')}>
-      <span className="hidden type-meta text-ink-faint md:inline">{hint}</span>
-      <Button
-        type="button"
-        variant="ghost"
-        className="ml-auto hidden md:inline-flex"
-        onClick={onCancel}
-      >
-        Cancel
-      </Button>
-      <Button
-        type="submit"
-        disabled={busy}
-        className={cn(small && 'h-12 flex-1 md:h-9 md:flex-none')}
-      >
-        {busy ? 'Saving…' : submitLabel}
-      </Button>
+    <div className={cn('flex-col gap-2 md:flex', small ? 'flex' : 'hidden')}>
+      <div className="flex items-center gap-2">
+        {start ?? hintText}
+        <Button
+          type="button"
+          variant="ghost"
+          className="ml-auto hidden md:inline-flex"
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={busy}
+          className={cn(small && 'h-12 flex-1 md:h-9 md:flex-none')}
+        >
+          {busy ? 'Saving…' : submitLabel}
+        </Button>
+      </div>
+      {start && <div className="hidden justify-end md:flex">{hintText}</div>}
     </div>
   )
 }

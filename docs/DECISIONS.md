@@ -71,6 +71,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 ## Data details
 - Birthdays store day, month and an optional year (the year is often unknown).
 - Each user keeps **one** notes text per person, any number of memory aids, and their own timeline.
+- A timeline entry has a day and an **optional time of day**, both as the user's own clock read them (no time zone). Entries on the same day go newest time first; those without a time come after.
 - Space names are unique per owner (ignoring case); colors can repeat.
 - Deleting a space never deletes people or links; links in it become private to their owner.
 

@@ -146,6 +146,33 @@ def test_the_timeline_is_the_users_own_newest_first(api, world):
     assert items(api.login(world.kaan).get("/interactions")) == []
 
 
+def test_entries_on_the_same_day_go_by_time_and_those_without_one_last(api, world):
+    InteractionFactory(author=world.ela, person=world.oskar, label="Lunch", occurred_at="12:30")
+    InteractionFactory(author=world.ela, person=world.oskar, label="Drinks", occurred_at="19:05")
+
+    timeline = items(api.login(world.ela).get("/interactions", person=str(world.oskar.pk)))
+
+    assert [(i["label"], i["occurred_at"]) for i in timeline] == [
+        ("Drinks", "19:05:00"),
+        ("Lunch", "12:30:00"),
+        ("", None),
+    ]
+
+
+def test_a_time_can_be_given_and_cleared(api, world):
+    client = api.login(world.ela)
+    entry = Interaction.objects.get(author=world.ela)
+
+    assert (
+        client.patch(f"/interactions/{entry.pk}", {"occurred_at": "08:15"}).json()["occurred_at"]
+        == "08:15:00"
+    )
+    assert (
+        client.patch(f"/interactions/{entry.pk}", {"occurred_at": None}).json()["occurred_at"]
+        is None
+    )
+
+
 def test_log_an_interaction(api, world):
     response = api.login(world.kaan).post(
         "/interactions",

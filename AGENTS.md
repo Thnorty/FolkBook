@@ -109,6 +109,8 @@ These rules are the product. Breaking one is a critical bug.
 - **Appearance settings** (theme, reduced motion) belong to the device: `src/lib/appearance.ts` keeps them in localStorage and sets `data-theme` / `data-motion` on `<html>`. Read them with `useAppearance()`, change them with `setAppearance()`.
 - Keyboard shortcuts: `N` add person, `Shift+N` quick capture, `Ctrl/Cmd+K` command palette, `L` log an interaction (on a profile). Show `Ctrl` on Windows/Linux and `⌘` on macOS.
 - Components from shadcn/ui are restyled to the notebook design; don't ship default shadcn looks.
+- **Form warnings:** forms use plain HTML constraints (`required`, `minLength`, `type="email"`, `max`…); `<FieldWarnings>` (mounted once in `Providers`) replaces the browser's popups with our own bubble and wording. For any other warning about a field, call `warnAt(field, text)` from `src/lib/fieldWarnings.ts`. Never use `alert()` or the browser's bubbles.
+- **Dialogs** arrive with `animate-sheet-up` (phones) / `animate-dialog-in` (desktop) and `reduced:animate-fade-in`, defined in `src/index.css`; `FormDialog` and `ConfirmDialog` already do.
 
 ## Tests
 

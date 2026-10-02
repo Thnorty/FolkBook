@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react'
-import { formatDay } from '@/lib/dates'
+import { formatDay, formatTime } from '@/lib/dates'
 
 type TimelineItemProps = {
   /** Calendar day from the API, e.g. "2026-09-12". */
   date: string
+  /** Time of day from the API, e.g. "14:30:00", if known. */
+  time?: string | null
   /** What kind of moment, e.g. "Coffee". */
   kind?: string
   title: string
@@ -13,11 +15,14 @@ type TimelineItemProps = {
 }
 
 /** One entry on a person's timeline: a dot on the line, the date, what happened. */
-export function TimelineItem({ date, kind, title, children, onOpen }: TimelineItemProps) {
+export function TimelineItem({ date, time, kind, title, children, onOpen }: TimelineItemProps) {
   const content = (
     <>
       <span className="block type-meta text-ink-faint">
-        <time dateTime={date}>{formatDay(date)}</time>
+        <time dateTime={time ? `${date}T${time}` : date}>
+          {formatDay(date)}
+          {time && ` · ${formatTime(time)}`}
+        </time>
         {kind && ` · ${kind}`}
       </span>
       <span className="mt-0.5 block type-heading">{title}</span>
