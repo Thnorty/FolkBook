@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Bell, BellOff } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { labelClass } from '@/components/ui/label'
@@ -57,18 +58,20 @@ export function KeepInTouch({ personId }: { personId: string }) {
     >
       <p className="type-heading">{summary}</p>
       {setting.next_nudge_on && !snoozed && (
-        <p className="type-meta text-ink-faint">
+        <p className="flex items-center gap-1.5 type-small text-ink-soft">
+          <Bell aria-hidden className="size-3.5 text-ink-faint" />
           {setting.next_nudge_on <= today
             ? 'Due now: on Today'
             : `Next nudge ${formatRelativeDay(setting.next_nudge_on)}`}
         </p>
       )}
       {snoozed && (
-        <p className="flex items-center gap-2 type-meta text-ink-faint">
+        <p className="flex items-center gap-1.5 type-small text-ink-soft">
+          <BellOff aria-hidden className="size-3.5 text-ink-faint" />
           Snoozed until {formatDay(setting.snoozed_until!)}
           <Button
             variant="ghost"
-            className="h-8 px-2 normal-case"
+            className="ml-1 h-8 px-2"
             onClick={() => save.mutate({ snoozed_until: null })}
           >
             Wake up

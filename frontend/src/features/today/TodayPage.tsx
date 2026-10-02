@@ -60,7 +60,6 @@ export function TodayPage() {
   const ended = useQuery(accessEndedQuery)
   const [skip, setSkip] = useState<string | null>(null)
   const remember = useQuery(rememberQuery(skip))
-  const [rememberDone, setRememberDone] = useState(false)
   const [dismissed, dismiss] = useDismissed('folkbook.today.dismissedSpaces')
 
   const shared = (spaces.data?.items ?? []).filter(
@@ -70,7 +69,7 @@ export function TodayPage() {
     ended: ended.data ?? [],
     birthdays: birthdays.data ?? [],
     due: due.data ?? [],
-    remember: rememberDone ? null : (remember.data ?? null),
+    remember: remember.data ?? null,
     shared,
     blanks: blanks.data,
     recent: recent.data?.items ?? [],
@@ -135,14 +134,13 @@ export function TodayPage() {
                     {sections.remember.person.name}
                   </Link>
                 </StickyNote>
-                <div className="flex gap-2">
-                  <Button variant="secondary" onClick={() => setRememberDone(true)}>
-                    Got it
-                  </Button>
-                  <Button variant="ghost" onClick={() => setSkip(sections.remember!.aid.id)}>
-                    Show another
-                  </Button>
-                </div>
+                <Button
+                  variant="secondary"
+                  className="self-start"
+                  onClick={() => setSkip(sections.remember!.aid.id)}
+                >
+                  Show another
+                </Button>
               </Section>
             )}
             {shared.length > 0 && <SharedWithYou spaces={shared} onDismiss={dismiss} />}
