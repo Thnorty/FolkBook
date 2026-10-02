@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useMemo, useState, type ReactNode } from 'react'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { notify } from '@/lib/notify'
+import { useClosing } from '@/motion/useClosing'
 import { removePhoto, uploadPhoto } from './photo'
 import { PersonForm, type PersonFormResult } from './PersonForm'
 import { createPerson, personQuery, refreshPeople, updatePerson } from './queries'
@@ -13,6 +14,7 @@ const FORM_ID = 'person-form'
 /** Makes the add / edit person form available anywhere below it (usePersonForm). */
 export function PersonFormProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState<{ personId?: string; name?: string } | null>(null)
+  const [shown, closing] = useClosing(open)
   const controls = useMemo(
     () => ({
       openNew: (options?: { name?: string }) => setOpen({ name: options?.name }),
@@ -24,10 +26,11 @@ export function PersonFormProvider({ children }: { children: ReactNode }) {
   return (
     <PersonFormContext.Provider value={controls}>
       {children}
-      {open && (
+      {shown && (
         <PersonFormDialog
-          personId={open.personId}
-          initialName={open.name}
+          personId={shown.personId}
+          initialName={shown.name}
+          open={!closing}
           onClose={() => setOpen(null)}
         />
       )}
@@ -38,10 +41,12 @@ export function PersonFormProvider({ children }: { children: ReactNode }) {
 function PersonFormDialog({
   personId,
   initialName,
+  open,
   onClose,
 }: {
   personId?: string
   initialName?: string
+  open: boolean
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
@@ -73,6 +78,7 @@ function PersonFormDialog({
       formId={FORM_ID}
       submitLabel="Save"
       busy={save.isPending}
+      open={open}
       onClose={onClose}
     >
       {editing && !person.data ? (

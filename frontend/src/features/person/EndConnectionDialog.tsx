@@ -21,6 +21,8 @@ type EndConnectionDialogProps = {
   personId: string
   personName: string
   link: Relationship
+  /** False while it animates out. */
+  open?: boolean
   onClose: () => void
 }
 
@@ -29,6 +31,7 @@ export function EndConnectionDialog({
   personId,
   personName,
   link,
+  open = true,
   onClose,
 }: EndConnectionDialogProps) {
   const queryClient = useQueryClient()
@@ -68,6 +71,7 @@ export function EndConnectionDialog({
       formId={FORM_ID}
       submitLabel="Mark as former"
       busy={end.isPending}
+      open={open}
       onClose={onClose}
     >
       <form id={FORM_ID} onSubmit={submit} className="flex flex-col gap-4">

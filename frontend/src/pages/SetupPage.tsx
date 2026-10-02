@@ -9,6 +9,7 @@ import { CopyLink } from '@/components/ui/copy-link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createInvite } from '@/features/invites/queries'
+import { warnAt } from '@/lib/fieldWarnings'
 import { appLink } from '@/lib/links'
 import { birthdayInput, type BirthdayValue } from '@/features/person/birthday'
 import { BirthdayFields } from '@/features/person/PersonFormFields'
@@ -111,13 +112,15 @@ function AccountStep({
   initial: Account
   onDone: (account: Account) => void
 }) {
-  const [mismatch, setMismatch] = useState(false)
-
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
     const password = String(form.get('password'))
-    if (password !== form.get('again')) return setMismatch(true)
+    if (password !== form.get('again')) {
+      const again = event.currentTarget.elements.namedItem('again')
+      if (again instanceof HTMLInputElement) warnAt(again, "The passwords don't match.")
+      return
+    }
     onDone({ email: String(form.get('email')).trim(), password })
   }
 
@@ -159,14 +162,8 @@ function AccountStep({
             autoComplete="new-password"
             defaultValue={initial.password}
             required
-            aria-invalid={mismatch || undefined}
           />
         </div>
-        {mismatch && (
-          <p role="alert" className="type-small text-danger">
-            The passwords don&apos;t match.
-          </p>
-        )}
         <Button type="submit">Continue</Button>
       </form>
     </StepPage>

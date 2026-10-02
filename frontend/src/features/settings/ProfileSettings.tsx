@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { personQuery } from '@/features/person/queries'
 import { usePersonForm } from '@/features/person/usePersonForm'
 import { formatBirthday, formatRelativeDay, isoDay } from '@/lib/dates'
+import { warnAt } from '@/lib/fieldWarnings'
 import { notify } from '@/lib/notify'
 import { changePassword, devicesQuery, signOutDevice, signOutOtherDevices } from './queries'
 import { SettingsPage, SettingsPart } from './SettingsPage'
@@ -51,7 +52,6 @@ function MeCard({ personId }: { personId: string }) {
 function PasswordPart() {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [mismatch, setMismatch] = useState(false)
   const change = useMutation({
     mutationFn: (body: { current_password: string; new_password: string }) =>
       changePassword(queryClient, body),
@@ -65,10 +65,12 @@ function PasswordPart() {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
     const next = String(form.get('new'))
-    setMismatch(next !== form.get('again'))
-    if (next === form.get('again')) {
-      change.mutate({ current_password: String(form.get('current')), new_password: next })
+    if (next !== form.get('again')) {
+      const again = event.currentTarget.elements.namedItem('again')
+      if (again instanceof HTMLInputElement) warnAt(again, "The new passwords don't match.")
+      return
     }
+    change.mutate({ current_password: String(form.get('current')), new_password: next })
   }
 
   return (
@@ -110,9 +112,9 @@ function PasswordPart() {
             <Label htmlFor="again">New password again</Label>
             <Input id="again" name="again" type="password" autoComplete="new-password" required />
           </div>
-          {(mismatch || change.error) && (
+          {change.error && (
             <p role="alert" className="type-small text-danger">
-              {mismatch ? "The new passwords don't match." : change.error?.message}
+              {change.error.message}
             </p>
           )}
           <div className="flex gap-2">

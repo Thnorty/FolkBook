@@ -7,3 +7,7 @@ export const menuItemClass =
   'flex min-h-10 cursor-pointer items-center rounded-tab px-3 text-md outline-none select-none data-highlighted:bg-hover'
 
 export const menuSeparatorClass = 'my-1 h-px bg-line'
+
+/** Matches under a search field (people, accounts): a card apart from the form around it. */
+export const pickerListClass =
+  'mt-1.5 flex flex-col rounded-card border border-line bg-card p-1 shadow-paper'
