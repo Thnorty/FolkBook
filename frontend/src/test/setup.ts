@@ -33,7 +33,14 @@ afterEach(() => {
 vi.mock('reagraph', async () => {
   const React = await import('react')
   type Node = { id: string; label: string }
-  type Edge = { id: string; source: string; target: string; label?: string; dashed?: boolean }
+  type Edge = {
+    id: string
+    source: string
+    target: string
+    label?: string
+    dashed?: boolean
+    dashArray?: number[]
+  }
   return {
     GraphCanvas: React.forwardRef(function FakeCanvas(
       props: {
@@ -68,7 +75,11 @@ vi.mock('reagraph', async () => {
               React.createElement(
                 'button',
                 { onClick: () => props.onEdgeClick(edge) },
-                [`${edge.source}–${edge.target}`, edge.label, edge.dashed && '(dashed)']
+                [
+                  `${edge.source}–${edge.target}`,
+                  edge.label,
+                  edge.dashed && (edge.dashArray ? '(dotted)' : '(dashed)'),
+                ]
                   .filter(Boolean)
                   .join(' '),
               ),

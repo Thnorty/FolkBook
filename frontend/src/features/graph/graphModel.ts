@@ -27,8 +27,8 @@ export type Palette = {
   me: string
   noSpace: string
   edge: string
-  /** Lines that only say someone is in a space (no relationship): faint, in the back. */
-  spaceEdge: string
+  /** Lines between users who share a space (no relationship): faint, in the back. */
+  sharedEdge: string
   space: Record<SpaceColor, string>
   /** Each space's darker shade, readable as text (its name on the ring). */
   spaceInk: Record<SpaceColor, string>
@@ -54,15 +54,18 @@ export type CanvasEdge = {
   target: string
   label?: string
   dashed?: boolean
+  /** Dash and gap lengths: long dashes for former links, dots for a shared space. */
+  dashArray?: [number, number]
   fill: string
 }
 
+const DOTS: [number, number] = [1, 2]
+
 /**
- * What a line says: "friend", "met at Hackathon", "former partner"; a line that only
- * means someone is in a space says which ("in Hackathon", "shares Hackathon").
+ * What a line says: "friend", "met at Hackathon", "former partner"; between users who
+ * share a space, which one ("shares Hackathon").
  */
 function edgeLabel(edge: ApiEdge): string | undefined {
-  if (edge.kind === 'space') return edge.space ? `in ${edge.space.name}` : undefined
   if (edge.kind === 'member') return edge.space ? `shares ${edge.space.name}` : undefined
   if (!edge.type) return undefined
   const label = linkLabel({ type: edge.type, label: edge.label })
@@ -83,6 +86,7 @@ export function toCanvas(
   faces: Record<string, string> = {},
 ) {
   const keepEdge = (edge: ApiEdge) =>
+    drawn(edge) &&
     !(filters.hideFormer && edge.former) &&
     !(filters.familyOnly && !(edge.kind === 'relationship' && FAMILY.has(edge.type ?? '')))
   const inSpaces = (node: ApiNode) =>
@@ -124,8 +128,9 @@ export function toCanvas(
       source: edge.source,
       target: edge.target,
       label: edgeLabel(edge),
-      dashed: edge.former,
-      fill: edge.kind === 'relationship' ? palette.edge : palette.spaceEdge,
+      ...(edge.former && { dashed: true }),
+      ...(edge.kind === 'member' && { dashed: true, dashArray: DOTS }),
+      fill: edge.kind === 'relationship' ? palette.edge : palette.sharedEdge,
     })),
   }
 }
@@ -156,11 +161,20 @@ export function linesAround(edges: CanvasEdge[], focus: Focus): string[] {
   return [...people, ...lines.map((edge) => edge.id)]
 }
 
+/**
+ * Being in a space draws no line: the space's ring already shows who's in it, and a
+ * line from you to everyone in your spaces read as a relationship you don't have.
+ * (The API still sends those links, for "How do I know …?".)
+ */
+function drawn(edge: ApiEdge) {
+  return edge.kind !== 'space'
+}
+
 /** "148 people · 231 connections" for the header (you aren't counted). */
 export function graphSummary(graph: GraphData) {
   return {
     people: graph.nodes.filter((node) => !node.is_me).length,
-    connections: graph.edges.length,
+    connections: graph.edges.filter(drawn).length,
   }
 }
 

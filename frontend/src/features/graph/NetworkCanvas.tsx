@@ -1,4 +1,5 @@
-import { forwardRef, useMemo, useRef, useState } from 'react'
+import { useThree } from '@react-three/fiber'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import {
   GraphCanvas,
   Label,
@@ -18,6 +19,7 @@ import {
   type ClusterColors,
   type Focus,
 } from './graphModel'
+import { widenLineReach } from './lineReach'
 import type { CanvasColors } from './usePalette'
 
 type NetworkCanvasProps = {
@@ -90,13 +92,31 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         onEdgePointerOver={pointed.over}
         onEdgePointerOut={pointed.out}
         onCanvasClick={() => {
-          setPickedLine(null)
-          onSelect(null)
+          // A click near a line, not quite on it, still picks it.
+          setPickedLine(pointed.line)
+          if (!pointed.line) onSelect(null)
         }}
-      />
+      >
+        <WideLineReach />
+      </GraphCanvas>
     </div>
   )
 })
+
+/** Inside the canvas: lines can be pointed at from a few pixels away. */
+function WideLineReach() {
+  const raycaster = useThree((state) => state.raycaster)
+  const get = useThree((state) => state.get)
+  useEffect(
+    () =>
+      widenLineReach(raycaster, () => {
+        const { camera, size } = get()
+        return { camera, heightPx: size.height }
+      }),
+    [raycaster, get],
+  )
+  return null
+}
 
 /**
  * The line under the pointer. Reagraph checks every frame and tells lines apart as

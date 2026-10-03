@@ -42,7 +42,7 @@ export function useCanvasColors(): CanvasColors {
         me: read('--ink'),
         noSpace: read('--ink-faint'),
         edge: read('--ink'),
-        spaceEdge: read('--ink-faint'),
+        sharedEdge: read('--ink-faint'),
         space: Object.fromEntries(
           SPACES.map((name) => [name, read(`--space-${name}`)]),
         ) as Palette['space'],

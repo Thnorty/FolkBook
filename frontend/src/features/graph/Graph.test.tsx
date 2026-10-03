@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
+import { LineCurve3, Mesh, TubeGeometry, Vector3 } from 'three'
 import { initials } from './faces'
+import { nearestLine } from './lineReach'
 import {
   NO_FILTERS,
   toCanvas,
@@ -11,6 +13,7 @@ import {
   type Palette,
   labelLinesOf,
   linesAround,
+  graphSummary,
 } from './graphModel'
 
 const ME = { id: 'u1', email: 'ela@example.com', is_admin: false, me: { id: 'me', name: 'Ela' } }
@@ -190,7 +193,7 @@ describe('toCanvas', () => {
     me: 'ink',
     noSpace: 'faint',
     edge: 'line',
-    spaceEdge: 'faint line',
+    sharedEdge: 'faint line',
     space: { sage: 'green', ochre: 'o', clay: 'red', plum: 'p', teal: 't', slate: 's' },
     spaceInk: {
       sage: 'dark green',
@@ -223,7 +226,7 @@ describe('toCanvas', () => {
     expect(clusters).toMatchObject({ Family: { ring: 'red', label: 'dark red' } })
   })
 
-  it('says which space a space line stands for', () => {
+  it('draws no line for being in a space, and dots between users who share one', () => {
     const graph: GraphData = {
       nodes: GRAPH.nodes,
       edges: [
@@ -233,7 +236,16 @@ describe('toCanvas', () => {
     }
     const { edges } = toCanvas(graph, NO_FILTERS, palette)
 
-    expect(edges.map((e) => e.label)).toEqual(['in Friends', 'shares Family'])
+    expect(edges).toEqual([
+      expect.objectContaining({
+        id: 'm1',
+        label: 'shares Family',
+        dashed: true,
+        dashArray: [1, 2],
+        fill: 'faint line',
+      }),
+    ])
+    expect(graphSummary(graph).connections).toBe(1)
   })
 
   it('keeps you even when a space filter leaves you out', () => {
@@ -288,5 +300,30 @@ describe('initials', () => {
     expect(initials('Ela')).toBe('E')
     expect(initials('şükrü öztürk')).toBe('ŞÖ')
     expect(initials('Anna Maria van der Berg')).toBe('AB')
+  })
+})
+
+describe('nearestLine', () => {
+  // Two tubes like Reagraph's lines: along y = 0 and y = 10, from x = 0 to 100.
+  const tube = (y: number) =>
+    new Mesh(
+      new TubeGeometry(
+        new LineCurve3(new Vector3(0, y, 0), new Vector3(100, y, 0)),
+        20,
+        0.5,
+        5,
+        false,
+      ),
+    )
+  const [low, high] = [tube(0), tube(10)]
+
+  it('finds a line from a few units away, the nearest one first', () => {
+    expect(nearestLine([low, high], new Vector3(50, 3, 0), 4)).toBe(low)
+    expect(nearestLine([low, high], new Vector3(50, 7, 0), 4)).toBe(high)
+  })
+
+  it('finds nothing out of reach or past the ends', () => {
+    expect(nearestLine([low, high], new Vector3(50, 5, 0), 4)).toBeNull()
+    expect(nearestLine([low, high], new Vector3(110, 0, 0), 4)).toBeNull()
   })
 })
