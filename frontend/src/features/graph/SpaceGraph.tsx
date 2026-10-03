@@ -32,7 +32,6 @@ export default function SpaceGraph({ spaceId }: { spaceId: string }) {
           onSelect={(personId) =>
             personId && void navigate({ to: '/people/$personId', params: { personId } })
           }
-          onFocus={() => {}}
         />
       </div>
     </section>

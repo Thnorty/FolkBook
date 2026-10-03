@@ -13,7 +13,6 @@ type NetworkCanvasProps = {
   colors: CanvasColors
   selected: string | null
   onSelect: (personId: string | null) => void
-  onFocus: (personId: string) => void
 }
 
 // Room between people, so names don't overlap (Reagraph's defaults: 50 and -250).
@@ -26,7 +25,7 @@ const SPACING = { linkDistance: 110, nodeStrength: -600 }
  * of whoever is hovered or selected.
  */
 export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(function NetworkCanvas(
-  { nodes, edges, colors, selected, onSelect, onFocus },
+  { nodes, edges, colors, selected, onSelect },
   ref,
 ) {
   const theme = useMemo(() => canvasTheme(colors), [colors])
@@ -45,6 +44,9 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         theme={theme}
         layoutType="forceDirected2d"
         layoutOverrides={SPACING}
+        // Drawn where the layout ends up: animated, the lines swing round as people
+        // fly out from the middle.
+        animated={false}
         clusterAttribute="cluster"
         labelFontUrl={labelFontUrl}
         edgeArrowPosition="none"
@@ -53,7 +55,6 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         selections={selected ? [selected] : []}
         actives={actives}
         onNodeClick={(node) => onSelect(node.id)}
-        onNodeDoubleClick={(node) => onFocus(node.id)}
         onNodePointerOver={(node) => setHovered(node.id)}
         onNodePointerOut={() => setHovered(null)}
         onCanvasClick={() => onSelect(null)}

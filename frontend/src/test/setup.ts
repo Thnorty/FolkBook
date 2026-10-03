@@ -40,7 +40,6 @@ vi.mock('reagraph', async () => {
         nodes: Node[]
         edges: Edge[]
         onNodeClick: (node: Node) => void
-        onNodeDoubleClick: (node: Node) => void
       },
       ref,
     ) {
@@ -54,7 +53,6 @@ vi.mock('reagraph', async () => {
             {
               key: node.id,
               onClick: () => props.onNodeClick(node),
-              onDoubleClick: () => props.onNodeDoubleClick(node),
             },
             node.label,
           ),

@@ -84,10 +84,6 @@ export function GraphPage() {
               colors={colors}
               selected={selected}
               onSelect={setSelected}
-              onFocus={(personId) => {
-                setFocus(personId)
-                setSelected(personId)
-              }}
             />
           )}
           <div className="absolute right-3 bottom-3 flex flex-col gap-1">
@@ -106,8 +102,7 @@ export function GraphPage() {
           Each circle is a person, in the color of their space (the dots on the buttons above); grey
           ones aren&apos;t in a space.{' '}
           <span className="hidden md:inline">
-            Point at someone to see how they&apos;re related. Click to open them beside the graph;
-            double-click to show only them and the people they&apos;re linked to.
+            Point at someone to see how they&apos;re related; click to open them beside the graph.
           </span>
           <span className="md:hidden">
             Tap someone to see how they&apos;re related, open them or show only their links.

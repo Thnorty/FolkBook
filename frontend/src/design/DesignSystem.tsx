@@ -212,7 +212,6 @@ function GraphDemo() {
         colors={colors}
         selected={selected}
         onSelect={setSelected}
-        onFocus={setSelected}
       />
     </div>
   )
