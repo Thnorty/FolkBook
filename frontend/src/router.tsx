@@ -95,6 +95,12 @@ function placeholder<const Path extends string>(path: Path, title: string, note:
   })
 }
 
+/** Server admin pages: anyone else goes back to their own settings. */
+async function adminOnly(queryClient: QueryClient) {
+  const user = await queryClient.ensureQueryData(currentUserQuery)
+  if (!user?.is_admin) throw redirect({ to: '/settings' })
+}
+
 const settingsRoute = createRoute({
   getParentRoute: () => appRoute,
   path: 'settings',
@@ -120,8 +126,18 @@ const settingsTree = settingsRoute.addChildren([
     component: AppearanceSettings,
   }),
   createRoute({ getParentRoute: () => settingsRoute, path: 'about', component: AboutSettings }),
-  createRoute({ getParentRoute: () => settingsRoute, path: 'users', component: UsersSettings }),
-  createRoute({ getParentRoute: () => settingsRoute, path: 'invites', component: InvitesSettings }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'users',
+    beforeLoad: ({ context }) => adminOnly(context.queryClient),
+    component: UsersSettings,
+  }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'invites',
+    beforeLoad: ({ context }) => adminOnly(context.queryClient),
+    component: InvitesSettings,
+  }),
 ])
 
 const appPages = [

@@ -85,7 +85,7 @@ These rules are the product. Breaking one is a critical bug.
 
 - TypeScript `strict`. No `any` unless unavoidable, and then explain why.
 - Server state through TanStack Query hooks built on the generated API client. No ad-hoc `fetch` calls in components.
-- **Routing:** TanStack Router, routes defined in code in `src/router.tsx`; links and params are type-checked. Logged-in pages are children of `appRoute`, whose guard sends you to `/login` (and back afterwards). Screens not built yet use `placeholder()`; replace the placeholder when you build the screen.
+- **Routing:** TanStack Router, routes defined in code in `src/router.tsx`; links and params are type-checked. Logged-in pages are children of `appRoute`, whose guard sends you to `/login` (and back afterwards). Pages only server admins may open (Settings → Users, Invite links) also run `adminOnly` in `beforeLoad`, which sends anyone else back to `/settings`; the API refuses them anyway. Screens not built yet use `placeholder()`; replace the placeholder when you build the screen.
 - **Layout:** `src/app/` is the shell: `AppLayout` (sidebar from `md` up, bottom tabs below), `CommandPalette`, and `nav.ts` with the sections and `SHORTCUTS`. Register a shortcut with `useShortcut`; show it with `<Kbd>`, which writes it the way the user's keyboard labels it. Pages start with `<PageHeader>`, which also names the browser tab.
 - **Adding and editing people** goes through one dialog: call `openNew()` / `openEdit(id)` from `usePersonForm()` (never a separate page).
 - **Connecting people** goes through one dialog as well: `openConnect(personId)` / `openChange(personId, link)` from `useConnectionForm()`.

@@ -205,4 +205,15 @@ describe('settings', () => {
     )
     expect(within(nav).queryByText('Server · admin')).not.toBeInTheDocument()
   })
+
+  it.each(['/settings/users', '/settings/invites'])(
+    'sends members who open %s back to their own settings',
+    async (path) => {
+      server()
+      const router = renderApp(path)
+
+      await waitFor(() => expect(router.state.location.pathname).toBe('/settings'))
+      expect(await screen.findByRole('navigation', { name: 'Settings' })).toBeInTheDocument()
+    },
+  )
 })
