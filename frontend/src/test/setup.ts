@@ -66,7 +66,9 @@ vi.mock('reagraph', async () => {
             React.createElement(
               'li',
               { key: edge.id },
-              `${edge.source}–${edge.target} ${edge.label ?? ''}${edge.dashed ? ' (dashed)' : ''}`.trim(),
+              [`${edge.source}–${edge.target}`, edge.label, edge.dashed && '(dashed)']
+                .filter(Boolean)
+                .join(' '),
             ),
           ),
         ),

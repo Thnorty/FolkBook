@@ -101,10 +101,18 @@ export function GraphPage() {
               <Maximize aria-hidden />
             </CanvasButton>
           </div>
-          <p className="pointer-events-none absolute bottom-3 left-3 hidden type-meta text-ink-faint md:block">
-            Click to open · double-click to focus · color = space
-          </p>
         </div>
+        <p className="mt-2 type-small text-ink-soft">
+          Each circle is a person, in the color of their space (the dots on the buttons above); grey
+          ones aren&apos;t in a space.{' '}
+          <span className="hidden md:inline">
+            Point at someone to see how they&apos;re related. Click to open them beside the graph;
+            double-click to show only them and the people they&apos;re linked to.
+          </span>
+          <span className="md:hidden">
+            Tap someone to see how they&apos;re related, open them or show only their links.
+          </span>
+        </p>
       </div>
       {selected && (
         <>

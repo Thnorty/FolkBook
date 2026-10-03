@@ -27,6 +27,8 @@ export type Palette = {
   me: string
   noSpace: string
   edge: string
+  /** Lines that only say someone is in a space (no relationship): faint, in the back. */
+  spaceEdge: string
   space: Record<SpaceColor, string>
 }
 
@@ -100,9 +102,29 @@ export function toCanvas(
       target: edge.target,
       label: edgeLabel(edge),
       dashed: edge.former,
-      fill: palette.edge,
+      fill: edge.kind === 'relationship' ? palette.edge : palette.spaceEdge,
     })),
   }
+}
+
+/**
+ * Relationship words only on the lines of one person (the one hovered or picked):
+ * written on every line, they pile up on each other and on the names.
+ */
+export function labelLinesOf(edges: CanvasEdge[], personId: string | null): CanvasEdge[] {
+  return edges.map((edge) =>
+    personId && (edge.source === personId || edge.target === personId)
+      ? edge
+      : { ...edge, label: undefined },
+  )
+}
+
+/** A person's lines and the people at their other ends, to light up around them. */
+export function linesAround(edges: CanvasEdge[], personId: string | null): string[] {
+  if (!personId) return []
+  const touching = edges.filter((edge) => edge.source === personId || edge.target === personId)
+  const others = touching.map((edge) => (edge.source === personId ? edge.target : edge.source))
+  return [personId, ...others, ...touching.map((edge) => edge.id)]
 }
 
 /** "148 people · 231 connections" for the header (you aren't counted). */

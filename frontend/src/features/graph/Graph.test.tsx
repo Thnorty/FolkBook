@@ -4,7 +4,14 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
 import { initials } from './faces'
-import { NO_FILTERS, toCanvas, type GraphData, type Palette } from './graphModel'
+import {
+  NO_FILTERS,
+  toCanvas,
+  type GraphData,
+  type Palette,
+  labelLinesOf,
+  linesAround,
+} from './graphModel'
 
 const ME = { id: 'u1', email: 'ela@example.com', is_admin: false, me: { id: 'me', name: 'Ela' } }
 const FRIENDS = { id: 's1', name: 'Friends', color: 'sage' as const }
@@ -92,17 +99,16 @@ const lines = async () =>
 afterEach(clearCookies)
 
 describe('graph', () => {
-  it('draws everyone with you in the middle, lines labelled by relationship', async () => {
+  it('draws everyone with you in the middle, and words on the picked person’s lines', async () => {
     server()
     renderApp('/graph')
 
     expect(await screen.findByRole('button', { name: 'Me' })).toBeInTheDocument()
     expect(screen.getByText('3 people · 3 connections')).toBeInTheDocument()
-    expect(await lines()).toEqual([
-      'me–emma friend',
-      'emma–kerem former partner (dashed)',
-      'emma–tom cousin',
-    ])
+    expect(await lines()).toEqual(['me–emma', 'emma–kerem (dashed)', 'emma–tom'])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Tom Bergqvist' }))
+    expect(await lines()).toEqual(['me–emma', 'emma–kerem (dashed)', 'emma–tom cousin'])
   })
 
   it('filters by space, family only and hiding former links', async () => {
@@ -111,10 +117,10 @@ describe('graph', () => {
     const filters = await screen.findByRole('group', { name: 'Filters' })
 
     await userEvent.click(within(filters).getByRole('button', { name: 'Hide former' }))
-    expect(await lines()).toEqual(['me–emma friend', 'emma–tom cousin'])
+    expect(await lines()).toEqual(['me–emma', 'emma–tom'])
 
     await userEvent.click(within(filters).getByRole('button', { name: 'Family only' }))
-    expect(await lines()).toEqual(['emma–tom cousin'])
+    expect(await lines()).toEqual(['emma–tom'])
     expect(screen.queryByRole('button', { name: 'Kerem Yılmaz' })).not.toBeInTheDocument()
 
     await userEvent.click(within(filters).getByRole('button', { name: 'Family only' }))
@@ -161,6 +167,7 @@ describe('toCanvas', () => {
     me: 'ink',
     noSpace: 'faint',
     edge: 'line',
+    spaceEdge: 'faint line',
     space: { sage: 'green', ochre: 'o', clay: 'red', plum: 'p', teal: 't', slate: 's' },
   }
 
@@ -183,6 +190,30 @@ describe('toCanvas', () => {
     const { nodes } = toCanvas(GRAPH, { ...NO_FILTERS, spaces: ['s2'] }, palette)
 
     expect(nodes.map((n) => n.id)).toEqual(['me', 'kerem'])
+  })
+})
+
+describe('labelLinesOf', () => {
+  const edges = [
+    { id: 'e1', source: 'emma', target: 'kerem', label: 'partner', fill: 'line' },
+    { id: 'e2', source: 'ayse', target: 'kerem', label: 'parent', fill: 'line' },
+  ]
+
+  it("writes the relationship only on the focused person's lines", () => {
+    expect(labelLinesOf(edges, 'emma').map((e) => e.label)).toEqual(['partner', undefined])
+    expect(labelLinesOf(edges, 'kerem').map((e) => e.label)).toEqual(['partner', 'parent'])
+    expect(labelLinesOf(edges, null).map((e) => e.label)).toEqual([undefined, undefined])
+  })
+})
+
+describe('linesAround', () => {
+  it("lights up a person, their lines and who's at the other end", () => {
+    const edges = [
+      { id: 'e1', source: 'emma', target: 'kerem', fill: 'line' },
+      { id: 'e2', source: 'ayse', target: 'kerem', fill: 'line' },
+    ]
+    expect(linesAround(edges, 'emma')).toEqual(['emma', 'kerem', 'e1'])
+    expect(linesAround(edges, null)).toEqual([])
   })
 })
 
