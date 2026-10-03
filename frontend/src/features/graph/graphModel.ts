@@ -30,7 +30,12 @@ export type Palette = {
   /** Lines that only say someone is in a space (no relationship): faint, in the back. */
   spaceEdge: string
   space: Record<SpaceColor, string>
+  /** Each space's darker shade, readable as text (its name on the ring). */
+  spaceInk: Record<SpaceColor, string>
 }
+
+/** A space's ring around its people, in the space's colors. */
+export type ClusterColors = Record<string, { ring: string; label: string }>
 
 export type CanvasNode = {
   id: string
@@ -87,7 +92,20 @@ export function toCanvas(
   const shown = new Set(nodes.map((node) => node.id))
   edges = edges.filter((edge) => shown.has(edge.source) && shown.has(edge.target))
 
+  // People are grouped by their first space's name; its ring takes that space's colors.
+  const clusters: ClusterColors = {}
+  for (const node of nodes) {
+    const space = node.spaces[0]
+    if (!node.is_me && space && !clusters[space.name]) {
+      clusters[space.name] = {
+        ring: palette.space[space.color],
+        label: palette.spaceInk[space.color],
+      }
+    }
+  }
+
   return {
+    clusters,
     nodes: nodes.map((node): CanvasNode => ({
       id: node.id,
       label: node.is_me ? 'Me' : node.name,

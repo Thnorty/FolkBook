@@ -81,6 +81,7 @@ export function GraphPage() {
               ref={canvas}
               nodes={drawn.nodes}
               edges={drawn.edges}
+              clusters={drawn.clusters}
               colors={colors}
               selected={selected}
               onSelect={setSelected}

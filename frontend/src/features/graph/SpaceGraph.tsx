@@ -27,6 +27,7 @@ export default function SpaceGraph({ spaceId }: { spaceId: string }) {
         <NetworkCanvas
           nodes={drawn.nodes}
           edges={drawn.edges}
+          clusters={drawn.clusters}
           colors={colors}
           selected={null}
           onSelect={(personId) =>
