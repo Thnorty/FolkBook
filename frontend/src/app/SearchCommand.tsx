@@ -49,6 +49,25 @@ export function SearchCommand({ onDone }: { onDone: () => void }) {
       results.notes.length ===
       0
 
+  // The first item, in the order the list shows them (values as on each Item).
+  const first =
+    (nothing && results?.did_you_mean && `person ${results.did_you_mean.id}`) ||
+    (q && results?.people[0] && `person ${results.people[0].id}`) ||
+    (q && results?.spaces[0] && `space ${results.spaces[0].id}`) ||
+    (q && results?.memory_aids[0] && `aid ${results.memory_aids[0].id}`) ||
+    (q && results?.notes[0] && `note ${results.notes[0].person.id}`) ||
+    (pages[0] && `page ${pages[0].to}`) ||
+    (!q && spaces[0] && `space ${spaces[0].id}`) ||
+    'add person'
+  // Results arrive after typing, and whatever was highlighted may be gone by then: start
+  // again from the top whenever the list changes, so Enter always opens something.
+  const [selected, setSelected] = useState(first)
+  const [listTop, setListTop] = useState(first)
+  if (first !== listTop) {
+    setListTop(first)
+    setSelected(first)
+  }
+
   const go = (to: LinkProps['to'], params?: LinkProps['params']) => () => {
     onDone()
     void navigate({ to, params })
@@ -60,7 +79,7 @@ export function SearchCommand({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <Command loop shouldFilter={false} label="Search">
+    <Command loop shouldFilter={false} label="Search" value={selected} onValueChange={setSelected}>
       <Command.Input
         value={text}
         onValueChange={setText}
@@ -236,7 +255,7 @@ function Item({ children, icon, onSelect, value, detail, shortcut }: ItemProps) 
         <span className="block truncate">{children}</span>
         {detail && <span className="block truncate type-small text-ink-faint">{detail}</span>}
       </span>
-      {shortcut && <Kbd shortcut={shortcut} className="ml-auto text-ink-faint" />}
+      {shortcut && <Kbd shortcut={shortcut} className="ml-auto hidden text-ink-faint md:inline" />}
     </Command.Item>
   )
 }
