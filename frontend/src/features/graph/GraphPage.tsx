@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { Maximize, Minus, Plus, X } from 'lucide-react'
+import { Info, Maximize, Minus, Plus, X } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import type { GraphCanvasRef } from 'reagraph'
 import { PageHeader } from '@/components/PageHeader'
@@ -24,6 +24,8 @@ export function GraphPage() {
   const focused = useQuery({ ...neighborhoodQuery(focus ?? ''), enabled: focus !== null })
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [selected, setSelected] = useState<string | null>(null)
+  // How to read the graph: hidden until asked for.
+  const [tip, setTip] = useState(false)
   const colors = useCanvasColors()
   const canvas = useRef<GraphCanvasRef>(null)
   const closePreview = useCallback(() => setSelected(null), [])
@@ -50,15 +52,15 @@ export function GraphPage() {
   if (summary?.people === 0) return <EmptyGraph />
 
   return (
+    // The whole screen: the graph takes all the room under the header and filters
+    // (above the bottom tabs on phones, which <main> leaves 7rem for).
     <div
       className={cn(
-        'mx-auto px-4 py-6 md:px-8',
-        selected
-          ? 'max-w-7xl md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] md:gap-6'
-          : 'max-w-6xl',
+        'h-[calc(100dvh-7rem)] px-4 pt-6 pb-2 md:h-dvh md:px-8 md:pb-6',
+        selected && 'md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] md:gap-6',
       )}
     >
-      <div className="min-w-0">
+      <div className="flex h-full min-h-0 min-w-0 flex-col">
         <PageHeader
           title="Graph"
           meta={
@@ -75,7 +77,7 @@ export function GraphPage() {
             </Button>
           </p>
         )}
-        <div className="relative mt-4 h-[65dvh] overflow-hidden rounded-card border border-line bg-paper">
+        <div className="relative mt-4 min-h-64 flex-1 overflow-hidden rounded-card border border-line bg-paper">
           {drawn && (
             <NetworkCanvas
               ref={canvas}
@@ -87,7 +89,33 @@ export function GraphPage() {
               onSelect={setSelected}
             />
           )}
+          {tip && (
+            <p
+              id="graph-tip"
+              className="absolute bottom-3 left-3 max-w-72 rounded-card border border-line bg-card px-3 py-2 type-small text-ink-soft shadow-paper"
+            >
+              Each circle is a person, in the color of their space (the dots on the buttons above);
+              grey ones aren&apos;t in a space.{' '}
+              <span className="hidden md:inline">
+                Point at someone to see how they&apos;re related; click to open them beside the
+                graph.
+              </span>
+              <span className="md:hidden">
+                Tap someone to see how they&apos;re related, open them or show only their links.
+              </span>
+            </p>
+          )}
           <div className="absolute right-3 bottom-3 flex flex-col gap-1">
+            <Button
+              variant="secondary"
+              aria-label="How to read the graph"
+              aria-expanded={tip}
+              aria-controls="graph-tip"
+              onClick={() => setTip(!tip)}
+              className={cn('size-9 bg-card px-0', tip && 'bg-hover')}
+            >
+              <Info aria-hidden />
+            </Button>
             <CanvasButton label="Zoom in" onClick={() => canvas.current?.zoomIn()}>
               <Plus aria-hidden />
             </CanvasButton>
@@ -99,16 +127,6 @@ export function GraphPage() {
             </CanvasButton>
           </div>
         </div>
-        <p className="mt-2 type-small text-ink-soft">
-          Each circle is a person, in the color of their space (the dots on the buttons above); grey
-          ones aren&apos;t in a space.{' '}
-          <span className="hidden md:inline">
-            Point at someone to see how they&apos;re related; click to open them beside the graph.
-          </span>
-          <span className="md:hidden">
-            Tap someone to see how they&apos;re related, open them or show only their links.
-          </span>
-        </p>
       </div>
       {selected && (
         <>
