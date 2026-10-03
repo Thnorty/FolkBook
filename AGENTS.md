@@ -90,7 +90,7 @@ These rules are the product. Breaking one is a critical bug.
 - **Adding and editing people** goes through one dialog: call `openNew()` / `openEdit(id)` from `usePersonForm()` (never a separate page).
 - **Connecting people** goes through one dialog as well: `openConnect(personId)` / `openChange(personId, link)` from `useConnectionForm()`.
 - **Logging interactions** goes through one dialog too: `openLog(personId)` / `openEntry(interaction)` from `useInteractionForm()`. A short form like this uses `<FormDialog small>`: a sheet from the bottom on phones, a small dialog on desktop.
-- **Graph:** `src/features/graph/` draws the network with Reagraph (WebGL), loaded only on the graph page. `graphModel.ts` turns the API graph plus filters into nodes and lines (plain data, tested directly); `useCanvasColors()` reads the design tokens as colors for the canvas, so it follows the theme. Tests never load Reagraph: `src/test/setup.ts` replaces the canvas with a list of its nodes and lines.
+- **Graph:** `src/features/graph/` draws the network with Reagraph (WebGL), loaded only on the graph page. `graphModel.ts` turns the API graph plus filters into nodes and lines (plain data, tested directly); `useCanvasColors()` reads the design tokens as colors for the canvas, so it follows the theme. Tests never load Reagraph: `src/test/setup.ts` replaces the canvas with a list of its nodes and lines. Labels use our own fonts only: Instrument Sans, then the fallback fonts in `public/graph-fonts/` (`fallbackFonts.ts`; rebuild with `npm run graph-fonts`, never edit by hand). Anything the text library can't find there it fetches from a CDN, so keep that folder complete (`fallbackFonts.test.ts` checks).
 - **Generated types** treat fields with a server default as optional (`--default-non-nullable false`), so request bodies only need what you send.
 - **Queries** live with their feature: `src/features/<resource>/queries.ts` (e.g. `spacesQuery`). Log in and out only through `logIn` / `logOut` in `src/api/session.ts`: they drop cached data so one account never sees another's.
 - **API client** (`src/api/`): `api` from `client.ts` is typed from `schema.d.ts`, which `npm run api:generate` builds from the backend's OpenAPI spec. Never edit the generated files; regenerate and commit them with the backend change. The client adds the CSRF header and rejects every failed call with an `ApiError` (`status`, `detail`, a readable `message`). Write query options next to the feature with TanStack's `queryOptions` and `unwrap(api.GET(...))`; keys start with the resource (`['people', ...]`) so related queries can be invalidated together. A 401 anywhere clears the current user (`currentUserQuery`).
@@ -151,6 +151,7 @@ Postgres must be running for backend tests: `docker compose up -d db`.
 | Frontend tests | `cd frontend && npm test` |
 | Frontend checks | `cd frontend && npm run typecheck && npm run lint && npm run format:check` |
 | Regenerate API types | `cd frontend && npm run api:generate` (after any API change) |
+| Rebuild the graph's fallback fonts | `cd frontend && npm run graph-fonts` (needs internet; commit the output) |
 
 ## Commits
 
