@@ -1,25 +1,26 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
 import { notify } from '@/lib/notify'
-import { useDismissed } from '@/lib/useDismissed'
 import { firstNames, whatEnded } from './labels'
-import { accessEndedQuery } from './queries'
+import { accessEndedQuery, markAccessEndedToasted } from './queries'
 import { useReviewKept } from './useReviewKept'
 
-/** "Defne stopped sharing Hackathon 2026 — you kept Tom, Ola and Jin." Once per device;
- * the card stays on Today until dismissed (screen 4n). */
+/** "Defne stopped sharing Hackathon 2026 — you kept Tom, Ola and Jin." Once per account
+ * (the server remembers, so another device doesn't toast it again); the card stays on
+ * Today until dismissed (screen 4n). */
 export function useAccessEndedToasts() {
   const notices = useQuery(accessEndedQuery).data
-  const [toasted, markToasted] = useDismissed('folkbook.accessEnded.toasted')
+  const queryClient = useQueryClient()
   const review = useReviewKept()
   // Effects run twice in development; never toast the same one twice.
   const shown = useRef(new Set<string>())
 
   useEffect(() => {
     for (const notice of notices ?? []) {
-      if (toasted.includes(notice.id) || shown.current.has(notice.id)) continue
+      if (notice.toasted || shown.current.has(notice.id)) continue
       shown.current.add(notice.id)
-      markToasted(notice.id)
+      // If this fails, the worst is another device showing it again.
+      markAccessEndedToasted(queryClient, notice.id).catch(() => {})
       const kept = notice.kept
       notify({
         title:
@@ -29,5 +30,5 @@ export function useAccessEndedToasts() {
         action: kept.length > 0 ? { label: 'Review', onClick: () => review(kept) } : undefined,
       })
     }
-  }, [notices, toasted, markToasted, review])
+  }, [notices, queryClient, review])
 }

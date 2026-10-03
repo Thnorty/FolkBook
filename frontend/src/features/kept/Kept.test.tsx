@@ -53,6 +53,7 @@ const STOPPED = {
   lost: 11,
   kept: [ref('tom2', 'Tom Bergqvist'), ref('ola2', 'Ola Nowak'), ref('jin2', 'Jin Park')],
   at: '2026-09-22T09:00:00Z',
+  toasted: false,
 }
 
 type Write = { method: string; path: string }
@@ -184,6 +185,10 @@ describe('when someone else ends your access', () => {
     let notices = [STOPPED]
     const writes = server({
       'GET /api/today/access-ended': () => json(notices),
+      'POST /api/today/access-ended/n1/toasted': (request) => {
+        writes.push({ method: request.method, path: new URL(request.url).pathname })
+        return new Response(null, { status: 204 })
+      },
       'DELETE /api/today/access-ended/n1': (request) => {
         writes.push({ method: request.method, path: new URL(request.url).pathname })
         notices = []
@@ -215,7 +220,25 @@ describe('when someone else ends your access', () => {
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Review kept people' })).not.toBeInTheDocument(),
     )
-    expect(writes).toEqual([{ method: 'DELETE', path: '/api/today/access-ended/n1' }])
+    expect(writes).toEqual([
+      { method: 'POST', path: '/api/today/access-ended/n1/toasted' }, // no other device toasts it
+      { method: 'DELETE', path: '/api/today/access-ended/n1' },
+    ])
+  })
+
+  it('shows the card but no toast when another device already showed it', async () => {
+    const writes = server({
+      'GET /api/today/access-ended': () => json([{ ...STOPPED, toasted: true }]),
+    })
+    renderApp('/')
+
+    expect(
+      await screen.findByText(
+        'Defne Aydın stopped sharing Hackathon 2026. You kept 3 people you had notes on.',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/— you kept Tom/)).not.toBeInTheDocument()
+    expect(writes).toEqual([])
   })
 })
 

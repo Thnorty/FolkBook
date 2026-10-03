@@ -223,6 +223,8 @@ class AccessEnded(BaseModel):
     about = models.CharField(max_length=200, blank=True)
     lost_count = models.PositiveIntegerField(help_text="People who left the book, kept or not.")
     kept = models.ManyToManyField(Person, blank=True, related_name="+")
+    # The app showed it as a toast: once per account, on whichever device came first.
+    toasted = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = "access ended"

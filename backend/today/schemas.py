@@ -33,6 +33,7 @@ class AccessEndedOut(Schema):
     lost: int  # people who left your book, kept ones included
     kept: list[PersonRef]  # your copies
     at: datetime.datetime
+    toasted: bool  # already shown as a toast, on any of your devices
 
     @staticmethod
     def resolve_lost(obj):

@@ -67,6 +67,19 @@ function server(overrides: Overrides = {}) {
         member_count: 3, // you and two others
       },
     ]),
+    'GET /api/spaces/s1/members': () =>
+      json([
+        {
+          user_id: 'u-defne',
+          name: 'Defne Aydın',
+          email: 'd@x.test',
+          role: 'owner',
+          is_you: false,
+        },
+        { user_id: 'u-ela', name: 'Ela', email: 'e@x.test', role: 'editor', is_you: true },
+        { user_id: 'u-ola', name: 'Ola Nowak', email: 'o@x.test', role: 'viewer', is_you: false },
+        { user_id: 'u-jin', name: 'Jin Park', email: 'j@x.test', role: 'viewer', is_you: false },
+      ]),
     'GET /api/people': page([]),
     'GET /api/people/emma': () => json(EMMA),
     'GET /api/people/emma/family': () => json([]),
@@ -113,7 +126,9 @@ describe('tearing someone out of the book', () => {
     ).toBeInTheDocument()
     expect(within(dialog).getByText('Leaves the Friends space')).toBeInTheDocument()
     expect(
-      within(dialog).getByText(/Defne and 2 others will no longer see Emma/),
+      await within(dialog).findByText(
+        /Defne Aydın, Ola Nowak and Jin Park will no longer see Emma there/,
+      ),
     ).toBeInTheDocument()
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Tear out' }))

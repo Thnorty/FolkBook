@@ -160,7 +160,7 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 - Desktop: `Ctrl/Cmd + K` palette; phones: the same as a Search page (button on Today)
 
 ### 3.14 Access revoked
-- When someone else ends your access (stops sharing, removes you, deletes the space, or takes out or deletes someone you wrote about): a toast once per device + a Today card until dismissed:
+- When someone else ends your access (stops sharing, removes you, deletes the space, or takes out or deletes someone you wrote about): a toast once per account (not again on your other devices) + a Today card until dismissed:
   *"Defne stopped sharing Hackathon 2026. You kept 3 people you had notes on."* with the kept people, *Review kept people* · *Dismiss*
 - When you leave yourself, the toast says who you kept
 - Kept people become your own copies: marked **Kept** on their profile with *"Kept copy · was shared by Defne in Hackathon 2026 until 22 Sep 2026"* and *Add to a space*; People has a **Kept** filter while you have any
@@ -210,7 +210,7 @@ Inspired by the kind of details collected on [Design Spells](https://designspell
 - **Long-press person card (mobile):** radial or popup quick menu: log interaction, add memory aid, open in graph
 - **Ink path in graph:** "How do I know…?" draws the path hop by hop like a pen stroke
 - **Tabbed dividers:** switching spaces slides the colored tab like a notebook divider
-- **Delete = tear out:** profile **⋯ → Tear out of the book…** → a confirm dialog lists what goes with them (connections, your memory aids, timeline and note, the spaces they leave) and warns who in a shared space will stop seeing them → the page tears away and a 10-second Undo toast appears
+- **Delete = tear out:** profile **⋯ → Tear out of the book…** → a confirm dialog lists what goes with them (connections, your memory aids, timeline and note, the spaces they leave) and warns who in a shared space will stop seeing them, by name ("Bora Kaya will no longer see Deniz there"; past four names, "and N others") → the page tears away and a 10-second Undo toast appears
 - **Birthday occasion:** subtle confetti / doodle on a person's profile on their birthday
 - **Doodle empty states:** hand-drawn illustrations for empty Today, empty graph, no results
 - **Easter egg:** tapping your own "Me" polaroid a few times flips it to a hidden back side

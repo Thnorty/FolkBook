@@ -50,7 +50,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
   - Your **private links** follow to the copies; private links to people you didn't keep are removed. Links you made **inside a space** you no longer see stay with the space: they pass to its owner (or become private links of yours when the owner can't see both people).
   - Leaving or being removed takes **your own people** out of that space too: a person can only be in a space their owner takes part in. Other members who wrote about them keep copies.
   - Leaving shows first who you'd keep ("1 note · 2 memory aids") and how many others go. The owner deletes a space rather than leaving it.
-  - When someone else's change ended your access, Today shows a card ("Defne stopped sharing Hackathon 2026. You kept 3 people you had notes on.") until dismissed, plus a toast once per device. For a single person taken out or deleted, there's a card only if you kept a copy.
+  - When someone else's change ended your access, Today shows a card ("Defne stopped sharing Hackathon 2026. You kept 3 people you had notes on.") until dismissed, plus a toast once per account (the server remembers it, so your other devices don't show it again). For a single person taken out or deleted, there's a card only if you kept a copy.
   - Being added back later doesn't merge anything: the shared person and your kept copy are then both in your book.
 - Narrowed access (for API keys) can be limited to some spaces, exclude private data, or be read-only. With a space limit, only people in those spaces are visible, and private links are hidden.
 

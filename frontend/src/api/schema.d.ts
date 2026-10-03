@@ -1143,6 +1143,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/today/access-ended/{notice_id}/toasted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Access Ended Toasted */
+        post: operations["today_api_access_ended_toasted"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/today/access-ended/{notice_id}": {
         parameters: {
             query?: never;
@@ -2286,6 +2303,8 @@ export interface components {
              * Format: date-time
              */
             at: string;
+            /** Toasted */
+            toasted: boolean;
         };
         /**
          * Reason
@@ -4233,6 +4252,26 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AccessEndedOut"][];
                 };
+            };
+        };
+    };
+    today_api_access_ended_toasted: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
