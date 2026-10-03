@@ -154,6 +154,19 @@ describe('graph', () => {
     expect(await lines()).toHaveLength(3)
   })
 
+  it('explains how to read it only when asked', async () => {
+    server()
+    renderApp('/graph')
+    const button = await screen.findByRole('button', { name: 'How to read the graph' })
+    expect(screen.queryByText(/Each circle is a person/)).not.toBeInTheDocument()
+
+    await userEvent.click(button)
+    expect(screen.getByText(/Each circle is a person/)).toBeInTheDocument()
+    expect(button).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.click(button)
+    expect(screen.queryByText(/Each circle is a person/)).not.toBeInTheDocument()
+  })
+
   it('starts with just you', async () => {
     server({ nodes: [node('me', 'Ela', [], true)], edges: [] })
     renderApp('/graph')
