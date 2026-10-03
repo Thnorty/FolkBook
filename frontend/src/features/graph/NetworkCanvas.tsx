@@ -7,10 +7,13 @@ import {
   type GraphCanvasRef,
   type Theme,
 } from 'reagraph'
+import { configureTextBuilder } from 'troika-three-text'
 // Instrument Sans (OFL, fonts/OFL.txt), Latin and Latin Extended merged into one .woff
-// at weight 500: the canvas can't use .woff2. Without a font of our own, the labels
-// would fetch fonts from a CDN, which a self-hosted notebook mustn't do.
+// at weight 500: the canvas can't use .woff2. Characters it lacks come from our own
+// fallback fonts (fallbackFonts.ts); left alone, the text library would fetch them from a
+// CDN, which a self-hosted notebook mustn't do.
 import labelFontUrl from './fonts/instrument-sans-500.woff?url'
+import { fallbackFontsUrl } from './fallbackFonts'
 import {
   labelLinesOf,
   linesAround,
@@ -21,6 +24,9 @@ import {
 } from './graphModel'
 import { widenLineReach } from './lineReach'
 import type { CanvasColors } from './usePalette'
+
+// Before the first label is drawn: later calls are ignored.
+configureTextBuilder({ unicodeFontsURL: fallbackFontsUrl() })
 
 type NetworkCanvasProps = {
   nodes: CanvasNode[]

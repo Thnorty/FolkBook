@@ -2,3 +2,4 @@
 dist
 openapi.json
 src/api/schema.d.ts
+public/graph-fonts

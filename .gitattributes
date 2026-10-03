@@ -4,6 +4,9 @@
 frontend/openapi.json linguist-generated
 frontend/src/api/schema.d.ts linguist-generated
 
+# The graph's fallback fonts and their index (npm run graph-fonts)
+frontend/public/graph-fonts/** linguist-generated -diff
+
 *.png binary
 *.jpg binary
 *.ico binary

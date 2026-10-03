@@ -18,6 +18,7 @@
     "api:spec": "cd ../backend && uv run --env-file ../.env python manage.py export_openapi_schema --api config.api.api --indent 2 --output ../frontend/openapi.json",
     "api:types": "openapi-typescript openapi.json -o src/api/schema.d.ts --default-non-nullable false",
     "api:check": "openapi-typescript openapi.json -o src/api/schema.d.ts --default-non-nullable false --check",
+    "graph-fonts": "node scripts/graph-fonts.mjs",
     "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
@@ -40,7 +41,8 @@
     "reagraph": "^4.32.0",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
-    "three": "^0.184.0"
+    "three": "^0.184.0",
+    "troika-three-text": "^0.52.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
