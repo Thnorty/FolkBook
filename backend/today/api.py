@@ -49,6 +49,15 @@ def list_access_ended(request):
     return visible_access_ended(access).prefetch_related(kept)[:20]
 
 
+@router.post("/access-ended/{notice_id}/toasted", response={204: None})
+def access_ended_toasted(request, notice_id: UUID):
+    access = access_for(request)
+    services.mark_access_ended_toasted(
+        access, get_object_or_404(visible_access_ended(access), pk=notice_id)
+    )
+    return Status(204, None)
+
+
 @router.delete("/access-ended/{notice_id}", response={204: None})
 def dismiss_access_ended(request, notice_id: UUID):
     access = access_for(request)

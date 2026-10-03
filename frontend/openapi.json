@@ -3432,6 +3432,37 @@
         ]
       }
     },
+    "/api/today/access-ended/{notice_id}/toasted": {
+      "post": {
+        "operationId": "today_api_access_ended_toasted",
+        "summary": "Access Ended Toasted",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notice_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Notice Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "today"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/today/access-ended/{notice_id}": {
       "delete": {
         "operationId": "today_api_dismiss_access_ended",
@@ -6471,6 +6502,10 @@
             "format": "date-time",
             "title": "At",
             "type": "string"
+          },
+          "toasted": {
+            "title": "Toasted",
+            "type": "boolean"
           }
         },
         "required": [
@@ -6481,7 +6516,8 @@
           "about",
           "lost",
           "kept",
-          "at"
+          "at",
+          "toasted"
         ],
         "title": "AccessEndedOut",
         "type": "object"

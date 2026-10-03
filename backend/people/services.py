@@ -113,6 +113,13 @@ def dismiss_access_ended(access: Access, notice: AccessEnded) -> None:
     notice.delete()
 
 
+def mark_access_ended_toasted(access: Access, notice: AccessEnded) -> None:
+    """The app showed an "access ended" toast; don't show it again on another device."""
+    if access.read_only:
+        raise PermissionDenied("This access can't change your book.")
+    AccessEnded.objects.filter(pk=notice.pk).update(toasted=True)
+
+
 def restore_person(access: Access, person: Person) -> Person:
     """Undo a delete, as long as it hasn't been made final yet."""
     if person.deleted_at is None or person.deleted_at < timezone.now() - UNDO_WINDOW:

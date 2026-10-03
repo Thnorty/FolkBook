@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass } from '@/components/ui/menu'
-import { spacesQuery, type Space } from '@/features/spaces/queries'
+import { membersQuery, spacesQuery, type Space } from '@/features/spaces/queries'
 import { notify, type Notice } from '@/lib/notify'
 import { cn } from '@/lib/utils'
 import { tearOut } from '@/motion/tearOut'
@@ -121,13 +121,7 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
       >
         {gone.lines.length > 0 && <Details lines={gone.lines} />}
         {gone.shared.map((space) => (
-          <p key={space.id} className="mt-3 rounded-card bg-hover px-4 py-3 type-small">
-            <strong className="font-medium">
-              {firstName} is in {space.name}, a shared space.
-            </strong>{' '}
-            {others(space)} will no longer see {firstName} there. Their own notes about {firstName}{' '}
-            are theirs and stay put.
-          </p>
+          <SharedSpaceNote key={space.id} space={space} firstName={firstName} />
         ))}
       </ConfirmDialog>
 
@@ -172,7 +166,30 @@ function Details({ lines }: { lines: string[] }) {
   )
 }
 
-/** "Defne and 3 others", "2 others": everyone in the space but you. */
+/** "Deniz is in Friends, a shared space. Bora Kaya will no longer see Deniz there." */
+function SharedSpaceNote({ space, firstName }: { space: Space; firstName: string }) {
+  const members = useQuery(membersQuery(space.id)).data
+  const who = members
+    ? names(members.filter((member) => !member.is_you).map((member) => member.name))
+    : others(space)
+  return (
+    <p className="mt-3 rounded-card bg-hover px-4 py-3 type-small">
+      <strong className="font-medium">
+        {firstName} is in {space.name}, a shared space.
+      </strong>{' '}
+      {who} will no longer see {firstName} there. Their own notes about {firstName} are theirs and
+      stay put.
+    </p>
+  )
+}
+
+/** "Bora Kaya", "Bora Kaya and Defne Aydın", "A, B, C and 2 others". */
+function names(all: string[]): string {
+  const shown = all.length > 4 ? all.slice(0, 3) : all
+  return words([...shown, all.length > shown.length && countOf(all.length - 3, 'other')])
+}
+
+/** "Defne and 3 others", "2 others": everyone in the space but you, until their names load. */
 function others(space: Space): string {
   if (space.role === 'owner') return countOf(space.member_count, 'other member')
   const owner = space.owner?.name ?? 'The owner'

@@ -308,6 +308,19 @@ def test_today_lists_what_ended_until_dismissed(api, world):
     assert copies_of(world.deniz)  # the copies stay
 
 
+def test_a_card_is_toasted_once_per_account(api, world):
+    api.login(world.ela).delete(f"/spaces/{world.climbing.pk}/members/{world.deniz.pk}")
+    laptop, phone = api.login(world.deniz), api.login(world.deniz)
+
+    [notice] = laptop.get("/today/access-ended").json()
+    assert notice["toasted"] is False
+    assert laptop.post(f"/today/access-ended/{notice['id']}/toasted").status_code == 204
+
+    [seen] = phone.get("/today/access-ended").json()
+    assert seen["toasted"] is True  # the phone doesn't toast it again
+    assert seen["id"] == notice["id"]  # and the card stays until dismissed
+
+
 def test_nobody_else_sees_or_dismisses_your_cards(api, world):
     api.login(world.ela).delete(f"/spaces/{world.climbing.pk}/members/{world.deniz.pk}")
     notice = AccessEnded.objects.get(user=world.deniz)
@@ -315,3 +328,6 @@ def test_nobody_else_sees_or_dismisses_your_cards(api, world):
     ela = api.login(world.ela)
     assert ela.get("/today/access-ended").json() == []
     assert ela.delete(f"/today/access-ended/{notice.pk}").status_code == 404
+    assert ela.post(f"/today/access-ended/{notice.pk}/toasted").status_code == 404
+    notice.refresh_from_db()
+    assert not notice.toasted
