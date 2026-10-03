@@ -1,15 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, X } from 'lucide-react'
+import { Pin, PinOff, Plus, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { StickyNote, type NoteColor } from '@/components/notebook/StickyNote'
 import { Button } from '@/components/ui/button'
+import { Tooltip } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { ProfileSection } from './ProfileSection'
-import { addMemoryAid, memoryAidsQuery, removeMemoryAid } from './queries'
+import { addMemoryAid, memoryAidsQuery, pinMemoryAid, removeMemoryAid } from './queries'
 
 const COLORS: NoteColor[] = ['yellow', 'pink', 'green', 'blue']
 const PROMPTS = ["kids' names?", 'allergies?', 'favourite team?']
+// A note's small round buttons: shown on hover or focus, always on touch screens.
+const NOTE_BUTTON =
+  'flex size-7 cursor-pointer items-center justify-center rounded-full bg-card text-ink-soft opacity-0 shadow-photo group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100'
 
-/** "Remember": the small facts on sticky notes. Always private to you. */
+/**
+ * "Remember": the small facts on sticky notes, pinned ones first (with a tack). A pinned
+ * note is also the hint on their keep-in-touch nudge on Today. Always private to you.
+ */
 export function RememberSection({ personId }: { personId: string }) {
   const queryClient = useQueryClient()
   const aids = useQuery(memoryAidsQuery(personId)).data ?? []
@@ -20,6 +28,10 @@ export function RememberSection({ personId }: { personId: string }) {
   })
   const remove = useMutation({
     mutationFn: (aidId: string) => removeMemoryAid(queryClient, personId, aidId),
+  })
+  const pin = useMutation({
+    mutationFn: ({ aidId, pinned }: { aidId: string; pinned: boolean }) =>
+      pinMemoryAid(queryClient, personId, aidId, pinned),
   })
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -63,17 +75,42 @@ export function RememberSection({ personId }: { personId: string }) {
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {aids.map((aid, index) => (
             <li key={aid.id} className="group relative">
+              {aid.pinned && (
+                // A tack holding the note up.
+                <Pin
+                  aria-hidden
+                  className="absolute -top-2.5 left-1/2 z-10 size-5 -translate-x-1/2 rotate-12 fill-danger text-danger drop-shadow-sm"
+                />
+              )}
               <StickyNote seed={aid.id} color={COLORS[index % COLORS.length]}>
+                {aid.pinned && <span className="sr-only">Pinned: </span>}
                 {aid.text}
               </StickyNote>
-              <button
-                type="button"
-                aria-label={`Remove “${aid.text}”`}
-                onClick={() => remove.mutate(aid.id)}
-                className="absolute -top-2 -right-2 flex size-7 cursor-pointer items-center justify-center rounded-full bg-card text-ink-soft opacity-0 shadow-photo group-hover:opacity-100 hover:text-danger focus-visible:opacity-100"
-              >
-                <X aria-hidden className="size-3.5" />
-              </button>
+              <div className="absolute -top-2 -right-2 flex gap-1">
+                <Tooltip content={aid.pinned ? 'Unpin' : 'Pin to the top'}>
+                  <button
+                    type="button"
+                    aria-label={`Pin “${aid.text}”`}
+                    aria-pressed={aid.pinned}
+                    onClick={() => pin.mutate({ aidId: aid.id, pinned: !aid.pinned })}
+                    className={cn(NOTE_BUTTON, 'hover:text-ink')}
+                  >
+                    {aid.pinned ? (
+                      <PinOff aria-hidden className="size-3.5" />
+                    ) : (
+                      <Pin aria-hidden className="size-3.5" />
+                    )}
+                  </button>
+                </Tooltip>
+                <button
+                  type="button"
+                  aria-label={`Remove “${aid.text}”`}
+                  onClick={() => remove.mutate(aid.id)}
+                  className={cn(NOTE_BUTTON, 'hover:text-danger')}
+                >
+                  <X aria-hidden className="size-3.5" />
+                </button>
+              </div>
             </li>
           ))}
           {adding && (

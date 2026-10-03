@@ -68,7 +68,7 @@ flowchart LR
 ### 3.4 Person profile (the most important screen)
 Top to bottom:
 1. **Header:** polaroid photo, name (serif), pronouns if set, "how we met" line, space tabs (shared ones marked with a people icon)
-2. **Remember:** memory aids as sticky notes (kids' names, allergies, favorite team…). Add, edit or pin quickly. Always private
+2. **Remember:** memory aids as sticky notes (kids' names, allergies, favorite team…). Add, edit or pin quickly: the pin button on a note (shown on hover or focus, always on touch screens) tacks it to the top, and the first pinned note is the hint on their keep-in-touch nudge on Today. Always private
 3. **Notes:** free-form, private
 4. **Connections:** relationships list + mini graph; family relations grouped (parents, partner, siblings, derived: cousins, in-laws)
 5. **Timeline:** interactions (met, called, coffee…), newest first
