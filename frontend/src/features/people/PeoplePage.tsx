@@ -41,10 +41,12 @@ export function PeoplePage() {
   )
   const search = useCallback((text: string) => setSearch({ q: text || undefined }), [setSearch])
   const closePeek = useCallback(() => setSearch({ peek: undefined }), [setSearch])
-  // Where the clicked card was, so the panel's photo and name glide in from it.
-  const [peekFrom, setPeekFrom] = useState<FlyOrigin | null>(null)
-  const openPeek = (personId: string, from: FlyOrigin) => {
-    setPeekFrom(from)
+  // Where the clicked card was, so the panel's photo and name glide in from it. Kept with
+  // whose card it was: the address (and so the panel) changes a moment later, and the
+  // person still shown until then must not fly in from the new card.
+  const [peekFrom, setPeekFrom] = useState<{ personId: string; origin: FlyOrigin } | null>(null)
+  const openPeek = (personId: string, origin: FlyOrigin) => {
+    setPeekFrom({ personId, origin })
     setSearch({ peek: personId })
   }
 
@@ -140,7 +142,13 @@ export function PeoplePage() {
           />
         </div>
       </div>
-      {peek && <PeekPanel personId={peek} flyFrom={peekFrom} onClose={closePeek} />}
+      {peek && (
+        <PeekPanel
+          personId={peek}
+          flyFrom={peekFrom && peekFrom.personId === peek ? peekFrom.origin : null}
+          onClose={closePeek}
+        />
+      )}
     </div>
   )
 }
