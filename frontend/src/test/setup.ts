@@ -40,6 +40,7 @@ vi.mock('reagraph', async () => {
         nodes: Node[]
         edges: Edge[]
         onNodeClick: (node: Node) => void
+        onEdgeClick: (edge: Edge) => void
       },
       ref,
     ) {
@@ -64,9 +65,13 @@ vi.mock('reagraph', async () => {
             React.createElement(
               'li',
               { key: edge.id },
-              [`${edge.source}–${edge.target}`, edge.label, edge.dashed && '(dashed)']
-                .filter(Boolean)
-                .join(' '),
+              React.createElement(
+                'button',
+                { onClick: () => props.onEdgeClick(edge) },
+                [`${edge.source}–${edge.target}`, edge.label, edge.dashed && '(dashed)']
+                  .filter(Boolean)
+                  .join(' '),
+              ),
             ),
           ),
         ),

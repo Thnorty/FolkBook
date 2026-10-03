@@ -57,9 +57,14 @@ export type CanvasEdge = {
   fill: string
 }
 
-/** What a link says on its line: "friend", "met at Hackathon", "former partner". */
+/**
+ * What a line says: "friend", "met at Hackathon", "former partner"; a line that only
+ * means someone is in a space says which ("in Hackathon", "shares Hackathon").
+ */
 function edgeLabel(edge: ApiEdge): string | undefined {
-  if (edge.kind !== 'relationship' || !edge.type) return undefined
+  if (edge.kind === 'space') return edge.space ? `in ${edge.space.name}` : undefined
+  if (edge.kind === 'member') return edge.space ? `shares ${edge.space.name}` : undefined
+  if (!edge.type) return undefined
   const label = linkLabel({ type: edge.type, label: edge.label })
   return edge.former ? `former ${label}` : label
 }
@@ -125,24 +130,30 @@ export function toCanvas(
   }
 }
 
-/**
- * Relationship words only on the lines of one person (the one hovered or picked):
- * written on every line, they pile up on each other and on the names.
- */
-export function labelLinesOf(edges: CanvasEdge[], personId: string | null): CanvasEdge[] {
-  return edges.map((edge) =>
-    personId && (edge.source === personId || edge.target === personId)
-      ? edge
-      : { ...edge, label: undefined },
-  )
+/** What the graph is about right now: a person or a line, hovered or picked. */
+export type Focus = { person: string } | { line: string } | null
+
+function linesOf(edges: CanvasEdge[], focus: Focus): CanvasEdge[] {
+  if (!focus) return []
+  if ('line' in focus) return edges.filter((edge) => edge.id === focus.line)
+  return edges.filter((edge) => edge.source === focus.person || edge.target === focus.person)
 }
 
-/** A person's lines and the people at their other ends, to light up around them. */
-export function linesAround(edges: CanvasEdge[], personId: string | null): string[] {
-  if (!personId) return []
-  const touching = edges.filter((edge) => edge.source === personId || edge.target === personId)
-  const others = touching.map((edge) => (edge.source === personId ? edge.target : edge.source))
-  return [personId, ...others, ...touching.map((edge) => edge.id)]
+/**
+ * Words only on the lines in focus (a person's, or the one line): written on every
+ * line, they pile up on each other and on the names.
+ */
+export function labelLinesOf(edges: CanvasEdge[], focus: Focus): CanvasEdge[] {
+  const labelled = new Set(linesOf(edges, focus).map((edge) => edge.id))
+  return edges.map((edge) => (labelled.has(edge.id) ? edge : { ...edge, label: undefined }))
+}
+
+/** The lines in focus and the people at their ends, to light up. */
+export function linesAround(edges: CanvasEdge[], focus: Focus): string[] {
+  const lines = linesOf(edges, focus)
+  const people = new Set(focus && 'person' in focus ? [focus.person] : [])
+  for (const edge of lines) people.add(edge.source).add(edge.target)
+  return [...people, ...lines.map((edge) => edge.id)]
 }
 
 /** "148 people · 231 connections" for the header (you aren't counted). */

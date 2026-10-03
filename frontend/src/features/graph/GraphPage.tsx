@@ -97,11 +97,11 @@ export function GraphPage() {
               Each circle is a person, in the color of their space (the dots on the buttons above);
               grey ones aren&apos;t in a space.{' '}
               <span className="hidden md:inline">
-                Point at someone to see how they&apos;re related; click to open them beside the
-                graph.
+                Point at someone, or at a line, to see how they&apos;re connected; click someone to
+                open them beside the graph.
               </span>
               <span className="md:hidden">
-                Tap someone to see how they&apos;re related, open them or show only their links.
+                Tap a line to see what it means; tap someone to open them or show only their links.
               </span>
             </p>
           )}
