@@ -106,6 +106,13 @@ function server(overrides: Overrides = {}) {
       aids = [...aids, { id: 'a2', person_id: 'emma', text, pinned: false, position: 1 }]
       return json(aids.at(-1), 201)
     },
+    'PATCH /api/memory-aids/a2': async (request) => {
+      await record(request)
+      const { pinned } = writes.at(-1)!.body as { pinned: boolean }
+      aids = aids.map((aid) => (aid.id === 'a2' ? { ...aid, pinned } : aid))
+      aids.sort((a, b) => Number(b.pinned) - Number(a.pinned) || a.position - b.position)
+      return json(aids.find((aid) => aid.id === 'a2'))
+    },
     'DELETE /api/memory-aids/a1': async (request) => {
       await record(request)
       aids = aids.filter((aid) => aid.id !== 'a1')
@@ -192,6 +199,40 @@ describe('profile page', () => {
         body: { person_id: 'emma', text: 'Allergic to peanuts', pinned: false },
       },
       { method: 'DELETE', path: '/api/memory-aids/a1', body: null },
+    ])
+  })
+
+  it('pins a sticky note to the top, and unpins it', async () => {
+    const writes = server()
+    renderApp('/people/emma')
+    const remember = await section('Remember')
+    await userEvent.click(await within(remember).findByRole('button', { name: 'Add' }))
+    await userEvent.type(
+      within(remember).getByRole('textbox', { name: 'New sticky note' }),
+      'Allergic to peanuts{Enter}',
+    )
+    const notes = () =>
+      within(remember)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent)
+    await waitFor(() => expect(notes()).toEqual(['Kid: Arda, 6', 'Allergic to peanuts']))
+
+    const pin = within(remember).getByRole('button', { name: 'Pin “Allergic to peanuts”' })
+    expect(pin).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(pin)
+
+    await waitFor(() => expect(notes()).toEqual(['Pinned: Allergic to peanuts', 'Kid: Arda, 6']))
+    expect(
+      within(remember).getByRole('button', { name: 'Pin “Allergic to peanuts”' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+
+    await userEvent.click(
+      within(remember).getByRole('button', { name: 'Pin “Allergic to peanuts”' }),
+    )
+    await waitFor(() => expect(notes()).toEqual(['Kid: Arda, 6', 'Allergic to peanuts']))
+    expect(writes.filter((write) => write.method === 'PATCH')).toEqual([
+      { method: 'PATCH', path: '/api/memory-aids/a2', body: { pinned: true } },
+      { method: 'PATCH', path: '/api/memory-aids/a2', body: { pinned: false } },
     ])
   })
 

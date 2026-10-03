@@ -151,6 +151,35 @@ export async function addMemoryAid(queryClient: QueryClient, personId: string, t
   return aid
 }
 
+/**
+ * Pin a memory aid to the top of someone's notes (it's also the hint on their keep-in-touch
+ * nudge on Today), or unpin it. The note moves at once; the server's order follows.
+ */
+export async function pinMemoryAid(
+  queryClient: QueryClient,
+  personId: string,
+  aidId: string,
+  pinned: boolean,
+) {
+  const { queryKey } = memoryAidsQuery(personId)
+  queryClient.setQueryData(queryKey, (aids) => {
+    const next = aids?.map((aid) => (aid.id === aidId ? { ...aid, pinned } : aid))
+    // The server's order: pinned first, then by position.
+    return next?.sort((a, b) => Number(b.pinned) - Number(a.pinned) || a.position - b.position)
+  })
+  try {
+    await unwrap(
+      api.PATCH('/api/memory-aids/{aid_id}', {
+        params: { path: { aid_id: aidId } },
+        body: { pinned },
+      }),
+    )
+  } finally {
+    await queryClient.invalidateQueries({ queryKey })
+    void queryClient.invalidateQueries({ queryKey: ['people', 'due'] })
+  }
+}
+
 export async function removeMemoryAid(queryClient: QueryClient, personId: string, aidId: string) {
   await unwrap(api.DELETE('/api/memory-aids/{aid_id}', { params: { path: { aid_id: aidId } } }))
   await queryClient.invalidateQueries({ queryKey: memoryAidsQuery(personId).queryKey })
