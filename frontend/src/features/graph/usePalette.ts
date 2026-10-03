@@ -46,6 +46,9 @@ export function useCanvasColors(): CanvasColors {
         space: Object.fromEntries(
           SPACES.map((name) => [name, read(`--space-${name}`)]),
         ) as Palette['space'],
+        spaceInk: Object.fromEntries(
+          SPACES.map((name) => [name, read(`--space-${name}-ink`)]),
+        ) as Palette['spaceInk'],
       },
     }
     probe.remove()

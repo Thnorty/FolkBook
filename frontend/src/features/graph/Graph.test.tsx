@@ -171,6 +171,14 @@ describe('toCanvas', () => {
     edge: 'line',
     spaceEdge: 'faint line',
     space: { sage: 'green', ochre: 'o', clay: 'red', plum: 'p', teal: 't', slate: 's' },
+    spaceInk: {
+      sage: 'dark green',
+      ochre: 'o',
+      clay: 'dark red',
+      plum: 'p',
+      teal: 't',
+      slate: 's',
+    },
   }
 
   it('colors people by their first space and pins you in the middle', () => {
@@ -186,6 +194,12 @@ describe('toCanvas', () => {
       fill: 'red',
       data: { cluster: 'Family' },
     })
+  })
+
+  it("gives each space's ring the space's colors", () => {
+    const { clusters } = toCanvas(GRAPH, NO_FILTERS, palette)
+
+    expect(clusters).toMatchObject({ Family: { ring: 'red', label: 'dark red' } })
   })
 
   it('keeps you even when a space filter leaves you out', () => {

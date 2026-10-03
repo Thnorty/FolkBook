@@ -1,15 +1,29 @@
 import { forwardRef, useMemo, useState } from 'react'
-import { GraphCanvas, type GraphCanvasRef, type Theme } from 'reagraph'
+import {
+  GraphCanvas,
+  Label,
+  type ClusterRendererProps,
+  type GraphCanvasRef,
+  type Theme,
+} from 'reagraph'
 // Instrument Sans (OFL, fonts/OFL.txt), Latin and Latin Extended merged into one .woff
 // at weight 500: the canvas can't use .woff2. Without a font of our own, the labels
 // would fetch fonts from a CDN, which a self-hosted notebook mustn't do.
 import labelFontUrl from './fonts/instrument-sans-500.woff?url'
-import { labelLinesOf, linesAround, type CanvasEdge, type CanvasNode } from './graphModel'
+import {
+  labelLinesOf,
+  linesAround,
+  type CanvasEdge,
+  type CanvasNode,
+  type ClusterColors,
+} from './graphModel'
 import type { CanvasColors } from './usePalette'
 
 type NetworkCanvasProps = {
   nodes: CanvasNode[]
   edges: CanvasEdge[]
+  /** Each space's ring and name colors, by the space's name. */
+  clusters: ClusterColors
   colors: CanvasColors
   selected: string | null
   onSelect: (personId: string | null) => void
@@ -25,10 +39,11 @@ const SPACING = { linkDistance: 110, nodeStrength: -600 }
  * of whoever is hovered or selected.
  */
 export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(function NetworkCanvas(
-  { nodes, edges, colors, selected, onSelect },
+  { nodes, edges, clusters, colors, selected, onSelect },
   ref,
 ) {
   const theme = useMemo(() => canvasTheme(colors), [colors])
+  const renderCluster = useMemo(() => spaceRing(clusters, colors), [clusters, colors])
   const [hovered, setHovered] = useState<string | null>(null)
   const inFocus = hovered ?? selected
   const shownEdges = useMemo(() => labelLinesOf(edges, inFocus), [edges, inFocus])
@@ -48,6 +63,7 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         // fly out from the middle.
         animated={false}
         clusterAttribute="cluster"
+        onRenderCluster={renderCluster}
         labelFontUrl={labelFontUrl}
         edgeArrowPosition="none"
         edgeLabelPosition="above"
@@ -92,5 +108,46 @@ function canvasTheme({ paper, ink, accent, palette }: CanvasColors): Theme {
       inactiveOpacity: 0.1,
       label: { color: ink, stroke: paper },
     },
+  }
+}
+
+/**
+ * A space's ring and name in the space's own colors (Reagraph's own ring has one color
+ * for all). Same shape as Reagraph's: a band just outside the people, the name below.
+ */
+function spaceRing(clusters: ClusterColors, { ink, paper }: CanvasColors) {
+  return function SpaceRing({
+    label,
+    opacity,
+    outerRadius,
+    innerRadius,
+    padding,
+  }: ClusterRendererProps) {
+    const color = label && clusters[label.text]
+    return (
+      <>
+        <mesh>
+          <ringGeometry args={[outerRadius, innerRadius + padding, 128]} />
+          <meshBasicMaterial
+            color={color ? color.ring : ink}
+            transparent
+            depthTest={false}
+            opacity={opacity}
+          />
+        </mesh>
+        {label && (
+          <group position={label.position}>
+            <Label
+              text={label.text}
+              fontUrl={label.fontUrl}
+              fontSize={12}
+              color={color ? color.label : ink}
+              stroke={paper}
+              opacity={opacity}
+            />
+          </group>
+        )}
+      </>
+    )
   }
 }

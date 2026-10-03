@@ -203,12 +203,13 @@ function GraphDemo() {
   const colors = useCanvasColors()
   const [selected, setSelected] = useState<string | null>(null)
   const faces = useNodeFaces(DEMO_GRAPH.nodes, colors)
-  const { nodes, edges } = toCanvas(DEMO_GRAPH, NO_FILTERS, colors.palette, faces)
+  const { nodes, edges, clusters } = toCanvas(DEMO_GRAPH, NO_FILTERS, colors.palette, faces)
   return (
     <div className="h-90 overflow-hidden rounded-card border border-line">
       <NetworkCanvas
         nodes={nodes}
         edges={edges}
+        clusters={clusters}
         colors={colors}
         selected={selected}
         onSelect={setSelected}
