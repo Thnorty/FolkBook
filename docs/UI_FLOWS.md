@@ -122,7 +122,8 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 - **Default:** you ("Me") pinned in the center, people around, clustered and colored by their first space; former links dashed, "in this space" lines faint. The relationship words show only on the lines of the person you point at or select (their lines and people light up); on every line at once they piled up on the names. A line under the canvas says what the colors and clicks mean, in plain words
 - **Filter bar:** space chips (any number), "Family only" (family links and the people on them), "Hide former"
 - **Click a node:** desktop opens the same peek panel as People; phones get a bottom sheet (name, how you met, a memory aid → Open profile · Focus · Log). Click the canvas to close
-- **Focus mode:** double-click a person to show only them and the people one step away; "Show everyone" goes back
+- **Focus mode:** *Focus* on the phone sheet shows only that person and the people one step away; "Show everyone" goes back. No double-click (removed: easy to trigger by accident)
+- The graph appears where its layout ends up, with no animation: animated, the lines swung round as people flew out from the middle
 - Zoom in / out / Fit buttons; empty graph: "Your graph starts with you"
 - Later: **"How do I know…?"** (the path from Me drawn as an ink line, #34), family tree (#36), folded space bubbles for big notebooks (#35)
 

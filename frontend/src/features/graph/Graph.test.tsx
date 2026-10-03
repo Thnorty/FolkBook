@@ -132,7 +132,7 @@ describe('graph', () => {
     expect(screen.getByRole('button', { name: 'Kerem Yılmaz' })).toBeInTheDocument()
   })
 
-  it('previews a person on click, and focuses on a double-click', async () => {
+  it('previews a person on click, and focuses from the sheet, not on a double-click', async () => {
     server()
     renderApp('/graph')
 
@@ -146,8 +146,10 @@ describe('graph', () => {
     expect(screen.getByRole('complementary', { name: 'Peek' })).toBeInTheDocument() // desktop
 
     fireEvent.doubleClick(screen.getByRole('button', { name: 'Tom Bergqvist' }))
-    expect(await screen.findByText(/Focused on Tom Bergqvist/)).toBeInTheDocument()
-    expect(await lines()).toEqual(['emma–tom cousin'])
+    expect(screen.queryByText(/Focused on/)).not.toBeInTheDocument()
+
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Focus' }))
+    expect(await screen.findByText(/Focused on Emma Yılmaz/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Show everyone' }))
     expect(await lines()).toHaveLength(3)
   })
