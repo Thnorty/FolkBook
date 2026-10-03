@@ -43,7 +43,14 @@ export function PeekPanel({ personId, flyFrom, onClose }: PeekPanelProps) {
         </button>
       </div>
       <div className="p-5">
-        <ProfileView personId={personId} compact flyFrom={flyFrom} onGone={onClose} />
+        {/* A fresh view per person, so one person's header never flies in as another's. */}
+        <ProfileView
+          key={personId}
+          personId={personId}
+          compact
+          flyFrom={flyFrom}
+          onGone={onClose}
+        />
       </div>
     </aside>
   )
