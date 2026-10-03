@@ -39,16 +39,18 @@ const NOTHING = {
   did_you_mean: ref('zeynep', 'Zeynep Demir'),
 }
 
-function server() {
+/** `slow`: search answers after a moment, like a real server, so results arrive late. */
+function server({ slow = false } = {}) {
   const searched: string[] = []
   fakeServer({
     'GET /api/auth/me': () => json(ME),
     'GET /api/auth/csrf': () => new Response(null, { status: 204 }),
     'GET /api/spaces': () => json({ items: [], count: 0 }),
     'GET /api/people': () => json({ items: [], count: 0 }),
-    'GET /api/search': (request) => {
+    'GET /api/search': async (request) => {
       const q = new URL(request.url).searchParams.get('q') ?? ''
       searched.push(q)
+      if (slow) await new Promise((resolve) => setTimeout(resolve, 300))
       return json(q.startsWith('clim') ? CLIMBING : NOTHING)
     },
     'GET /api/people/sofia': () => json({ ...person('sofia', 'Sofia Lind'), contact_methods: [] }),
@@ -83,6 +85,22 @@ describe('search', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/people/sofia'))
     expect(searched.at(-1)).toBe('clim')
+  })
+
+  it('highlights the first result once results arrive, so Enter opens it', async () => {
+    server({ slow: true })
+    const router = renderApp('/people')
+    const palette = await openPalette()
+
+    // Typed at once, as when pasting: the page shortcuts that matched before are gone.
+    fireEvent.change(within(palette).getByRole('combobox'), { target: { value: 'clim' } })
+    const people = await within(palette).findByRole('group', { name: 'People' })
+    await waitFor(() =>
+      expect(within(people).getAllByRole('option')[0]).toHaveAttribute('aria-selected', 'true'),
+    )
+    await userEvent.keyboard('{Enter}')
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/people/kaan'))
   })
 
   it('suggests a close name, or adding someone new, when nothing matches', async () => {
