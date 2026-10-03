@@ -111,6 +111,14 @@ describe('graph', () => {
     expect(await lines()).toEqual(['me–emma', 'emma–kerem (dashed)', 'emma–tom cousin'])
   })
 
+  it('says what a line means when you tap it', async () => {
+    server()
+    renderApp('/graph')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'emma–kerem (dashed)' }))
+    expect(await lines()).toEqual(['me–emma', 'emma–kerem former partner (dashed)', 'emma–tom'])
+  })
+
   it('filters by space, family only and hiding former links', async () => {
     server()
     renderApp('/graph')
@@ -215,6 +223,19 @@ describe('toCanvas', () => {
     expect(clusters).toMatchObject({ Family: { ring: 'red', label: 'dark red' } })
   })
 
+  it('says which space a space line stands for', () => {
+    const graph: GraphData = {
+      nodes: GRAPH.nodes,
+      edges: [
+        edge('s1', 'me', 'emma', '', { kind: 'space', type: null, space: FRIENDS }),
+        edge('m1', 'me', 'kerem', '', { kind: 'member', type: null, space: FAMILY }),
+      ],
+    }
+    const { edges } = toCanvas(graph, NO_FILTERS, palette)
+
+    expect(edges.map((e) => e.label)).toEqual(['in Friends', 'shares Family'])
+  })
+
   it('keeps you even when a space filter leaves you out', () => {
     const { nodes } = toCanvas(GRAPH, { ...NO_FILTERS, spaces: ['s2'] }, palette)
 
@@ -229,9 +250,19 @@ describe('labelLinesOf', () => {
   ]
 
   it("writes the relationship only on the focused person's lines", () => {
-    expect(labelLinesOf(edges, 'emma').map((e) => e.label)).toEqual(['partner', undefined])
-    expect(labelLinesOf(edges, 'kerem').map((e) => e.label)).toEqual(['partner', 'parent'])
+    expect(labelLinesOf(edges, { person: 'emma' }).map((e) => e.label)).toEqual([
+      'partner',
+      undefined,
+    ])
+    expect(labelLinesOf(edges, { person: 'kerem' }).map((e) => e.label)).toEqual([
+      'partner',
+      'parent',
+    ])
     expect(labelLinesOf(edges, null).map((e) => e.label)).toEqual([undefined, undefined])
+  })
+
+  it('writes on just the line pointed at', () => {
+    expect(labelLinesOf(edges, { line: 'e2' }).map((e) => e.label)).toEqual([undefined, 'parent'])
   })
 })
 
@@ -241,8 +272,13 @@ describe('linesAround', () => {
       { id: 'e1', source: 'emma', target: 'kerem', fill: 'line' },
       { id: 'e2', source: 'ayse', target: 'kerem', fill: 'line' },
     ]
-    expect(linesAround(edges, 'emma')).toEqual(['emma', 'kerem', 'e1'])
+    expect(linesAround(edges, { person: 'emma' })).toEqual(['emma', 'kerem', 'e1'])
     expect(linesAround(edges, null)).toEqual([])
+  })
+
+  it('lights up a line and the two people it joins', () => {
+    const edges = [{ id: 'e2', source: 'ayse', target: 'kerem', fill: 'line' }]
+    expect(linesAround(edges, { line: 'e2' })).toEqual(['ayse', 'kerem', 'e2'])
   })
 })
 

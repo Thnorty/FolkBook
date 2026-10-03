@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useState } from 'react'
+import { forwardRef, useMemo, useRef, useState } from 'react'
 import {
   GraphCanvas,
   Label,
@@ -16,6 +16,7 @@ import {
   type CanvasEdge,
   type CanvasNode,
   type ClusterColors,
+  type Focus,
 } from './graphModel'
 import type { CanvasColors } from './usePalette'
 
@@ -35,8 +36,8 @@ const SPACING = { linkDistance: 110, nodeStrength: -600 }
 /**
  * The network on a WebGL canvas (Reagraph), styled after the graph kit (screen 3a):
  * nodes in their space's color, clustered by space, ink lines (former ones dashed),
- * and the selected person ringed in accent. The relationship words show on the lines
- * of whoever is hovered or selected.
+ * and the selected person ringed in accent. A line's words show when you point at it
+ * or tap it, or at one of its people.
  */
 export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(function NetworkCanvas(
   { nodes, edges, clusters, colors, selected, onSelect },
@@ -45,7 +46,16 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
   const theme = useMemo(() => canvasTheme(colors), [colors])
   const renderCluster = useMemo(() => spaceRing(clusters, colors), [clusters, colors])
   const [hovered, setHovered] = useState<string | null>(null)
-  const inFocus = hovered ?? selected
+  const pointed = usePointedLine()
+  // A tapped line keeps its words (phones can't point).
+  const [pickedLine, setPickedLine] = useState<string | null>(null)
+  const inFocus = useMemo<Focus>(() => {
+    const person = hovered
+    const line = pointed.line ?? pickedLine
+    if (person) return { person }
+    if (line) return { line }
+    return selected ? { person: selected } : null
+  }, [hovered, pointed.line, pickedLine, selected])
   const shownEdges = useMemo(() => labelLinesOf(edges, inFocus), [edges, inFocus])
   // Lit up, so their words stay readable while everything else fades.
   const actives = useMemo(() => linesAround(edges, inFocus), [edges, inFocus])
@@ -70,14 +80,46 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         labelType="all" // every name; lines only have words for the person in focus
         selections={selected ? [selected] : []}
         actives={actives}
-        onNodeClick={(node) => onSelect(node.id)}
+        onNodeClick={(node) => {
+          setPickedLine(null)
+          onSelect(node.id)
+        }}
         onNodePointerOver={(node) => setHovered(node.id)}
         onNodePointerOut={() => setHovered(null)}
-        onCanvasClick={() => onSelect(null)}
+        onEdgeClick={(edge) => setPickedLine(edge.id)}
+        onEdgePointerOver={pointed.over}
+        onEdgePointerOut={pointed.out}
+        onCanvasClick={() => {
+          setPickedLine(null)
+          onSelect(null)
+        }}
       />
     </div>
   )
 })
+
+/**
+ * The line under the pointer. Reagraph checks every frame and tells lines apart as
+ * objects: a line that gets its words is a new object, so "left the old line" follows
+ * "entered the new one". Keeping the objects makes that harmless; with lines on top of
+ * each other, the last one entered wins.
+ */
+function usePointedLine() {
+  const under = useRef(new Set<{ id: string }>())
+  const [line, setLine] = useState<string | null>(null)
+  const update = () => setLine([...under.current].at(-1)?.id ?? null)
+  return {
+    line,
+    over(edge: { id: string }) {
+      under.current.add(edge)
+      update()
+    },
+    out(edge: { id: string }) {
+      under.current.delete(edge)
+      update()
+    },
+  }
+}
 
 function canvasTheme({ paper, ink, accent, palette }: CanvasColors): Theme {
   return {
