@@ -51,6 +51,15 @@ export const aboutQuery = queryOptions({
   staleTime: Infinity,
 })
 
+/** The full export (.zip): downloaded by the browser from a plain link. */
+export const EXPORT_URL = '/api/export/everything'
+
+/** What the full export holds, for the line under "Everything". */
+export const exportSummaryQuery = queryOptions({
+  queryKey: ['export', 'summary'],
+  queryFn: ({ signal }) => unwrap(api.GET('/api/export/summary', { signal })),
+})
+
 export type User = components['schemas']['UserOut']
 export type Invite = components['schemas']['InviteOut']
 

@@ -74,6 +74,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - A timeline entry has a day and an **optional time of day**, both as the user's own clock read them (no time zone). Entries on the same day go newest time first; those without a time come after.
 - Space names are unique per owner (ignoring case); colors can repeat.
 - Deleting a space never deletes people or links; links in it become private to their owner.
+- **Full export** (Settings → Import / export): one .zip per user, `folkbook.json` (format version 1, `backend/exports/schemas.py`) plus photos. It holds the user's own book: their people (Me, kept copies, contact details, tags), the spaces they own, their own links (a link in someone else's space comes out as private), and everything they wrote (notes, memory aids, timeline, keep-in-touch). Someone else's person is included only if the user wrote about them or linked to them, with just the basic profile they see; restore turns them into kept copies. Not included: other accounts and memberships (they don't exist on another server), people torn out or taken out of the book. Only full access can export (not a limited API key).
 
 ## API
 - API-first: the frontend uses the same API users get.

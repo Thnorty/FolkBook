@@ -320,6 +320,12 @@ def visible_access_ended(access: Access) -> QuerySet[AccessEnded]:
     return AccessEnded.objects.filter(user=access.user)
 
 
+def can_export_everything(access: Access) -> bool:
+    """A full export holds all the user's private data and their whole book, so it needs
+    access to both: not an API key limited to some spaces or without private notes."""
+    return access.include_private and not access.is_space_limited
+
+
 def can_write_private(access: Access, person: Person) -> bool:
     """Add notes, memory aids, timeline entries or reminders about a person."""
     return not access.read_only and access.include_private and can_see_person(access, person)

@@ -7,6 +7,7 @@ from ninja.security import django_auth
 from accounts.api import router as auth_router
 from accounts.api import users_router
 from core.api import Conflict, validation_detail
+from exports.api import router as export_router
 from graph.api import router as graph_router
 from interactions.api import router as interactions_router
 from invites.api import router as invites_router
@@ -35,6 +36,7 @@ api.add_router("/interactions", interactions_router)
 api.add_router("/keep-in-touch", reminders_router)
 api.add_router("/today", today_router)
 api.add_router("/search", search_router)
+api.add_router("/export", export_router)
 
 
 @api.exception_handler(PermissionDenied)

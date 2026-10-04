@@ -2,6 +2,7 @@
 export const SETTINGS_SECTIONS = [
   { to: '/settings/profile', label: 'Profile & account', admin: false },
   { to: '/settings/reminders', label: 'Reminders', admin: false },
+  { to: '/settings/import-export', label: 'Import / export', admin: false },
   { to: '/settings/appearance', label: 'Appearance', admin: false },
   { to: '/settings/about', label: 'About', admin: false },
   { to: '/settings/users', label: 'Users', admin: true },

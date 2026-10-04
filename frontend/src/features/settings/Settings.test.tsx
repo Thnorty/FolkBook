@@ -87,6 +87,7 @@ function server() {
       return json(settings)
     },
     'GET /api/about': () => json({ version: '0.1.0', source_url: 'https://example.com/folkbook' }),
+    'GET /api/export/summary': () => json({ people: 148, photos: 1, size: 84_200_000 }),
   })
   return writes
 }
@@ -192,6 +193,21 @@ describe('settings', () => {
       'href',
       'https://example.com/folkbook',
     )
+  })
+
+  it('exports everything as one .zip', async () => {
+    server()
+    renderApp('/settings/import-export')
+    const exports = await page('Import / export')
+
+    expect(
+      await within(exports).findByText(/148 people · 1 photo · ~84 MB zip/),
+    ).toBeInTheDocument()
+    expect(within(exports).getByRole('link', { name: 'Export .zip' })).toHaveAttribute(
+      'href',
+      '/api/export/everything',
+    )
+    expect(within(exports).getByText(/include your private notes/)).toBeInTheDocument()
   })
 
   it('lists the sections, without the admin ones for members', async () => {

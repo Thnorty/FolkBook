@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "reminders",
     "today",
     "search",
+    "exports",
     "invites",
     "jobs",
     "django_tasks_db",
