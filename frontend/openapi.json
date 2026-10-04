@@ -3533,6 +3533,58 @@
           }
         ]
       }
+    },
+    "/api/export/summary": {
+      "get": {
+        "operationId": "exports_api_export_summary",
+        "summary": "Export Summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportSummary"
+                }
+              }
+            }
+          }
+        },
+        "description": "How many people and photos a full export holds, and roughly how big it is.",
+        "tags": [
+          "export"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/export/everything": {
+      "get": {
+        "operationId": "exports_api_export_everything",
+        "summary": "Export Everything",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A .zip: folkbook.json (see ExportFile) and photos/",
+            "content": {
+              "application/zip": {}
+            }
+          }
+        },
+        "description": "Everything in your book, private notes included, as one .zip.",
+        "tags": [
+          "export"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -6639,6 +6691,30 @@
           "did_you_mean"
         ],
         "title": "SearchOut",
+        "type": "object"
+      },
+      "ExportSummary": {
+        "description": "What \"Export .zip\" would download: shown before you click.",
+        "properties": {
+          "people": {
+            "title": "People",
+            "type": "integer"
+          },
+          "photos": {
+            "title": "Photos",
+            "type": "integer"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "people",
+          "photos",
+          "size"
+        ],
+        "title": "ExportSummary",
         "type": "object"
       }
     },

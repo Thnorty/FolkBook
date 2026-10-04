@@ -32,6 +32,8 @@ For a real server, set `SITE_ADDRESS` to your domain (e.g. `folk.example.com`) a
 
 Everything FolkBook knows is in two Docker volumes: `db_data` (the database) and `media_data` (profile photos). Back up both, together.
 
+Each user can also download their own book from **Settings → Import / export → Export .zip**: a `folkbook.json` and the photos. It includes their private notes.
+
 ### Install as an app
 
 FolkBook can be added to the home screen (Android, iOS) or installed on the desktop (Chrome, Edge). Browsers only offer this on HTTPS (or `localhost`), so set up your domain as above. When the server can't be reached, the app shows an offline page; nothing from your notebook is stored on the device.

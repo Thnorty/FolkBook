@@ -1199,6 +1199,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/export/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Summary
+         * @description How many people and photos a full export holds, and roughly how big it is.
+         */
+        get: operations["exports_api_export_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/export/everything": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Everything
+         * @description Everything in your book, private notes included, as one .zip.
+         */
+        get: operations["exports_api_export_everything"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2347,6 +2387,18 @@ export interface components {
             /** Notes */
             notes: components["schemas"]["NoteHit"][];
             did_you_mean: components["schemas"]["PersonRef"] | null;
+        };
+        /**
+         * ExportSummary
+         * @description What "Export .zip" would download: shown before you click.
+         */
+        ExportSummary: {
+            /** People */
+            people: number;
+            /** Photos */
+            photos: number;
+            /** Size */
+            size: number;
         };
     };
     responses: never;
@@ -4313,6 +4365,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchOut"];
+                };
+            };
+        };
+    };
+    exports_api_export_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExportSummary"];
+                };
+            };
+        };
+    };
+    exports_api_export_everything: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A .zip: folkbook.json (see ExportFile) and photos/ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": unknown;
                 };
             };
         };

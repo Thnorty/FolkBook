@@ -171,7 +171,7 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 - **API keys:** list (name, scopes, last used, expiry) → create (shown once, copy button) → revoke
 - **Nudges:** global on/off, default interval, email frequency (daily / weekly digest), "Send test email"
 - **Admin only: email (SMTP):** host, port, user, password, from address, TLS, "Send test email". Can also be set via env vars. Not configured → banner: "Email isn't set up; reminders only show on Today"
-- **Import / Export:** .vcf import, full export (JSON + photos), .vcf export
+- **Import / Export:** .vcf import, full export (JSON + photos: "Everything", with how many people and photos and the rough size, and a reminder that it holds private notes), .vcf export, restore
 - **Appearance:** light / dark / system, reduce motion
 - **Admin only:** users, invite links, server info
 

@@ -23,6 +23,7 @@ import {
   ReminderSettingsPage,
 } from './features/settings/OtherSettings'
 import { InvitesSettings, UsersSettings } from './features/settings/AdminSettings'
+import { ImportExportSettings } from './features/settings/ImportExportSettings'
 import { ProfileSettings } from './features/settings/ProfileSettings'
 import { SettingsLayout } from './features/settings/SettingsLayout'
 import { validatePeopleSearch } from './features/people/search'
@@ -119,6 +120,11 @@ const settingsTree = settingsRoute.addChildren([
     getParentRoute: () => settingsRoute,
     path: 'reminders',
     component: ReminderSettingsPage,
+  }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'import-export',
+    component: ImportExportSettings,
   }),
   createRoute({
     getParentRoute: () => settingsRoute,
