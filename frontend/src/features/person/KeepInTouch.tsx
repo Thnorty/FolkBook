@@ -3,6 +3,7 @@ import { Bell, BellOff } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { labelClass } from '@/components/ui/label'
+import { selectClass } from '@/components/ui/select'
 import { formatDay, formatRelativeDay, isoDay } from '@/lib/dates'
 import { intervalLabel } from './labels'
 import { ProfileSection } from './ProfileSection'
@@ -88,7 +89,7 @@ export function KeepInTouch({ personId }: { personId: string }) {
             value={value}
             onChange={(event) => choose(event.target.value)}
             disabled={save.isPending}
-            className="h-11 w-full rounded-card border border-line-input bg-card px-3 text-input outline-none focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-focus-glow md:h-10"
+            className={selectClass}
           >
             <option value={DEFAULT}>
               {yourDefault

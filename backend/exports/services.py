@@ -26,6 +26,7 @@ from access.policy import (
     visible_relationships,
     visible_spaces,
 )
+from core.db import by_name
 from exports.schemas import (
     AccountExport,
     Birthday,
@@ -43,8 +44,10 @@ from exports.schemas import (
     SpaceExport,
     TimelineExport,
 )
+from exports.vcard import card
 from people.models import Person
 from reminders.models import ReminderSettings
+from spaces.models import Space
 
 README = """\
 FolkBook export
@@ -239,3 +242,19 @@ def summary(access: Access) -> ExportSummary:
         default_storage.size(name) for _, name in photos
     )
     return ExportSummary(people=len(export.people), photos=len(photos), size=size)
+
+
+def contacts_vcf(access: Access, space: Space | None = None) -> str:
+    """Everyone in your book (or in one space) as vCards: name, phone, email, birthday.
+    Not you, and shared people's contact details only where their space shares them."""
+    people = visible_people(access).exclude(account=access.user)
+    if space:
+        people = people.filter(spaces=space)
+    people = people.prefetch_related(
+        Prefetch(
+            "contact_methods",
+            visible_contact_methods(access).order_by("position", "created_at"),
+            to_attr="contacts_shown",
+        )
+    ).order_by(by_name(), "pk")
+    return "".join(card(person, person.contacts_shown) for person in people)

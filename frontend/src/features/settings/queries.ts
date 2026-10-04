@@ -54,6 +54,10 @@ export const aboutQuery = queryOptions({
 /** The full export (.zip): downloaded by the browser from a plain link. */
 export const EXPORT_URL = '/api/export/everything'
 
+/** The contacts (.vcf): everyone in your book, or one space's people. */
+export const contactsExportUrl = (spaceId?: string) =>
+  spaceId ? `/api/export/contacts?space=${encodeURIComponent(spaceId)}` : '/api/export/contacts'
+
 /** What the full export holds, for the line under "Everything". */
 export const exportSummaryQuery = queryOptions({
   queryKey: ['export', 'summary'],

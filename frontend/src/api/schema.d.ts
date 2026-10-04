@@ -1239,6 +1239,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/export/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Contacts
+         * @description Your people as a .vcf for your phone or another app: name, phone, email,
+         *     birthday. `space` narrows it to one space.
+         */
+        get: operations["exports_api_export_contacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4405,6 +4426,28 @@ export interface operations {
                 };
                 content: {
                     "application/zip": unknown;
+                };
+            };
+        };
+    };
+    exports_api_export_contacts: {
+        parameters: {
+            query?: {
+                space?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description vCards (3.0), one per person */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/vcard": unknown;
                 };
             };
         };

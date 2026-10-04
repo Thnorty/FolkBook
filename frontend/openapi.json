@@ -3585,6 +3585,48 @@
           }
         ]
       }
+    },
+    "/api/export/contacts": {
+      "get": {
+        "operationId": "exports_api_export_contacts",
+        "summary": "Export Contacts",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "space",
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Space"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "vCards (3.0), one per person",
+            "content": {
+              "text/vcard": {}
+            }
+          }
+        },
+        "description": "Your people as a .vcf for your phone or another app: name, phone, email,\nbirthday. `space` narrows it to one space.",
+        "tags": [
+          "export"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
