@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ExternalLink } from 'lucide-react'
 import { Choice } from '@/components/ui/choice'
 import { labelClass } from '@/components/ui/label'
+import { selectClass } from '@/components/ui/select'
 import { intervalLabel } from '@/features/person/labels'
 import { setAppearance, useAppearance, type Appearance } from '@/lib/appearance'
 import {
@@ -56,7 +57,7 @@ export function ReminderSettingsPage() {
             onChange={(event) =>
               save.mutate({ default_interval_days: Number(event.target.value) || null })
             }
-            className="h-11 w-full rounded-card border border-line-input bg-card px-3 text-input outline-none focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-focus-glow md:h-10"
+            className={selectClass}
           >
             <option value="">Only people I pick</option>
             {INTERVALS.map((days) => (

@@ -11,6 +11,7 @@ import { CopyLink } from '@/components/ui/copy-link'
 import { labelClass } from '@/components/ui/label'
 import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass } from '@/components/ui/menu'
+import { selectClass } from '@/components/ui/select'
 import { createInvite } from '@/features/invites/queries'
 import { appLink } from '@/lib/links'
 import { spacesQuery } from '@/features/spaces/queries'
@@ -261,11 +262,7 @@ export function InvitesSettings() {
               <label htmlFor="invite-space" className={labelClass}>
                 Also share a space
               </label>
-              <select
-                id="invite-space"
-                name="space"
-                className="h-11 w-full rounded-card border border-line-input bg-card px-3 text-input outline-none focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-focus-glow md:h-10"
-              >
+              <select id="invite-space" name="space" className={selectClass}>
                 <option value="">No space</option>
                 {ownSpaces.map((space) => (
                   <option key={space.id} value={space.id}>

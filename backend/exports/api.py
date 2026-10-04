@@ -1,7 +1,12 @@
-from django.http import FileResponse
+from uuid import UUID
+
+from django.http import FileResponse, HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.http import content_disposition_header
 from ninja import Router
 
+from access.policy import visible_spaces
 from core.api import access_for
 from exports import services
 from exports.schemas import ExportSummary
@@ -31,3 +36,24 @@ def export_everything(request):
     out = services.export_zip(access_for(request))
     name = f"folkbook-{timezone.localdate():%Y-%m-%d}.zip"
     return FileResponse(out, as_attachment=True, filename=name, content_type="application/zip")
+
+
+@router.get(
+    "/contacts",
+    openapi_extra={
+        "responses": {
+            200: {"description": "vCards (3.0), one per person", "content": {"text/vcard": {}}}
+        }
+    },
+)
+def export_contacts(request, space: UUID | None = None):
+    """Your people as a .vcf for your phone or another app: name, phone, email,
+    birthday. `space` narrows it to one space."""
+    access = access_for(request)
+    chosen = get_object_or_404(visible_spaces(access), pk=space) if space else None
+    response = HttpResponse(
+        services.contacts_vcf(access, chosen), content_type="text/vcard; charset=utf-8"
+    )
+    name = f"FolkBook contacts{f' - {chosen.name}' if chosen else ''}.vcf"
+    response["Content-Disposition"] = content_disposition_header(True, name)
+    return response

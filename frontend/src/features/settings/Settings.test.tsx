@@ -53,7 +53,23 @@ function server() {
     'GET /api/auth/csrf': () => new Response(null, { status: 204 }),
     'GET /api/auth/me': () => json(ME),
     'GET /api/people/me': () => json(ELA),
-    'GET /api/spaces': () => json({ items: [], count: 0 }),
+    'GET /api/spaces': () =>
+      json({
+        items: [
+          {
+            id: 's1',
+            name: 'Climbing club',
+            color: 'teal',
+            description: '',
+            share_contact_details: false,
+            role: 'owner',
+            owner: { id: 'me', name: 'Ela Demir' },
+            people_count: 6,
+            member_count: 0,
+          },
+        ],
+        count: 1,
+      }),
     'GET /api/people': () => json({ items: [], count: 0 }),
     'GET /api/auth/devices': () =>
       json({
@@ -208,6 +224,22 @@ describe('settings', () => {
       '/api/export/everything',
     )
     expect(within(exports).getByText(/include your private notes/)).toBeInTheDocument()
+  })
+
+  it('exports contacts as a .vcf, for everyone or one space', async () => {
+    server()
+    renderApp('/settings/import-export')
+    const exports = await page('Import / export')
+    const link = () => within(exports).getByRole('link', { name: 'Export' })
+
+    expect(await within(exports).findByText('Contacts only (.vcf)')).toBeInTheDocument()
+    expect(link()).toHaveAttribute('href', '/api/export/contacts')
+
+    await userEvent.selectOptions(
+      within(exports).getByRole('combobox', { name: 'Which people' }),
+      await within(exports).findByRole('option', { name: 'Climbing club' }),
+    )
+    expect(link()).toHaveAttribute('href', '/api/export/contacts?space=s1')
   })
 
   it('lists the sections, without the admin ones for members', async () => {
