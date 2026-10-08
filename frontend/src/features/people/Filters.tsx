@@ -1,7 +1,9 @@
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { UsersRound } from 'lucide-react'
+import { UsersRound, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { components } from '@/api/schema'
+import { importQuery } from '@/features/imports/queries'
 import { ownership, peopleCount } from '@/features/spaces/labels'
 import { cn } from '@/lib/utils'
 
@@ -95,6 +97,26 @@ export function FilterChips({
 }
 
 /** Shown above the list when a space is picked: what it is, and a way to its page. */
+/** "From contacts.vcf": the list shows only the people that import added. */
+export function FromImport({ importId, onClear }: { importId: string; onClear: () => void }) {
+  const batch = useQuery(importQuery(importId)).data
+  if (!batch) return null
+  const label = `From ${batch.file_name}`
+  return (
+    <p className="inline-flex h-9 items-center gap-1 self-start rounded-full bg-ink pr-1 pl-3.5 text-md font-medium text-paper">
+      {label}
+      <button
+        type="button"
+        aria-label={`Clear ${label}`}
+        onClick={onClear}
+        className="grid size-7 cursor-pointer place-items-center rounded-full hover:bg-paper/15"
+      >
+        <X aria-hidden className="size-4" />
+      </button>
+    </p>
+  )
+}
+
 export function SpaceBanner({ space }: { space: Space }) {
   const facts = [peopleCount(space.people_count), ownership(space)]
   return (

@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import type { FlyOrigin } from '@/motion/FlyFrom'
 import { EmptyBook } from './EmptyBook'
 import { PeekPanel } from './PeekPanel'
-import { FilterChips, SpaceBanner } from './Filters'
+import { FilterChips, FromImport, SpaceBanner } from './Filters'
 import { NoMatch, PeopleResults } from './PeopleResults'
 import { keptCountQuery, needsDetailsCountQuery, peopleCountQuery } from './queries'
 import { SearchBox } from './SearchBox'
@@ -25,6 +25,7 @@ export function PeoplePage() {
     space,
     needs = false,
     kept = false,
+    import: importId,
     view,
     peek,
   } = useSearch({ from: '/app/people' })
@@ -54,7 +55,7 @@ export function PeoplePage() {
   const needsCount = useQuery(needsDetailsCountQuery).data
   const keptCount = useQuery(keptCountQuery).data
   const spaces = useQuery(spacesQuery).data?.items ?? []
-  const filtered = Boolean(q || space || needs || kept)
+  const filtered = Boolean(q || space || needs || kept || importId)
   const pickedSpace = spaces.find((item) => item.id === space)
   const grid = view === 'grid'
 
@@ -119,6 +120,9 @@ export function PeoplePage() {
               })
             }
           />
+          {importId && (
+            <FromImport importId={importId} onClear={() => setSearch({ import: undefined })} />
+          )}
           {pickedSpace && <SpaceBanner space={pickedSpace} />}
           {needs && (
             <Button asChild variant="secondary" className="self-start">
@@ -129,14 +133,20 @@ export function PeoplePage() {
 
         <div className="mt-5">
           <PeopleResults
-            filters={{ search: q, space, needsDetails: needs, kept }}
+            filters={{ search: q, space, needsDetails: needs, kept, importId }}
             grid={grid}
             onPeek={openPeek}
             empty={
               filtered ? (
                 <NoMatch
                   onClear={() =>
-                    setSearch({ q: undefined, space: undefined, needs: undefined, kept: undefined })
+                    setSearch({
+                      q: undefined,
+                      space: undefined,
+                      needs: undefined,
+                      kept: undefined,
+                      import: undefined,
+                    })
                   }
                 />
               ) : (

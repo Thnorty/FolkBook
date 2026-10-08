@@ -45,6 +45,8 @@ export type PeopleFilters = {
   space?: string
   needsDetails?: boolean
   kept?: boolean
+  /** Only the people one import added. */
+  importId?: string
 }
 
 /** The People list, 50 at a time, filtered and searched on the server. */
@@ -53,9 +55,10 @@ export function peopleListQuery({
   space,
   needsDetails = false,
   kept = false,
+  importId,
 }: PeopleFilters) {
   return infiniteQueryOptions({
-    queryKey: ['people', 'list', { search, space, needsDetails, kept }],
+    queryKey: ['people', 'list', { search, space, needsDetails, kept, importId }],
     initialPageParam: 1,
     // While a new search loads, keep showing the last results instead of a loading line.
     placeholderData: keepPreviousData,
@@ -69,6 +72,7 @@ export function peopleListQuery({
               space: space ?? null,
               needs_details: needsDetails,
               kept,
+              import: importId,
             },
           },
           signal,
