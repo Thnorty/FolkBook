@@ -165,10 +165,17 @@ def test_bad_choices(api, world, picked):
     assert Person.objects.count() == people
 
 
-def test_choices_that_arent_json(api, world):
-    response = api.login(world.ela).upload("/imports", {"file": vcf(GRETA), "choices": "{oops"})
+@pytest.mark.parametrize(
+    ("choices", "status"),
+    [
+        ("{oops", 400),  # not JSON at all: Ninja's answer for any unreadable body
+        ('{"picked": "everyone"}', 422),
+    ],
+)
+def test_choices_that_arent_valid(api, world, choices, status):
+    response = api.login(world.ela).upload("/imports", {"file": vcf(GRETA), "choices": choices})
 
-    assert response.status_code == 422
+    assert response.status_code == status
 
 
 def test_space_you_cant_add_to_is_403(api, world):

@@ -1354,7 +1354,7 @@ export interface paths {
         put?: never;
         /**
          * Run Import
-         * @description Import a .vcf: the same file as the preview, plus `choices` (JSON, see ChoicesIn):
+         * @description Import a .vcf: the same file as the preview, plus `choices` (a JSON form field):
          *     who to add, who to merge into the person they matched, and a space for the new
          *     people.
          */
@@ -2621,6 +2621,25 @@ export interface components {
             /** Left Out */
             left_out: number;
             space: components["schemas"]["SpaceRef"] | null;
+        };
+        /** ChoicesIn */
+        ChoicesIn: {
+            /** Picked */
+            picked: components["schemas"]["PickIn"][];
+            /** Space */
+            space?: string | null;
+        };
+        /** PickIn */
+        PickIn: {
+            /** Index */
+            index: number;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "new" | "merge" | "skip";
+            /** Into */
+            into?: string | null;
         };
     };
     responses: never;
@@ -4782,8 +4801,7 @@ export interface operations {
                      * Format: binary
                      */
                     file: string;
-                    /** Choices */
-                    choices: string;
+                    choices: components["schemas"]["ChoicesIn"];
                 };
             };
         };

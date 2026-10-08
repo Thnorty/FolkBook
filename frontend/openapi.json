@@ -3832,7 +3832,7 @@
             }
           }
         },
-        "description": "Import a .vcf: the same file as the preview, plus `choices` (JSON, see ChoicesIn):\nwho to add, who to merge into the person they matched, and a space for the new\npeople.",
+        "description": "Import a .vcf: the same file as the preview, plus `choices` (a JSON form field):\nwho to add, who to merge into the person they matched, and a space for the new\npeople.",
         "tags": [
           "import"
         ],
@@ -3847,8 +3847,7 @@
                     "type": "string"
                   },
                   "choices": {
-                    "title": "Choices",
-                    "type": "string"
+                    "$ref": "#/components/schemas/ChoicesIn"
                   }
                 },
                 "required": [
@@ -7267,6 +7266,69 @@
           "space"
         ],
         "title": "ImportOut",
+        "type": "object"
+      },
+      "ChoicesIn": {
+        "properties": {
+          "picked": {
+            "items": {
+              "$ref": "#/components/schemas/PickIn"
+            },
+            "title": "Picked",
+            "type": "array"
+          },
+          "space": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space"
+          }
+        },
+        "required": [
+          "picked"
+        ],
+        "title": "ChoicesIn",
+        "type": "object"
+      },
+      "PickIn": {
+        "properties": {
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "action": {
+            "enum": [
+              "new",
+              "merge",
+              "skip"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "into": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Into"
+          }
+        },
+        "required": [
+          "index",
+          "action"
+        ],
+        "title": "PickIn",
         "type": "object"
       }
     },

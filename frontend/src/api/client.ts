@@ -69,15 +69,21 @@ export async function unwrap<T>(request: Promise<{ data?: T }>): Promise<T> {
 }
 
 /**
- * The options for sending `fields` as a form (multipart), e.g. to upload a file. The
- * generated types say string for files; the form really sends them.
+ * The options for sending `fields` as a form (multipart), e.g. to upload a file. Files
+ * and text go as they are, anything else as JSON (the API reads a schema from a JSON
+ * field). The generated types say string for files; the form really sends them.
  */
-export function formUpload<T extends Record<string, string | Blob>>(fields: T) {
+export function formUpload<T extends Record<string, unknown>>(fields: T) {
   return {
-    body: fields as unknown as { [K in keyof T]: string },
+    body: fields as { [K in keyof T]: T[K] extends Blob ? string : T[K] },
     bodySerializer: () => {
       const form = new FormData()
-      for (const [name, value] of Object.entries(fields)) form.append(name, value)
+      for (const [name, value] of Object.entries(fields)) {
+        form.append(
+          name,
+          value instanceof Blob || typeof value === 'string' ? value : JSON.stringify(value),
+        )
+      }
       return form
     },
   }
