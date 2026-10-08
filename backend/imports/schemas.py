@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
@@ -72,3 +73,22 @@ class ImportOut(Schema):
     merged: int
     left_out: int  # not picked, or skipped: they stay in the phone
     space: SpaceRef | None
+
+
+class RecentImportOut(Schema):
+    """An import as Recent imports lists it."""
+
+    id: UUID
+    file_name: str
+    created_at: datetime
+    added: int  # people it added, even if they've been deleted since
+    merged: int
+    undone_at: datetime | None
+
+
+class UndoPreviewOut(Schema):
+    """What undoing an import would do."""
+
+    goes: list[PersonRef]
+    stays: list[PersonRef]  # written about since
+    loses_details: list[PersonRef]  # people it merged into

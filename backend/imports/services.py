@@ -10,6 +10,7 @@ from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import UploadedFile
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from access.policy import (
     Access,
@@ -80,6 +81,9 @@ def run_import(access: Access, upload: UploadedFile, choices: ChoicesIn) -> Impo
             merges = [(card, match) for card, pick, match in picks if pick.action == "merge"]
             for card, match in merges:
                 merge_into(match.person, card, user, batch, stored)
+            batch.added, batch.merged = len(added), len(merges)
+            batch.finished_at = timezone.now()
+            batch.save(update_fields=["added", "merged", "finished_at", "updated_at"])
     except BaseException:
         for name in stored:
             default_storage.delete(name)

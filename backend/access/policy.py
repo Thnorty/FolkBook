@@ -352,6 +352,12 @@ def can_import(access: Access) -> bool:
     return access.include_private and not access.read_only and not access.is_space_limited
 
 
+def can_undo_import(access: Access) -> bool:
+    """Undo an import: it deletes people and takes details back, so the same access as
+    importing."""
+    return can_import(access)
+
+
 def shares_book(user: User) -> bool:
     """Whether anyone else sees part of the user's book, or the user part of theirs."""
     return SpaceMembership.objects.filter(Q(user=user) | Q(space__owner=user)).exists()

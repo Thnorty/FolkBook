@@ -1352,7 +1352,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Imports
+         * @description Your imports, newest first.
+         */
+        get: operations["imports_api_list_imports"];
         put?: never;
         /**
          * Run Import
@@ -1361,6 +1365,81 @@ export interface paths {
          *     people.
          */
         post: operations["imports_api_run_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{import_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Import */
+        get: operations["imports_api_get_import"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{import_id}/undo-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Undo Preview
+         * @description Who undoing the import deletes, who stays because you wrote about them since, and
+         *     who loses details its merges added.
+         */
+        get: operations["imports_api_undo_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{import_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Undo Import */
+        post: operations["imports_api_undo_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{import_id}/redo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redo Import
+         * @description Undo the undo, within a minute.
+         */
+        post: operations["imports_api_redo_import"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2671,6 +2750,49 @@ export interface components {
             action: "new" | "merge" | "skip";
             /** Into */
             into?: string | null;
+        };
+        /** PagedRecentImportOut */
+        PagedRecentImportOut: {
+            /** Items */
+            items: components["schemas"]["RecentImportOut"][];
+            /** Count */
+            count: number;
+        };
+        /**
+         * RecentImportOut
+         * @description An import as Recent imports lists it.
+         */
+        RecentImportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** File Name */
+            file_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Added */
+            added: number;
+            /** Merged */
+            merged: number;
+            /** Undone At */
+            undone_at: string | null;
+        };
+        /**
+         * UndoPreviewOut
+         * @description What undoing an import would do.
+         */
+        UndoPreviewOut: {
+            /** Goes */
+            goes: components["schemas"]["PersonRef"][];
+            /** Stays */
+            stays: components["schemas"]["PersonRef"][];
+            /** Loses Details */
+            loses_details: components["schemas"]["PersonRef"][];
         };
     };
     responses: never;
@@ -4819,6 +4941,29 @@ export interface operations {
             };
         };
     };
+    imports_api_list_imports: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedRecentImportOut"];
+                };
+            };
+        };
+    };
     imports_api_run_import: {
         parameters: {
             query?: never;
@@ -4846,6 +4991,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportOut"];
+                };
+            };
+        };
+    };
+    imports_api_get_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentImportOut"];
+                };
+            };
+        };
+    };
+    imports_api_undo_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UndoPreviewOut"];
+                };
+            };
+        };
+    };
+    imports_api_undo_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentImportOut"];
+                };
+            };
+        };
+    };
+    imports_api_redo_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentImportOut"];
                 };
             };
         };

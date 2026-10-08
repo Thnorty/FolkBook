@@ -12,6 +12,7 @@ from django.db import transaction
 from django.tasks import Task
 from django.utils import timezone
 
+from imports import tasks as imports_tasks
 from jobs import tasks
 from jobs.models import ScheduledRun
 from people import tasks as people_tasks
@@ -31,6 +32,7 @@ PERIODIC_JOBS = [
     Periodic(tasks.clear_expired_sessions, every=datetime.timedelta(days=1)),
     Periodic(tasks.prune_task_results, every=datetime.timedelta(days=1)),
     Periodic(people_tasks.purge_deleted_people, every=datetime.timedelta(minutes=1)),
+    Periodic(imports_tasks.forget_taken_back_photos, every=datetime.timedelta(minutes=1)),
 ]
 
 

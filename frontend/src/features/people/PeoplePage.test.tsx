@@ -48,12 +48,24 @@ const EVERYONE = [
   }),
 ]
 
+/** Who the import i1 added. */
+const IMPORTED = new Set(['anna'])
+
 /** A fake API that filters like the real one does, and records the list requests. */
 function server(people = EVERYONE) {
   const listRequests: URLSearchParams[] = []
   fakeServer({
     'GET /api/auth/me': () => json(ME),
     'GET /api/spaces': () => json({ items: [CLIMBING], count: 1 }),
+    'GET /api/imports/i1': () =>
+      json({
+        id: 'i1',
+        file_name: 'contacts.vcf',
+        created_at: '2026-10-08T09:00:00Z',
+        added: 1,
+        merged: 0,
+        undone_at: null,
+      }),
     'GET /api/people': (request) => {
       const query = new URL(request.url).searchParams
       if (query.get('page_size') !== '1') listRequests.push(query)
@@ -63,7 +75,8 @@ function server(people = EVERYONE) {
           p.name.toLowerCase().includes(search) &&
           (query.get('needs_details') !== 'true' || p.needs_details) &&
           (query.get('kept') !== 'true' || p.kept) &&
-          (!query.get('space') || p.spaces.some((s) => s.id === query.get('space'))),
+          (!query.get('space') || p.spaces.some((s) => s.id === query.get('space'))) &&
+          (!query.get('import') || IMPORTED.has(p.id)),
       )
       const size = Number(query.get('page_size') ?? 50)
       const page = Number(query.get('page') ?? 1)
@@ -159,6 +172,21 @@ describe('People list', () => {
     await waitFor(async () => expect(await cards()).toEqual(['Oskar']))
     expect(screen.getByRole('link', { name: 'Space page →' })).toHaveAttribute('href', '/spaces/s1')
     expect(screen.getByText('Shared with 2')).toBeInTheDocument()
+  })
+
+  it('shows the people from one import', async () => {
+    const requests = server()
+    renderApp('/people?import=i1')
+
+    await waitFor(async () => expect(await cards()).toEqual(['Anna Kowalska']))
+    expect(requests.at(-1)?.get('import')).toBe('i1')
+    expect(await screen.findByText('From contacts.vcf')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Clear From contacts.vcf' }))
+
+    await waitFor(async () => expect(await cards()).toHaveLength(4))
+    expect(requests.at(-1)?.get('import')).toBeNull()
+    expect(screen.queryByText('From contacts.vcf')).not.toBeInTheDocument()
   })
 
   it('says when nothing matches, and clears the filters', async () => {

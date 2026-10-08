@@ -39,6 +39,7 @@ BASIC_FIELDS = ("name", "how_we_met", "work", "photo_caption")
 # How long a deleted person can be brought back. The app offers Undo for 10 seconds;
 # the rest is slack for a slow connection. The purge job runs every minute.
 UNDO_WINDOW = datetime.timedelta(minutes=1)
+TOO_LATE = "It's too late to bring them back."
 OWNER_ONLY_FIELDS = ("tags", "contact_methods")
 
 
@@ -123,7 +124,7 @@ def mark_access_ended_toasted(access: Access, notice: AccessEnded) -> None:
 def restore_person(access: Access, person: Person) -> Person:
     """Undo a delete, as long as it hasn't been made final yet."""
     if person.deleted_at is None or person.deleted_at < timezone.now() - UNDO_WINDOW:
-        raise Conflict("It's too late to bring them back.")
+        raise Conflict(TOO_LATE)
     person.deleted_at = None
     person.save(update_fields=["deleted_at", "updated_at"])
     return person

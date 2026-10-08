@@ -2,6 +2,8 @@ import { toast } from 'sonner'
 import { ToastCard } from '@/components/ui/toast'
 
 const DEFAULT_DURATION = 6000
+/** How long a toast offers Undo; the server keeps things a little longer, for slow connections. */
+export const UNDO_FOR = 10_000
 
 export type Notice = {
   title: string

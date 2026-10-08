@@ -10,6 +10,7 @@ from django.utils import timezone
 from django_tasks_db.models import DBTaskResult
 
 from accounts.models import Device
+from imports import tasks as imports_tasks
 from jobs import tasks
 from jobs.models import ScheduledRun
 from jobs.scheduler import PERIODIC_JOBS, Periodic, enqueue_due
@@ -58,6 +59,7 @@ def test_what_runs_how_often():
         (tasks.prune_task_results, DAY),
         # Makes deletes final once Undo runs out, so it must run about that often.
         (people_tasks.purge_deleted_people, datetime.timedelta(minutes=1)),
+        (imports_tasks.forget_taken_back_photos, datetime.timedelta(minutes=1)),
     }
 
 
