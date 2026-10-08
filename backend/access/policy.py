@@ -26,6 +26,7 @@ from django.db.models import (
 )
 
 from accounts.models import User
+from imports.models import Import
 from interactions.models import Interaction
 from people.models import AccessEnded, ContactMethod, HiddenPerson, MemoryAid, Note, Person
 from relationships.models import Relationship
@@ -335,6 +336,14 @@ def can_export_everything(access: Access) -> bool:
 def can_restore(access: Access) -> bool:
     """Restore replaces the whole book, private data included: full read-write access only."""
     return can_export_everything(access) and not access.read_only
+
+
+def visible_imports(access: Access) -> QuerySet[Import]:
+    """The user's own .vcf imports. Nobody else's: which people came from an import, and
+    the file's name, are the importer's own business."""
+    if access.is_space_limited:
+        return Import.objects.none()
+    return Import.objects.filter(owner=access.user)
 
 
 def can_import(access: Access) -> bool:

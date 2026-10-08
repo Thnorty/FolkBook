@@ -14,7 +14,7 @@ from django.db.models import (
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from ninja import File, Router, Status, UploadedFile
+from ninja import File, Query, Router, Status, UploadedFile
 from ninja.pagination import PageNumberPagination, paginate
 
 from access.policy import (
@@ -25,6 +25,7 @@ from access.policy import (
     hidden_people,
     restorable_people,
     visible_contact_methods,
+    visible_imports,
     visible_interactions,
     visible_memory_aids,
     visible_notes,
@@ -91,7 +92,16 @@ def detail(access: Access, person_id: UUID) -> Person:
     person.can_edit = can_edit_person(access, person)
     person.can_delete = can_delete_person(access, person)
     person.can_hide = can_hide_person(access, person)
+    person.from_import = (
+        visible_imports(access).filter(pk=person.added_by_import_id).first()
+        if person.added_by_import_id
+        else None
+    )
     return person
+
+
+# `import` is a Python keyword, so the parameter has another name in the code.
+IMPORT_PARAM = Query(None, alias="import")
 
 
 @router.get("", response=list[PersonOut])
@@ -103,11 +113,13 @@ def list_people(
     search: str = "",
     recent: bool = False,
     kept: bool = False,
+    import_id: UUID | None = IMPORT_PARAM,
 ):
     """Everyone the user can see, by name. `needs_details`: no "how we met" yet.
     `recent`: people added to your own book in the last 30 days, newest first (not kept
     copies: you didn't add those).
     `kept`: your copies of people you lost sight of.
+    `import`: the people one of your .vcf imports added.
 
     `search` matches names, how you met, work, tags, spaces and your own notes and
     memory aids, ignoring case and accents.
@@ -118,6 +130,8 @@ def list_people(
         people = people.filter(spaces__in=visible_spaces(access).filter(pk=space))
     if needs_details:
         people = people.filter(needs_details=True)
+    if import_id:
+        people = people.filter(added_by_import__in=visible_imports(access).filter(pk=import_id))
     if kept:
         people = people.filter(owner=access.user, kept_at__isnull=False)
     if recent:
