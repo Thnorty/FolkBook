@@ -102,7 +102,7 @@ def access_for_key(api_key: ApiKey) -> Access:
     )
 
 
-def revoke_api_key(access: Access, api_key: ApiKey) -> None:
+def revoke_api_key(api_key: ApiKey) -> None:
     """Anything using it stops working right away."""
     api_key.delete()
 

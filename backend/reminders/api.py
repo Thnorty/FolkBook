@@ -4,6 +4,7 @@ from uuid import UUID
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import Router
+from ninja.security import django_auth
 
 from access.policy import Access, visible_keep_in_touch, visible_people
 from core.api import access_for
@@ -26,12 +27,13 @@ def list_due(request, today: datetime.date | None = None):
     return due_nudges(access_for(request), today or timezone.localdate())
 
 
-@router.get("/settings", response=ReminderSettingsSchema)
+# Nudges for the whole book are the account's: the login cookie only, never an API key.
+@router.get("/settings", response=ReminderSettingsSchema, auth=django_auth)
 def get_settings(request):
     return settings_for(access_for(request).user)
 
 
-@router.put("/settings", response=ReminderSettingsSchema)
+@router.put("/settings", response=ReminderSettingsSchema, auth=django_auth)
 def save_settings(request, payload: ReminderSettingsSchema):
     return services.save_settings(access_for(request), payload.model_dump())
 

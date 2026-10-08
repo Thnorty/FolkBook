@@ -59,7 +59,9 @@ def validation_error(request, exc):
 
 @api.exception_handler(InvalidApiKey)
 def invalid_api_key(request, exc):
-    return api.create_response(request, {"detail": "This API key isn't valid."}, status=401)
+    response = api.create_response(request, {"detail": "This API key isn't valid."}, status=401)
+    response["WWW-Authenticate"] = "Bearer"
+    return response
 
 
 @api.exception_handler(TooManyRequests)

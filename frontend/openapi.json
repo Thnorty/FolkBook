@@ -3344,9 +3344,6 @@
         ],
         "security": [
           {
-            "ApiKeyAuth": []
-          },
-          {
             "SessionAuth": []
           }
         ]
@@ -3381,9 +3378,6 @@
           "required": true
         },
         "security": [
-          {
-            "ApiKeyAuth": []
-          },
           {
             "SessionAuth": []
           }

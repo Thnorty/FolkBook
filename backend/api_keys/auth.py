@@ -10,6 +10,14 @@ from api_keys.services import InvalidApiKey
 
 
 class ApiKeyAuth(HttpBearer):
+    def __call__(self, request: HttpRequest) -> User | None:
+        # Ninja's own version logs, in full, an Authorization header it doesn't understand
+        # when DEBUG is on: a key sent without "Bearer " must never reach a log.
+        scheme, _, token = request.headers.get(self.header, "").partition(" ")
+        if scheme.lower() != self.openapi_scheme:
+            return None
+        return self.authenticate(request, token)
+
     def authenticate(self, request: HttpRequest, token: str) -> User:
         # Raised, never None: None would let the login cookie sign the request in
         # instead, with full access, when a logged-in browser sends a bad key.
