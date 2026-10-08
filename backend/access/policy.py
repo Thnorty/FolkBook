@@ -181,6 +181,12 @@ def can_edit_person(access: Access, person: Person) -> bool:
     return editable_spaces(access).filter(spaceperson__person=person).exists()
 
 
+def can_merge_into(access: Access, person: Person) -> bool:
+    """Merge an imported contact into someone the user can already see: only their own
+    people, since contact details are the owner's to change."""
+    return not access.read_only and person.owner_id == access.user.pk
+
+
 def can_delete_person(access: Access, person: Person) -> bool:
     """Only the owner can delete a person, and never a Me (that's deleting the account)."""
     return (
