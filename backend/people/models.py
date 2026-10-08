@@ -150,6 +150,10 @@ class ContactMethod(BaseModel):
     label = models.CharField(max_length=50, blank=True)
     value = models.CharField(max_length=255)
     position = models.PositiveSmallIntegerField(default=0)
+    # Added to someone already in the book by merging an imported contact.
+    added_by_import = models.ForeignKey(
+        "imports.Import", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
 
     class Meta:
         ordering = ["position", "created_at"]

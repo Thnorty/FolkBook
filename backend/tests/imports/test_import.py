@@ -10,6 +10,7 @@ from PIL import Image
 
 from access.policy import Access
 from imports import services
+from imports.models import Merge
 from imports.schemas import ChoicesIn
 from people.models import ContactMethod, Note, Person
 from tests.factories import ContactMethodFactory, NoteFactory
@@ -242,3 +243,28 @@ def test_contact_details_are_compared_like_matching(api, world):
     run(api, world.ela, vcf(vcard("Emma", "EMAIL:emma@example.com")), merge(0, world.emma))
 
     assert world.emma.contact_methods.count() == 1
+
+
+def test_a_merge_records_what_it_added(api, world):
+    NoteFactory(author=world.ela, person=world.ines, body="Climbs on Tuesdays")
+
+    run(api, world.ela, vcf(INES), merge(0, world.ines))
+
+    [record] = Merge.objects.filter(person=world.ines)
+    assert record.batch.owner == world.ela
+    assert record.filled == {"work": "Doctor", "birthday": [2, 3, None]}
+    assert record.note == "\n\nFrom the climbing gym"
+    added = world.ines.contact_methods.filter(added_by_import=record.batch)
+    assert [m.value for m in added] == ["ines@example.com"]
+    assert world.ines.contact_methods.get(value="+46 70 555 12 90").added_by_import is None
+
+
+def test_a_merge_records_a_photo_and_a_new_note(api, world):
+    upload = vcf(vcard("Emma", f"PHOTO;ENCODING=b;TYPE=JPEG:{jpeg()}", "NOTE:Neighbour"))
+
+    run(api, world.ela, upload, merge(0, world.emma))
+
+    world.emma.refresh_from_db()
+    record = Merge.objects.get(person=world.emma)
+    assert record.filled == {"photo": world.emma.photo.name}
+    assert record.note == "Neighbour"

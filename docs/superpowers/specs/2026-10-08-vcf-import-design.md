@@ -95,7 +95,7 @@ Matching runs in a constant number of queries: the user's people with their phon
 4. **Space:** "Put the {N} new people in a space?" Chips for the spaces the user can add people to, plus "No space". Picking a shared space shows `SharedSpaceConfirm`. Merged people keep their own spaces.
 5. **Done:** "Imported {N} new people, in {space} · {M} merged into … · {K} left out (they stay in your phone)". Then **Later** (to People) or **Fill in the blanks →** (PR 2; until it ships, "Show them" opens the Needs details filter).
 
-**Data:** a new `Import` model (`owner`, `file_name`, `created_at`, `undone_at` null), and a nullable `Person.added_by_import` (FK, `SET_NULL`). Merged people aren't linked to the import. Migrations in `imports` and `people`.
+**Data:** a new `Import` model (`owner`, `file_name`, `created_at`, `undone_at` null), and a nullable `Person.added_by_import` (FK, `SET_NULL`). Merges are recorded so undo can reverse them (decided after the first review of this spec): a `Merge` row per merge (`batch`, `person`, `filled`: the fields it filled in with their values, `note`: the text it added to the user's note), and a nullable `ContactMethod.added_by_import` on the phones and emails it added. Migrations in `imports` and `people`.
 
 **Docs:** `UI_FLOWS.md` §3.6 drops the "continue enriching later" reminder on Today, because the design (4t) uses the Needs details filter instead. `DECISIONS.md` gets an "Import (.vcf)" entry.
 
@@ -130,7 +130,8 @@ Matching runs in a constant number of queries: the user's people with their phon
 - **Undo this import** opens a confirmation:
   - who goes ("5 people");
   - who stays: "2 you've written about since stay", meaning people with a note, memory aid, timeline entry, keep-in-touch or link by the user created after the import (notes added by the import itself don't count);
-  - then the same soft delete as tear out (`delete_person` for each, inside `keeping_copies` like any ending of access), with the 10-second Undo that brings them all back. The `Import` gets `undone_at`. People merged by the import aren't touched.
+  - then the same soft delete as tear out (`delete_person` for each, inside `keeping_copies` like any ending of access), with the 10-second Undo that brings them all back. The `Import` gets `undone_at`.
+  - merges are reversed too: the phones and emails the import added are removed; fields it filled in are emptied again if they still hold the imported value; a photo it added is removed if it's still the photo; the note text it added is taken off the end of the user's note if it's still there (the note goes if nothing else is left). Anything changed since stays as it is, and the confirmation says how many people get details taken back ("2 people you had lose the details this import added").
 - **API:** `GET /api/imports` (paginated, the user's own), `GET /api/imports/{id}/undo-preview`, `POST /api/imports/{id}/undo`, `POST /api/imports/{id}/redo` (the toast's Undo).
 - **Policy:** `visible_imports(access)` (own imports only; others are 404) and `can_undo_import(access, imp)` (read-write, full access).
 
@@ -151,5 +152,5 @@ Matching runs in a constant number of queries: the user's people with their phon
 - **Duplicates:** each rule and its reason; a shared person can't be merged into; people the user can't see never match; merge adds only what's missing and never overwrites; the query count doesn't grow with the file.
 - **Import:** one transaction, with nothing left behind on failure; every choice checked (unknown index, `into` that isn't the match, a space the user can't add to); 401, and limited API keys; `added_by_import` set only on people it added.
 - **Fill in the blanks:** the `import` filter only works on the user's own imports; the card's keys, chips (including the shared-space confirmation), Friend of…, and the swipe with and without reduced motion.
-- **Undo:** people the user wrote about since stay; merged people stay; `keeping_copies` runs; redo brings everyone back; another user's import is 404.
+- **Undo:** people the user wrote about since stay; merges are reversed except what was changed since; `keeping_copies` runs; redo brings everyone back; another user's import is 404.
 - **In the real app** (a throwaway database, Chrome via a Playwright script, desktop light and phone dark), as for restore: import a sample .vcf, merge one duplicate, put people in a space, fill in one card, undo the import. The repo has no committed end-to-end suite yet; setting one up is out of scope here.

@@ -16,3 +16,16 @@ class Import(BaseModel):
 
     def __str__(self) -> str:
         return self.file_name
+
+
+class Merge(BaseModel):
+    """What an import's merge added to someone already in the book, so undoing the import
+    can take it back out (leaving anything changed since). The contact details it added
+    point to the import themselves (`ContactMethod.added_by_import`)."""
+
+    batch = models.ForeignKey(Import, on_delete=models.CASCADE, related_name="merges")
+    person = models.ForeignKey("people.Person", on_delete=models.CASCADE, related_name="+")
+    # Fields that were empty and got the contact's value: {"work": …, "birthday":
+    # [day, month, year], "photo": file name}.
+    filled = models.JSONField(default=dict)
+    note = models.TextField(blank=True)  # the text added to the user's note, as added

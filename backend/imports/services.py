@@ -17,7 +17,7 @@ from access.policy import (
 )
 from accounts.models import User
 from imports.matching import Match, find_matches, phone_key
-from imports.models import Import
+from imports.models import Import, Merge
 from imports.schemas import (
     ChoicesIn,
     ContactOut,
@@ -75,7 +75,7 @@ def run_import(access: Access, upload: UploadedFile, choices: ChoicesIn) -> Impo
                 )
             merges = [(card, match) for card, pick, match in picks if pick.action == "merge"]
             for card, match in merges:
-                merge_into(match.person, card, user, stored)
+                merge_into(match.person, card, user, batch, stored)
     except BaseException:
         for name in stored:
             default_storage.delete(name)
@@ -89,29 +89,39 @@ def run_import(access: Access, upload: UploadedFile, choices: ChoicesIn) -> Impo
     )
 
 
-def merge_into(person: Person, card: Card, user: User, stored: list[str]) -> None:
-    """Add to `person` what the card has and they don't. Overwrites nothing."""
+def merge_into(person: Person, card: Card, user: User, batch: Import, stored: list[str]) -> None:
+    """Add to `person` what the card has and they don't, and record what that was, so the
+    import can be undone. Overwrites nothing."""
     methods = list(person.contact_methods.all())
     phones = {_phone(m.value) for m in methods if m.kind == ContactMethod.ContactKind.PHONE}
     emails = {_email(m.value) for m in methods if m.kind == ContactMethod.ContactKind.EMAIL}
     new_phones = [d for d in card.phones if _phone(d.value) not in phones]
     new_emails = [d for d in card.emails if _email(d.value) not in emails]
     start = max((m.position for m in methods), default=-1) + 1
-    ContactMethod.objects.bulk_create(_contact_methods(person, new_phones, new_emails, start))
-    if not person.work:
-        person.work = card.work
+    added = _contact_methods(person, new_phones, new_emails, start)
+    for method in added:
+        method.added_by_import = batch
+    ContactMethod.objects.bulk_create(added)
+    filled: dict = {}
+    if not person.work and card.work:
+        person.work = filled["work"] = card.work
     if card.birthday and person.birth_day is None:
         person.birth_day, person.birth_month, person.birth_year = card.birthday
+        filled["birthday"] = list(card.birthday)
     if card.photo and not person.photo:
         _store_photo(person, card, stored)
+        filled["photo"] = person.photo.name
     person.save()
+    appended = ""
     if card.note:
         note, created = Note.objects.get_or_create(
             author=user, person=person, defaults={"body": card.note}
         )
+        appended = card.note if created else f"\n\n{card.note}"
         if not created:
-            note.body = f"{note.body}\n\n{card.note}"
+            note.body += appended
             note.save(update_fields=["body", "updated_at"])
+    Merge.objects.create(batch=batch, person=person, filled=filled, note=appended)
 
 
 def read_upload(upload: UploadedFile) -> tuple[list[Card], int]:
