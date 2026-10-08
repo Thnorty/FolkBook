@@ -67,3 +67,18 @@ export async function unwrap<T>(request: Promise<{ data?: T }>): Promise<T> {
   const { data } = await request
   return data as T
 }
+
+/**
+ * The options for sending `fields` as a form (multipart), e.g. to upload a file. The
+ * generated types say string for files; the form really sends them.
+ */
+export function formUpload<T extends Record<string, string | Blob>>(fields: T) {
+  return {
+    body: fields as unknown as { [K in keyof T]: string },
+    bodySerializer: () => {
+      const form = new FormData()
+      for (const [name, value] of Object.entries(fields)) form.append(name, value)
+      return form
+    },
+  }
+}

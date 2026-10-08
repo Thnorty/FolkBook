@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { Button } from '@/components/ui/button'
 import { Choice } from '@/components/ui/choice'
+import { FileButton } from '@/components/ui/file-button'
 import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
@@ -162,22 +163,10 @@ export function PersonForm({
           caption={photoUrl ? caption : undefined}
         />
         <div className="flex flex-col items-start gap-1.5">
-          <Button asChild variant="secondary">
-            <label className="cursor-pointer has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
-              <ImagePlus aria-hidden />
-              {photoUrl ? 'Replace photo' : 'Add photo'}
-              <input
-                ref={photoInput}
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={(event) => {
-                  pickFile(event.target.files?.[0])
-                  event.target.value = ''
-                }}
-              />
-            </label>
-          </Button>
+          <FileButton ref={photoInput} accept="image/*" onFile={pickFile}>
+            <ImagePlus aria-hidden />
+            {photoUrl ? 'Replace photo' : 'Add photo'}
+          </FileButton>
           {photoUrl && (
             <Button
               type="button"
