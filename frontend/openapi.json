@@ -3765,6 +3765,55 @@
           }
         ]
       }
+    },
+    "/api/imports/preview": {
+      "post": {
+        "operationId": "imports_api_preview_import",
+        "summary": "Preview Import",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The contacts in a .vcf, each with who they may already be in your book.\nNothing is stored.",
+        "tags": [
+          "import"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -6935,6 +6984,195 @@
           "photos"
         ],
         "title": "RestoreSummary",
+        "type": "object"
+      },
+      "ContactOut": {
+        "properties": {
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phones": {
+            "items": {
+              "$ref": "#/components/schemas/DetailOut"
+            },
+            "title": "Phones",
+            "type": "array"
+          },
+          "emails": {
+            "items": {
+              "$ref": "#/components/schemas/DetailOut"
+            },
+            "title": "Emails",
+            "type": "array"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "work": {
+            "title": "Work",
+            "type": "string"
+          },
+          "has_photo": {
+            "title": "Has Photo",
+            "type": "boolean"
+          },
+          "match": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MatchOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "index",
+          "name",
+          "phones",
+          "emails",
+          "birthday",
+          "work",
+          "has_photo",
+          "match"
+        ],
+        "title": "ContactOut",
+        "type": "object"
+      },
+      "DetailOut": {
+        "properties": {
+          "value": {
+            "title": "Value",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "DetailOut",
+        "type": "object"
+      },
+      "MatchOut": {
+        "description": "Who the contact may already be, with what they have now, to compare.",
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PhotoOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "phones": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Phones",
+            "type": "array"
+          },
+          "emails": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Emails",
+            "type": "array"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceRef"
+            },
+            "title": "Spaces",
+            "type": "array"
+          },
+          "reason": {
+            "enum": [
+              "phone",
+              "email",
+              "name",
+              "initial"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "sure": {
+            "title": "Sure",
+            "type": "boolean"
+          },
+          "can_merge": {
+            "title": "Can Merge",
+            "type": "boolean"
+          },
+          "by_details": {
+            "title": "By Details",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "person",
+          "owner",
+          "photo",
+          "phones",
+          "emails",
+          "spaces",
+          "reason",
+          "sure",
+          "can_merge",
+          "by_details"
+        ],
+        "title": "MatchOut",
+        "type": "object"
+      },
+      "PreviewOut": {
+        "properties": {
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/ContactOut"
+            },
+            "title": "Contacts",
+            "type": "array"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_name",
+          "contacts",
+          "skipped"
+        ],
+        "title": "PreviewOut",
         "type": "object"
       }
     },

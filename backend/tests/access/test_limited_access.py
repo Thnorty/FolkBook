@@ -5,6 +5,7 @@ from access.policy import (
     can_create_relationship,
     can_delete_person,
     can_edit_person,
+    can_import,
     can_leave_space,
     can_write_private,
     visible_access_ended,
@@ -74,3 +75,14 @@ def test_all_spaces_read_only_access_sees_everything_the_user_sees(world):
     key = Access.limited(world.ela)
 
     assert set(visible_people(key)) == set(visible_people(Access.for_user(world.ela)))
+
+
+def test_importing_contacts_needs_full_read_write_access(world):
+    assert can_import(Access.for_user(world.ela))
+    assert not can_import(Access.limited(world.ela, include_private=True, read_only=True))
+    assert not can_import(Access.limited(world.ela, include_private=False, read_only=False))
+    assert not can_import(
+        Access.limited(
+            world.ela, space_ids=[world.climbing.pk], include_private=True, read_only=False
+        )
+    )

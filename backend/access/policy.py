@@ -337,6 +337,12 @@ def can_restore(access: Access) -> bool:
     return can_export_everything(access) and not access.read_only
 
 
+def can_import(access: Access) -> bool:
+    """Import contacts: it adds people, notes and photos across the whole book, so full
+    read-write access only."""
+    return access.include_private and not access.read_only and not access.is_space_limited
+
+
 def shares_book(user: User) -> bool:
     """Whether anyone else sees part of the user's book, or the user part of theirs."""
     return SpaceMembership.objects.filter(Q(user=user) | Q(space__owner=user)).exists()

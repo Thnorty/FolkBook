@@ -12,7 +12,13 @@ from typing import Literal
 
 from django.db.models import Prefetch
 
-from access.policy import Access, can_merge_into, visible_contact_methods, visible_people
+from access.policy import (
+    Access,
+    can_merge_into,
+    visible_contact_methods,
+    visible_people,
+    visible_spaces,
+)
 from imports.vcard import Card
 from people.models import ContactMethod, Person
 
@@ -48,7 +54,8 @@ def find_matches(access: Access, cards: list[Card]) -> list[Match | None]:
         visible_people(access)
         .select_related("owner")
         .prefetch_related(
-            Prefetch("contact_methods", visible_contact_methods(access), to_attr="shown")
+            Prefetch("contact_methods", visible_contact_methods(access), to_attr="shown"),
+            Prefetch("spaces", visible_spaces(access).order_by("name"), to_attr="spaces_shown"),
         )
     )
     # The user's own people first, so they win a tie with someone shared.

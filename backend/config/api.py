@@ -9,6 +9,7 @@ from accounts.api import users_router
 from core.api import Conflict, validation_detail
 from exports.api import router as export_router
 from graph.api import router as graph_router
+from imports.api import router as imports_router
 from interactions.api import router as interactions_router
 from invites.api import router as invites_router
 from invites.api import setup_router
@@ -37,6 +38,7 @@ api.add_router("/keep-in-touch", reminders_router)
 api.add_router("/today", today_router)
 api.add_router("/search", search_router)
 api.add_router("/export", export_router)
+api.add_router("/imports", imports_router)
 
 
 @api.exception_handler(PermissionDenied)
