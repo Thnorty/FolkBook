@@ -92,12 +92,13 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 6. No AI key set → the button explains how to add one; manual form still available
 
 ### 3.6 Import contacts (.vcf)
-1. Settings → Import (or onboarding) → upload `.vcf`
-2. Parsed list with checkboxes, all unchecked by default ("select who you actually know")
-3. Duplicate detection: "Looks like Anna K. already exists → merge / skip / import as new"
-4. Optional: assign selected people to a space
-5. **Enrichment mode** (optional): card-by-card walk through imported people: "How do you know Anna?", add a memory aid, skip. Swipe/next on mobile
-6. Summary + "continue enriching later" reminder on Today
+A wizard at `/people/import` (Upload · Choose · Duplicates · Space · Done). Nothing is added until the last step.
+1. Settings → Import / export → **Import contacts** (onboarding later, once it exists) → drop or choose a `.vcf`
+2. **Choose:** the file's contacts, all unchecked ("select who you actually know"), with a search, "Maybe in your book" on possible matches and "Hide N already in your book"
+3. **Duplicates** (only if any): one at a time, "Looks like Anna K. already exists", the reason, both sides compared with what a merge adds in blue → **Merge** (only into your own people) / **Skip** / **Import as new**
+4. **Space** (optional) for the new people; a shared space asks first
+5. **Done:** "Imported 5 new people, in Work · 1 merged into Anna Kowalska · 208 left out" → Later / **Fill in the blanks** (card-by-card: "How do you know Anna?", a space chip, Friend of…, a memory aid; swipe on mobile, keys on desktop). People not filled in are found later under the **Needs details** filter (no Today reminder).
+6. **Recent imports** (Settings → Import / export): Show these people · Undo this import (keeps anyone you've written about since; takes back what merges added unless it changed since)
 
 ### 3.7 Spaces
 - **Create:** name, color/tab, optional description. Private by default

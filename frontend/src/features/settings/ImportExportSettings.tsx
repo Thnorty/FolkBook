@@ -1,5 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
+import { Upload } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
 import { DownloadLink } from '@/components/ui/download-link'
 import { FileButton } from '@/components/ui/file-button'
 import { selectClass } from '@/components/ui/select'
@@ -25,6 +28,19 @@ export function ImportExportSettings() {
   const [space, setSpace] = useState('')
   return (
     <SettingsPage title="Import / export">
+      <SettingsPart title="Import">
+        <ExportRow
+          title="Contacts (.vcf)"
+          description="From your phone or Google Contacts. You choose who comes in."
+        >
+          <Button asChild>
+            <Link to="/people/import">
+              <Upload aria-hidden />
+              Import contacts
+            </Link>
+          </Button>
+        </ExportRow>
+      </SettingsPart>
       <SettingsPart
         title="Export"
         note="Full exports include your private notes. Keep the file somewhere safe."

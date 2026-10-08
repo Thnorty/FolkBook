@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
 import { LineCurve3, Mesh, TubeGeometry, Vector3 } from 'three'
-import { initials } from './faces'
 import { nearestLine } from './lineReach'
 import {
   NO_FILTERS,
@@ -291,15 +290,6 @@ describe('linesAround', () => {
   it('lights up a line and the two people it joins', () => {
     const edges = [{ id: 'e2', source: 'ayse', target: 'kerem', fill: 'line' }]
     expect(linesAround(edges, { line: 'e2' })).toEqual(['ayse', 'kerem', 'e2'])
-  })
-})
-
-describe('initials', () => {
-  it('takes the first and last names, in any script case', () => {
-    expect(initials('Emma Yılmaz')).toBe('EY')
-    expect(initials('Ela')).toBe('E')
-    expect(initials('şükrü öztürk')).toBe('ŞÖ')
-    expect(initials('Anna Maria van der Berg')).toBe('AB')
   })
 })
 

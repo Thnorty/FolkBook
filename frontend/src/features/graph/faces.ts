@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { initials } from '@/lib/names'
 import { nodeFill, type GraphData } from './graphModel'
 import type { CanvasColors } from './usePalette'
 
@@ -12,13 +13,6 @@ const SIZE = 128
 const RIM = 8
 
 type Face = { initials: string; fill: string; photo?: HTMLImageElement }
-
-/** "Emma Yılmaz" → "EY", "Ela" → "E". */
-export function initials(name: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean)
-  const letters = words.length > 1 ? [words[0], words.at(-1)!] : words
-  return letters.map((word) => word[0].toLocaleUpperCase()).join('')
-}
 
 function draw({ initials: text, fill, photo }: Face, colors: CanvasColors): string | undefined {
   const canvas = document.createElement('canvas')

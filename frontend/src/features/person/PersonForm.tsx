@@ -9,8 +9,8 @@ import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
 import { SharedSpaceConfirm } from '@/features/spaces/SharedSpaceConfirm'
-import { spacesQuery, type Space } from '@/features/spaces/queries'
-import { useDismissed } from '@/lib/useDismissed'
+import { canAddPeople, spacesQuery, type Space } from '@/features/spaces/queries'
+import { useSharedSpaceConfirmed } from '@/features/spaces/useSharedSpaceConfirmed'
 import { cn } from '@/lib/utils'
 import { BirthdayFields, ContactFields, TagInput, type ContactValue } from './PersonFormFields'
 import { birthdayInput, type BirthdayValue } from './birthday'
@@ -57,16 +57,14 @@ export function PersonForm({
   formId,
 }: PersonFormProps) {
   const ownsDetails = !person || person.is_mine // tags and contact details: owner only
-  const spaces = (useQuery(spacesQuery).data?.items ?? []).filter(
-    (space) => space.role !== 'viewer',
-  )
+  const spaces = (useQuery(spacesQuery).data?.items ?? []).filter(canAddPeople)
   const [name, setName] = useState(person?.name ?? initialName ?? '')
   const [howWeMet, setHowWeMet] = useState(person?.how_we_met ?? '')
   const [work, setWork] = useState(person?.work ?? '')
   const [pronouns, setPronouns] = useState<Pronouns | ''>(person?.pronouns ?? '')
   const [spaceIds, setSpaceIds] = useState(person?.spaces.map((space) => space.id) ?? [])
   const [askFor, setAskFor] = useState<Space | null>(null)
-  const [confirmedShared, dontAskAgain] = useDismissed('folkbook.sharedSpaceConfirmed')
+  const [confirmedShared, dontAskAgain] = useSharedSpaceConfirmed()
   const [birthday, setBirthday] = useState(birthdayOf(person))
   const [contacts, setContacts] = useState<ContactValue[]>(
     person?.contact_methods.map(({ kind, label, value }) => ({ kind, label, value })) ?? [],

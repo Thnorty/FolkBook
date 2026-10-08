@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { clearCookies, fakeServer, json } from '../test/fakeServer'
-import { createApiClient, unwrap } from './client'
+import { createApiClient, formUpload, unwrap } from './client'
 import { ApiError } from './errors'
 
 const ME = { id: '1', email: 'ela@example.com', is_admin: false }
@@ -142,5 +142,17 @@ describe('unwrap', () => {
     fakeServer({ 'GET /api/auth/me': () => json(ME) })
 
     await expect(unwrap(createApiClient().GET('/api/auth/me'))).resolves.toEqual(ME)
+  })
+})
+
+describe('formUpload', () => {
+  it('sends files and text as they are, and anything else as JSON', () => {
+    const file = new File(['BEGIN:VCARD'], 'contacts.vcf')
+
+    const form = formUpload({ file, name: 'Ela', choices: { picked: [1, 2] } }).bodySerializer()
+
+    expect(form.get('file')).toBe(file)
+    expect(form.get('name')).toBe('Ela')
+    expect(form.get('choices')).toBe('{"picked":[1,2]}')
   })
 })

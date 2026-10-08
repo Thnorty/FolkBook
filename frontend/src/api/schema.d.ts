@@ -1322,6 +1322,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/imports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Import
+         * @description The contacts in a .vcf, each with who they may already be in your book.
+         *     Nothing is stored.
+         */
+        post: operations["imports_api_preview_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Import
+         * @description Import a .vcf: the same file as the preview, plus `choices` (a JSON form field):
+         *     who to add, who to merge into the person they matched, and a space for the new
+         *     people.
+         */
+        post: operations["imports_api_run_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2503,6 +2546,118 @@ export interface components {
             spaces: number;
             /** Photos */
             photos: number;
+        };
+        /**
+         * AdditionsOut
+         * @description What a merge would add: details they don't have, fields that are still empty.
+         */
+        AdditionsOut: {
+            /** Phones */
+            phones: string[];
+            /** Emails */
+            emails: string[];
+            /** Work */
+            work: string;
+            birthday: components["schemas"]["Birthday"] | null;
+            /** Photo */
+            photo: boolean;
+            /** Note */
+            note: boolean;
+        };
+        /** ContactOut */
+        ContactOut: {
+            /** Index */
+            index: number;
+            /** Name */
+            name: string;
+            /** Phones */
+            phones: components["schemas"]["DetailOut"][];
+            /** Emails */
+            emails: components["schemas"]["DetailOut"][];
+            birthday: components["schemas"]["Birthday"] | null;
+            /** Work */
+            work: string;
+            /** Has Photo */
+            has_photo: boolean;
+            match: components["schemas"]["MatchOut"] | null;
+        };
+        /** DetailOut */
+        DetailOut: {
+            /** Value */
+            value: string;
+            /** Label */
+            label: string;
+        };
+        /**
+         * MatchOut
+         * @description Who the contact may already be, with what they have now, to compare.
+         */
+        MatchOut: {
+            person: components["schemas"]["PersonRef"];
+            /** Owner */
+            owner: string;
+            photo: components["schemas"]["PhotoOut"] | null;
+            /** Phones */
+            phones: string[];
+            /** Emails */
+            emails: string[];
+            /** Spaces */
+            spaces: components["schemas"]["SpaceRef"][];
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "phone" | "email" | "name" | "initial";
+            /** Sure */
+            sure: boolean;
+            /** Can Merge */
+            can_merge: boolean;
+            /** By Details */
+            by_details: boolean;
+            adds: components["schemas"]["AdditionsOut"] | null;
+        };
+        /** PreviewOut */
+        PreviewOut: {
+            /** File Name */
+            file_name: string;
+            /** Contacts */
+            contacts: components["schemas"]["ContactOut"][];
+            /** Skipped */
+            skipped: number;
+        };
+        /** ImportOut */
+        ImportOut: {
+            /**
+             * Import Id
+             * Format: uuid
+             */
+            import_id: string;
+            /** Added */
+            added: number;
+            /** Merged */
+            merged: number;
+            /** Left Out */
+            left_out: number;
+            space: components["schemas"]["SpaceRef"] | null;
+        };
+        /** ChoicesIn */
+        ChoicesIn: {
+            /** Picked */
+            picked: components["schemas"]["PickIn"][];
+            /** Space */
+            space?: string | null;
+        };
+        /** PickIn */
+        PickIn: {
+            /** Index */
+            index: number;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "new" | "merge" | "skip";
+            /** Into */
+            into?: string | null;
         };
     };
     responses: never;
@@ -4615,6 +4770,67 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RestoreSummary"];
+                };
+            };
+        };
+    };
+    imports_api_preview_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * File
+                     * Format: binary
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewOut"];
+                };
+            };
+        };
+    };
+    imports_api_run_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * File
+                     * Format: binary
+                     */
+                    file: string;
+                    choices: components["schemas"]["ChoicesIn"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
                 };
             };
         };

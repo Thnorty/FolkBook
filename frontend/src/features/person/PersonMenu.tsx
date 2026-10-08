@@ -9,6 +9,7 @@ import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass } from '@/components/ui/menu'
 import { personCopyUrl } from '@/features/settings/queries'
 import { membersQuery, spacesQuery, type Space } from '@/features/spaces/queries'
+import { words } from '@/lib/names'
 import { notify, type Notice } from '@/lib/notify'
 import { cn } from '@/lib/utils'
 import { tearOut } from '@/motion/tearOut'
@@ -236,10 +237,4 @@ function useWhatGoes(person: PersonDetail, open: boolean) {
     ].filter((line): line is string => Boolean(line)),
     summary: went ? `${went} went with them.` : undefined,
   }
-}
-
-/** "a", "a and b", "a, b and c"; nothing for none. */
-function words(parts: (string | false)[]): string {
-  const kept = parts.filter((part): part is string => Boolean(part))
-  return kept.length > 1 ? `${kept.slice(0, -1).join(', ')} and ${kept.at(-1)}` : (kept[0] ?? '')
 }

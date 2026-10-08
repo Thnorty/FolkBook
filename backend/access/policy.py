@@ -181,6 +181,12 @@ def can_edit_person(access: Access, person: Person) -> bool:
     return editable_spaces(access).filter(spaceperson__person=person).exists()
 
 
+def can_merge_into(access: Access, person: Person) -> bool:
+    """Merge an imported contact into someone the user can already see: only their own
+    people, since contact details are the owner's to change."""
+    return not access.read_only and person.owner_id == access.user.pk and person.deleted_at is None
+
+
 def can_delete_person(access: Access, person: Person) -> bool:
     """Only the owner can delete a person, and never a Me (that's deleting the account)."""
     return (
@@ -329,6 +335,12 @@ def can_export_everything(access: Access) -> bool:
 def can_restore(access: Access) -> bool:
     """Restore replaces the whole book, private data included: full read-write access only."""
     return can_export_everything(access) and not access.read_only
+
+
+def can_import(access: Access) -> bool:
+    """Import contacts: it adds people, notes and photos across the whole book, so full
+    read-write access only."""
+    return access.include_private and not access.read_only and not access.is_space_limited
 
 
 def shares_book(user: User) -> bool:

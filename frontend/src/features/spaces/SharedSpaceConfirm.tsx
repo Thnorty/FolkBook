@@ -6,8 +6,9 @@ import { membersQuery, type Space } from './queries'
 
 type SharedSpaceConfirmProps = {
   space: Space
-  /** Who's being added, e.g. "Tom Bergqvist". */
-  personName: string
+  /** Who's being added, e.g. "Tom Bergqvist"; or `count` people at once (an import). */
+  personName?: string
+  count?: number
   onConfirm: (dontAskAgain: boolean) => void
   onCancel: () => void
 }
@@ -15,7 +16,8 @@ type SharedSpaceConfirmProps = {
 /** "Tom will be visible to 4 people", the first time someone goes into a shared space (4j, 4k). */
 export function SharedSpaceConfirm({
   space,
-  personName,
+  personName = '',
+  count,
   onConfirm,
   onCancel,
 }: SharedSpaceConfirmProps) {
@@ -28,9 +30,13 @@ export function SharedSpaceConfirm({
       open
       onOpenChange={(open) => !open && onCancel()}
       tone="plain"
-      title={`${firstName} will be visible to ${peopleCount(space.member_count)}`}
-      description={`They'll see ${firstName}'s basic profile and links to people in ${space.name}. Your notes and memory aids stay private.`}
-      confirmLabel={`Add ${firstName} to ${space.name}`}
+      title={`${count === undefined ? firstName : peopleCount(count)} will be visible to ${peopleCount(space.member_count)}`}
+      description={
+        count === undefined
+          ? `They'll see ${firstName}'s basic profile and links to people in ${space.name}. Your notes and memory aids stay private.`
+          : `They'll see their basic profiles and links to people in ${space.name}. Your notes and memory aids stay private.`
+      }
+      confirmLabel={`Add ${count === undefined ? firstName : 'them'} to ${space.name}`}
       onConfirm={() => onConfirm(remember)}
     >
       {others.length > 0 && (
