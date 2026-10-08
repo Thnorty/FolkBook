@@ -3586,6 +3586,41 @@
         ]
       }
     },
+    "/api/export/people/{person_id}": {
+      "get": {
+        "operationId": "exports_api_export_person",
+        "summary": "Export Person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A .zip like the full export, of one person",
+            "content": {
+              "application/zip": {}
+            }
+          }
+        },
+        "description": "A copy of one person to keep (before tearing them out): them, everything you wrote\nabout them, and your links to them. Not a book to restore.",
+        "tags": [
+          "export"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/export/contacts": {
       "get": {
         "operationId": "exports_api_export_contacts",

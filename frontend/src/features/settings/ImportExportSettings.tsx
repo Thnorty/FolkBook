@@ -1,7 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Download } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
+import { DownloadLink } from '@/components/ui/download-link'
 import { FileButton } from '@/components/ui/file-button'
 import { selectClass } from '@/components/ui/select'
 import { countOf } from '@/features/person/labels'
@@ -38,7 +37,6 @@ export function ImportExportSettings() {
             `${peopleCount(summary.people)} · ${countOf(summary.photos, 'photo')} · ~${fileSize(summary.size)} zip`
           }
         >
-          {/* Plain links: the browser downloads the file itself, however big. */}
           <DownloadLink href={EXPORT_URL}>Export .zip</DownloadLink>
         </ExportRow>
         <ExportRow
@@ -60,7 +58,7 @@ export function ImportExportSettings() {
               ))}
             </select>
           </div>
-          <DownloadLink href={contactsExportUrl(space || undefined)} secondary>
+          <DownloadLink href={contactsExportUrl(space || undefined)} variant="secondary">
             Export
           </DownloadLink>
         </ExportRow>
@@ -144,25 +142,6 @@ function ExportRow({
       </div>
       {footer}
     </div>
-  )
-}
-
-function DownloadLink({
-  href,
-  secondary,
-  children,
-}: {
-  href: string
-  secondary?: boolean
-  children: ReactNode
-}) {
-  return (
-    <Button asChild variant={secondary ? 'secondary' : 'primary'}>
-      <a href={href} download>
-        <Download aria-hidden />
-        {children}
-      </a>
-    </Button>
   )
 }
 

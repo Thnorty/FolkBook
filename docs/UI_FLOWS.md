@@ -172,7 +172,7 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 - **Nudges:** global on/off, default interval, email frequency (daily / weekly digest), "Send test email"
 - **Admin only: email (SMTP):** host, port, user, password, from address, TLS, "Send test email". Can also be set via env vars. Not configured → banner: "Email isn't set up; reminders only show on Today"
 - **Import / Export:** .vcf import, full export (JSON + photos: "Everything", with how many people and photos and the rough size, and a reminder that it holds private notes), .vcf export, restore
-  - **Restore:** "Choose .zip" → the server checks the file (a broken file, one from a newer FolkBook, or a shared book is explained right under the button) → "Replace everything in your book?" shows whose book the file is, its people, spaces and photos, and how many people you have now → type your email to turn Restore on → toast "Your book is restored"
+  - **Restore:** "Choose .zip" → the server checks the file (a broken file, one from a newer FolkBook, or a shared book is explained right under the button) → "Replace everything in your book?" shows whose book the file is, its people, spaces and photos, and how many people you have now, with **Download a copy of your book first** (the full export) → type your email to turn Restore on → toast "Your book is restored"
 - **Appearance:** light / dark / system, reduce motion
 - **Admin only:** users, invite links, server info
 
@@ -211,7 +211,7 @@ Inspired by the kind of details collected on [Design Spells](https://designspell
 - **Long-press person card (mobile):** radial or popup quick menu: log interaction, add memory aid, open in graph
 - **Ink path in graph:** "How do I know…?" draws the path hop by hop like a pen stroke
 - **Tabbed dividers:** switching spaces slides the colored tab like a notebook divider
-- **Delete = tear out:** profile **⋯ → Tear out of the book…** → a confirm dialog lists what goes with them (connections, your memory aids, timeline and note, the spaces they leave) and warns who in a shared space will stop seeing them, by name ("Bora Kaya will no longer see Deniz there"; past four names, "and N others") → the page tears away and a 10-second Undo toast appears
+- **Delete = tear out:** profile **⋯ → Tear out of the book…** → a confirm dialog lists what goes with them (connections, your memory aids, timeline and note, the spaces they leave) and warns who in a shared space will stop seeing them, by name ("Bora Kaya will no longer see Deniz there"; past four names, "and N others"), and offers **Download a copy first** (a .zip of just them, see Decisions) → the page tears away and a 10-second Undo toast appears
 - **Birthday occasion:** subtle confetti / doodle on a person's profile on their birthday
 - **Doodle empty states:** hand-drawn illustrations for empty Today, empty graph, no results
 - **Easter egg:** tapping your own "Me" polaroid a few times flips it to a hidden back side

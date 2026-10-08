@@ -348,6 +348,13 @@ def test_files_that_arent_exports(world, newcomer, make_file, message):
         restore_into(newcomer, make_file(export_of(world.ela)))
 
 
+def test_a_copy_of_one_person_isnt_a_book_to_restore(world, newcomer):
+    export, _ = services.build(Access.for_user(world.ela), world.oskar)
+
+    with pytest.raises(ValidationError, match="copy of one person"):
+        restore.check(Access.for_user(newcomer), zip_of(export))
+
+
 def zip_bytes(files: dict[str, bytes]) -> bytes:
     out = io.BytesIO()
     with zipfile.ZipFile(out, "w") as archive:

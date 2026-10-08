@@ -19,6 +19,7 @@ from tests.factories import (
     NoteFactory,
     PersonFactory,
     RelationshipFactory,
+    SpaceFactory,
     TagFactory,
 )
 
@@ -231,3 +232,95 @@ def test_query_count_does_not_grow_with_the_book(world):
         RelationshipFactory(owner=world.ela, person_a=person, person_b=world.oskar)
 
     assert queries() == before
+
+
+# ---------------------------------------------------------------- a copy of one person
+
+
+def copy_of(user, person) -> ExportFile:
+    export, _ = services.build(Access.for_user(user), person)
+    return export
+
+
+def test_a_copy_of_one_person_holds_them_and_what_you_wrote(world):
+    copy = copy_of(world.ela, world.oskar)
+
+    assert copy.contents == "person"
+    assert export_of(world.ela).contents == "everything"
+    assert by_name(copy, "Oskar").shared is None
+    assert [note.body for note in copy.notes] == ["Ela: Oskar sets the Tuesday routes."]
+    assert len(copy.memory_aids) == len(copy.timeline) == len(copy.keep_in_touch) == 1
+
+
+def test_the_people_they_are_linked_to_come_with_just_the_basics(world):
+    world.emma.photo.save("emma.webp", ContentFile(b"emma's face"))
+    world.emma.tags.add(TagFactory(owner=world.ela, name="uni"))
+    NoteFactory(author=world.ela, person=world.emma, body="About Emma")
+    MemoryAidFactory(author=world.ela, person=world.ines)
+
+    export, photos = services.build(Access.for_user(world.ela), world.oskar)
+
+    assert names(export) == {"Oskar", "Emma", "Ines"}  # not Ela: no link to her
+    emma, ines = by_name(export, "Emma"), by_name(export, "Ines")
+    assert (emma.photo, emma.tags, ines.contacts) == (None, [], [])
+    assert photos == []
+    assert {note.person for note in export.notes} == {world.oskar.pk}
+    assert {aid.person for aid in export.memory_aids} == {world.oskar.pk}
+
+
+def test_only_your_links_to_them(world):
+    RelationshipFactory(owner=world.ela, person_a=world.emma, person_b=world.ines)
+    RelationshipFactory(owner=world.deniz, person_a=world.oskar, person_b=world.yuki)
+
+    links = copy_of(world.ela, world.oskar).links
+
+    assert sorted(ends_of(link) for link in links) == sorted(
+        ends(link)
+        for link in [world.emma_oskar_private, world.oskar_ines, world.oskar_emma_in_climbing]
+    )
+
+
+def ends_of(link) -> tuple:
+    return (link.person_a, link.person_b, link.type)
+
+
+def test_only_the_spaces_they_are_in(world):
+    other = SpaceFactory(owner=world.ela, name="Uni")
+    other.people.add(world.emma)
+
+    [climbing] = copy_of(world.ela, world.oskar).spaces
+
+    assert climbing.name == "Climbing club"
+    assert set(climbing.people) == {world.oskar.pk, world.ines.pk}
+
+
+def test_a_copy_never_holds_anyone_elses_notes(world):
+    copy = copy_of(world.deniz, world.oskar)  # Deniz sees Oskar through Climbing club
+
+    assert [note.body for note in copy.notes] == ["Deniz: owes me a belay."]
+    assert copy.memory_aids == copy.timeline == copy.keep_in_touch == []
+
+
+def test_the_copy_downloads_as_a_zip_named_after_them(api, world):
+    world.oskar.name = "Oskar Şen"
+    world.oskar.save()
+    world.oskar.photo.save("oskar.webp", ContentFile(b"oskar's face"))
+
+    response = api.login(world.ela).get(f"/export/people/{world.oskar.pk}")
+
+    assert response.status_code == 200
+    assert "Oskar%20%C5%9Een" in response["Content-Disposition"]
+    archive = zipfile.ZipFile(io.BytesIO(b"".join(response.streaming_content)))
+    export = ExportFile.model_validate(json.loads(archive.read("folkbook.json")))
+    assert export.contents == "person"
+    assert archive.read(by_name(export, "Oskar Şen").photo) == b"oskar's face"
+    assert "one person" in archive.read("README.txt").decode()
+
+
+def test_someone_you_cant_see_is_not_found(api, world):
+    assert api.login(world.sofia).get(f"/export/people/{world.oskar.pk}").status_code == 404
+
+
+def test_limited_access_cant_copy_a_person(world):
+    with pytest.raises(PermissionDenied):
+        services.build(Access.limited(world.ela, include_private=False), world.oskar)
