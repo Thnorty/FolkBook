@@ -16,12 +16,28 @@ describe('shortcut labels', () => {
     expect(shortcutLabel({ key: 'n' }, false)).toBe('N')
     expect(shortcutLabel({ key: 'Enter', mod: true }, false)).toBe('Ctrl+Enter')
     expect(shortcutLabel({ key: 'Enter', mod: true }, true)).toBe('⌘Enter')
+    expect(shortcutLabel({ key: 'ArrowRight', mod: true }, false)).toBe('Ctrl+→')
   })
 })
 
-function Harness({ shortcut, action }: { shortcut: Shortcut; action: () => void }) {
-  useShortcut(shortcut, action)
-  return <input aria-label="Name" />
+function Harness({
+  shortcut,
+  action,
+  whileTyping,
+}: {
+  shortcut: Shortcut
+  action: () => void
+  whileTyping?: boolean
+}) {
+  useShortcut(shortcut, action, { whileTyping })
+  return (
+    <>
+      <input aria-label="Name" />
+      <div role="dialog" aria-label="Open dialog">
+        <button>OK</button>
+      </div>
+    </>
+  )
 }
 
 describe('useShortcut', () => {
@@ -68,5 +84,35 @@ describe('useShortcut', () => {
 
     expect(action).toHaveBeenCalledOnce()
     expect(event).toBe(false) // default prevented
+  })
+
+  it('leaves plain keys pressed inside a dialog to the dialog', () => {
+    const plain = vi.fn()
+    const withCtrl = vi.fn()
+    render(<Harness shortcut={{ key: '1' }} action={plain} />)
+    render(<Harness shortcut={{ key: 'k', mod: true }} action={withCtrl} />)
+    const [ok] = screen.getAllByRole('button', { name: 'OK' })
+
+    fireEvent.keyDown(ok, { key: '1' })
+    fireEvent.keyDown(ok, { key: 'k', ctrlKey: true })
+
+    expect(plain).not.toHaveBeenCalled()
+    expect(withCtrl).toHaveBeenCalledOnce() // e.g. Ctrl+K closes the palette from inside it
+  })
+
+  it('can leave a Ctrl shortcut to the field being typed in', () => {
+    const action = vi.fn()
+    render(
+      <Harness shortcut={{ key: 'ArrowRight', mod: true }} action={action} whileTyping={false} />,
+    )
+
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Name' }), {
+      key: 'ArrowRight',
+      ctrlKey: true,
+    })
+    expect(action).not.toHaveBeenCalled()
+
+    fireEvent.keyDown(window, { key: 'ArrowRight', ctrlKey: true })
+    expect(action).toHaveBeenCalledOnce()
   })
 })

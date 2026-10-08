@@ -41,6 +41,8 @@ type ConnectionFormProps = {
   person: PersonDetail
   /** The link being changed ("Change type"); nothing when adding one. */
   link?: Relationship
+  /** When adding: the kind to start with (e.g. "Friend of…" while filling in the blanks). */
+  kind?: ConnectionKind
   formId: string
   saving: boolean
   error?: string
@@ -58,6 +60,7 @@ const PARENT_TYPES: Record<ParentType, string> = {
 export function ConnectionForm({
   person,
   link,
+  kind: initialKind,
   formId,
   saving,
   error,
@@ -67,7 +70,9 @@ export function ConnectionForm({
   const firstName = person.name.split(' ')[0]
   const linked = link && (link.person_a.id === person.id ? link.person_b : link.person_a)
   const [other, setOther] = useState<Other | null>(linked ? { ...linked, spaces: [] } : null)
-  const [kind, setKind] = useState<ConnectionKind | null>(link ? kindOf(link, person.id) : null)
+  const [kind, setKind] = useState<ConnectionKind | null>(
+    link ? kindOf(link, person.id) : (initialKind ?? null),
+  )
   const [parentType, setParentType] = useState<ParentType>(link?.parent_type ?? 'biological')
   const [label, setLabel] = useState(link?.label ?? '')
   const [startedOn, setStartedOn] = useState(link?.started_on ?? '')

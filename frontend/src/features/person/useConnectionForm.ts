@@ -1,9 +1,10 @@
 import { createContext, useContext } from 'react'
+import type { ConnectionKind } from './connectionKinds'
 import type { Relationship } from './queries'
 
 type ConnectionFormControls = {
-  /** Connect someone to this person. */
-  openConnect: (personId: string) => void
+  /** Connect someone to this person, optionally with the kind already picked. */
+  openConnect: (personId: string, kind?: ConnectionKind) => void
   /** Change how a link reads, seen from this person's profile ("Change type"). */
   openChange: (personId: string, link: Relationship) => void
 }

@@ -4,7 +4,7 @@ import { FormDialog } from '@/components/ui/form-dialog'
 import { notify } from '@/lib/notify'
 import { useClosing } from '@/motion/useClosing'
 import { ConnectionForm, type ConnectionFormResult } from './ConnectionForm'
-import { linkFor } from './connectionKinds'
+import { linkFor, type ConnectionKind } from './connectionKinds'
 import {
   createPerson,
   createRelationship,
@@ -17,7 +17,7 @@ import { ConnectionFormContext } from './useConnectionForm'
 
 const FORM_ID = 'connection-form'
 
-type Open = { personId: string; link?: Relationship }
+type Open = { personId: string; link?: Relationship; kind?: ConnectionKind }
 
 /** Makes the connect form available anywhere below it (useConnectionForm). */
 export function ConnectionFormProvider({ children }: { children: ReactNode }) {
@@ -25,7 +25,7 @@ export function ConnectionFormProvider({ children }: { children: ReactNode }) {
   const [shown, closing] = useClosing(open)
   const controls = useMemo(
     () => ({
-      openConnect: (personId: string) => setOpen({ personId }),
+      openConnect: (personId: string, kind?: ConnectionKind) => setOpen({ personId, kind }),
       openChange: (personId: string, link: Relationship) => setOpen({ personId, link }),
     }),
     [],
@@ -42,6 +42,7 @@ export function ConnectionFormProvider({ children }: { children: ReactNode }) {
 function ConnectionDialog({
   personId,
   link,
+  kind,
   open,
   onClose,
 }: Open & { open: boolean; onClose: () => void }) {
@@ -111,6 +112,7 @@ function ConnectionDialog({
           formId={FORM_ID}
           person={person}
           link={link}
+          kind={kind}
           saving={save.isPending}
           error={save.error?.message}
           onSubmit={(result) => save.mutate(result)}

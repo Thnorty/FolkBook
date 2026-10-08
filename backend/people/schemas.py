@@ -127,11 +127,17 @@ class PersonOut(Schema):
         return getattr(obj.owner, "me", None)
 
 
+class ImportRef(Schema):
+    id: UUID
+    file_name: str
+
+
 class PersonDetailOut(PersonOut):
     contact_methods: list[ContactMethodOut]  # empty unless the viewer may see them
     can_edit: bool
     can_delete: bool
     can_hide: bool  # shared with you: you can take them out of your book
+    from_import: ImportRef | None  # the .vcf import that added them; only for its owner
 
     @staticmethod
     def resolve_contact_methods(obj):

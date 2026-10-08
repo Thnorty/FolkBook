@@ -408,6 +408,8 @@ export interface paths {
          *     `recent`: people added to your own book in the last 30 days, newest first (not kept
          *     copies: you didn't add those).
          *     `kept`: your copies of people you lost sight of.
+         *     `import`: the people one of your .vcf imports added.
+         *     `mine`: only people in your own book, not ones shared with you.
          *
          *     `search` matches names, how you met, work, tags, spaces and your own notes and
          *     memory aids, ignoring case and accents.
@@ -1751,6 +1753,16 @@ export interface components {
              */
             id: string;
         };
+        /** ImportRef */
+        ImportRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** File Name */
+            file_name: string;
+        };
         /** PersonDetailOut */
         PersonDetailOut: {
             /**
@@ -1794,6 +1806,7 @@ export interface components {
             can_delete: boolean;
             /** Can Hide */
             can_hide: boolean;
+            from_import: components["schemas"]["ImportRef"] | null;
         };
         /** ContactMethodIn */
         ContactMethodIn: {
@@ -3244,6 +3257,8 @@ export interface operations {
                 search?: string;
                 recent?: boolean;
                 kept?: boolean;
+                import?: string | null;
+                mine?: boolean;
                 page?: number;
                 page_size?: number | null;
             };
