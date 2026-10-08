@@ -13,8 +13,9 @@ from access.policy import Access
 
 
 def access_for(request: HttpRequest) -> Access:
-    """The Access for this request. API keys (#38) will plug in here."""
-    return Access.for_user(request.auth)
+    """The Access for this request: what its API key allows, or everything the logged-in
+    user can see."""
+    return getattr(request, "api_access", None) or Access.for_user(request.auth)
 
 
 def require_csrf(request: HttpRequest) -> None:

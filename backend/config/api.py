@@ -6,6 +6,9 @@ from ninja.security import django_auth
 
 from accounts.api import router as auth_router
 from accounts.api import users_router
+from api_keys.api import router as api_keys_router
+from api_keys.auth import KEY_OR_LOGIN
+from api_keys.services import InvalidApiKey, TooManyRequests
 from core.api import Conflict, validation_detail
 from exports.api import router as export_router
 from graph.api import router as graph_router
@@ -21,12 +24,13 @@ from search.api import router as search_router
 from spaces.api import router as spaces_router
 from today.api import router as today_router
 
-# Every endpoint needs a logged-in user unless it says `auth=None`.
-api = NinjaAPI(title="FolkBook API", version="0.1.0", auth=django_auth)
-api.add_router("/setup", setup_router)
-api.add_router("/auth", auth_router)
-api.add_router("/users", users_router)
-api.add_router("/invites", invites_router)
+# Every endpoint needs an API key or the login cookie unless it says `auth=None`.
+# Account-level routers take only the login cookie (`auth=django_auth`).
+api = NinjaAPI(title="FolkBook API", version="0.1.0", auth=KEY_OR_LOGIN)
+api.add_router("/setup", setup_router, auth=django_auth)
+api.add_router("/auth", auth_router, auth=django_auth)
+api.add_router("/users", users_router, auth=django_auth)
+api.add_router("/invites", invites_router, auth=django_auth)
 api.add_router("/people", people_router)
 api.add_router("/spaces", spaces_router)
 api.add_router("/relationships", relationships_router)
@@ -39,6 +43,7 @@ api.add_router("/today", today_router)
 api.add_router("/search", search_router)
 api.add_router("/export", export_router)
 api.add_router("/imports", imports_router)
+api.add_router("/api-keys", api_keys_router, auth=django_auth)
 
 
 @api.exception_handler(PermissionDenied)
@@ -50,6 +55,19 @@ def permission_denied(request, exc):
 @api.exception_handler(ValidationError)
 def validation_error(request, exc):
     return api.create_response(request, {"detail": validation_detail(exc)}, status=422)
+
+
+@api.exception_handler(InvalidApiKey)
+def invalid_api_key(request, exc):
+    return api.create_response(request, {"detail": "This API key isn't valid."}, status=401)
+
+
+@api.exception_handler(TooManyRequests)
+def too_many_requests(request, exc):
+    detail = "Too many requests for this API key. Try again in a minute."
+    response = api.create_response(request, {"detail": detail}, status=429)
+    response["Retry-After"] = str(exc.retry_after)
+    return response
 
 
 @api.exception_handler(Conflict)

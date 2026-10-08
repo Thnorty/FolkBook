@@ -3,6 +3,7 @@
 import json
 
 import pytest
+from django.test import Client
 
 
 class ApiClient:
@@ -12,6 +13,11 @@ class ApiClient:
     def login(self, user) -> "ApiClient":
         self._client.force_login(user)
         return self
+
+    def with_key(self, key: str, **client_options) -> "ApiClient":
+        """A new client that signs in with an API key instead of the login cookie."""
+        headers = {"Authorization": f"Bearer {key}"}
+        return ApiClient(Client(headers=headers, **client_options))
 
     def get(self, path: str, **params):
         return self._client.get(f"/api{path}", params)

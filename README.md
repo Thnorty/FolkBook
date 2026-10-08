@@ -94,6 +94,16 @@ Frontend:
 cd frontend && npm test && npm run typecheck && npm run lint && npm run format:check && npm run api:check
 ```
 
+## Using the API
+
+Scripts and apps can read or write your book with a personal API key (Settings → API keys). Send it as a bearer token:
+
+```sh
+curl -H "Authorization: Bearer fb_live_…" https://your-server/api/people
+```
+
+Each key is read-only or read-write, sees all your spaces or only the ones you pick, and includes your private notes only if you turned that on. The full API is described at `/api/docs`. Each key can make 120 requests a minute; past that you get `429` with a `Retry-After` header.
+
 ## Project layout
 
 | Path | What |

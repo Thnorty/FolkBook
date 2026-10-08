@@ -20,6 +20,7 @@ from accounts.schemas import (
     UserOut,
     UserPatch,
 )
+from api_keys.auth import KEY_OR_LOGIN
 from core.api import ErrorOut, require_csrf
 
 router = Router(tags=["auth"])
@@ -48,7 +49,8 @@ def logout(request):
     return Status(204, None)
 
 
-@router.get("/me", response=CurrentUserOut)
+# Scripts may ask who their key belongs to; the rest of /auth is the login cookie only.
+@router.get("/me", response=CurrentUserOut, auth=KEY_OR_LOGIN)
 def me(request):
     return request.auth
 
