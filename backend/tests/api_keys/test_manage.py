@@ -84,6 +84,7 @@ def test_a_space_you_only_view_can_be_picked(api, world):
     ("data", "message"),
     [
         ({"name": ""}, None),
+        ({"name": "   "}, None),
         ({"name": "x" * 61}, None),
         ({"name": "S", "space_ids": []}, "Pick at least one space, or All spaces."),
         ({"name": "S", "space_ids": ["sofia"]}, "That space isn't one you can pick."),
@@ -92,7 +93,14 @@ def test_a_space_you_only_view_can_be_picked(api, world):
             "That space isn't one you can pick.",
         ),
     ],
-    ids=["no name", "long name", "no spaces", "someone else's space", "unknown space"],
+    ids=[
+        "no name",
+        "blank name",
+        "long name",
+        "no spaces",
+        "someone else's space",
+        "unknown space",
+    ],
 )
 def test_bad_input(api, world, data, message):
     if data.get("space_ids") == ["sofia"]:
@@ -132,11 +140,13 @@ def test_spaces_you_cant_see_any_more_drop_off(api, world):
 
 
 def test_revoke(api, world):
-    key, _ = make(world.ela)
-    client = api.login(world.ela)
+    api_key, key = make(world.ela)
+    assert api.with_key(key).get("/people").status_code == 200
 
-    assert client.delete(f"/api-keys/{key.pk}").status_code == 204
+    assert api.login(world.ela).delete(f"/api-keys/{api_key.pk}").status_code == 204
+
     assert not ApiKey.objects.exists()
+    assert api.with_key(key).get("/people").status_code == 401
 
 
 def test_someone_elses_key_is_404(api, world):

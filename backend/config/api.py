@@ -7,8 +7,8 @@ from ninja.security import django_auth
 from accounts.api import router as auth_router
 from accounts.api import users_router
 from api_keys.api import router as api_keys_router
-from api_keys.auth import KEY_OR_LOGIN, InvalidApiKey
-from api_keys.services import TooManyRequests
+from api_keys.auth import KEY_OR_LOGIN
+from api_keys.services import InvalidApiKey, TooManyRequests
 from core.api import Conflict, validation_detail
 from exports.api import router as export_router
 from graph.api import router as graph_router

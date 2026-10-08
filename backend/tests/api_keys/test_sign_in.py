@@ -24,7 +24,28 @@ COOKIE_ONLY = (
     "/api/api-keys",
     "/api/export/restore",
 )
-TAKES_KEYS_ANYWAY = {"/api/auth/me"}
+# The book: API keys work here. A new router goes in one list or the other, on purpose.
+TAKES_KEYS = (
+    "/api/auth/me",
+    "/api/people",
+    "/api/spaces",
+    "/api/relationships",
+    "/api/graph",
+    "/api/memory-aids",
+    "/api/interactions",
+    "/api/keep-in-touch",
+    "/api/today",
+    "/api/search",
+    "/api/export",
+    "/api/imports",
+)
+
+
+def under(path: str, prefixes: tuple[str, ...]) -> str | None:
+    """The longest prefix the path sits under, by whole segments (/api/authors isn't
+    under /api/auth)."""
+    found = [p for p in prefixes if path == p or path.startswith(p + "/")]
+    return max(found, key=len, default=None)
 
 
 def key_for(user, **data) -> str:
@@ -84,6 +105,7 @@ def test_cookie_only_endpoints_refuse_keys(api, world):
 
     assert client.get("/auth/devices").status_code == 401
     assert client.get("/api-keys").status_code == 401
+    assert client.post("/api-keys", {"name": "Another"}).status_code == 401
     assert client.post("/export/restore/check").status_code == 401
     me = client.get("/auth/me")
     assert me.status_code == 200
@@ -92,19 +114,24 @@ def test_cookie_only_endpoints_refuse_keys(api, world):
 
 def test_every_route_is_cookie_only_or_takes_keys():
     """A new endpoint has to be put on one side on purpose."""
-    unclassified = []
+    wrong = []
     for router in folkbook_api._get_bound_routers():
         for path, view in router.path_operations.items():
             for operation in view.operations:
                 full = re.sub("/+", "/", f"/api/{router.prefix}/{path}").rstrip("/")
                 if not operation.auth_callbacks:
                     continue  # public, like /api/health
-                takes_keys = api_key_auth in operation.auth_callbacks
-                cookie_only = full.startswith(COOKIE_ONLY) and full not in TAKES_KEYS_ANYWAY
-                if takes_keys == cookie_only:
-                    unclassified.append((operation.methods, full))
+                cookie, keys = under(full, COOKIE_ONLY), under(full, TAKES_KEYS)
+                if cookie is None and keys is None:
+                    wrong.append(("unclassified", operation.methods, full))
+                    continue
+                # The longer prefix wins: /api/export/restore is cookie-only inside
+                # /api/export, /api/auth/me takes keys inside /api/auth.
+                should_take_keys = len(keys or "") > len(cookie or "")
+                if (api_key_auth in operation.auth_callbacks) != should_take_keys:
+                    wrong.append(("wrong side", operation.methods, full))
 
-    assert unclassified == []
+    assert wrong == []
 
 
 def test_the_key_narrows_access(api, world):
@@ -112,6 +139,9 @@ def test_the_key_narrows_access(api, world):
 
     assert read_only.post("/people", {"name": "Greta"}).status_code == 403
     assert read_only.get("/memory-aids").json() == {"items": [], "count": 0}
+    no_private = api.with_key(key_for(world.ela, read_only=False))
+    note = no_private.put(f"/people/{world.oskar.pk}/note", {"body": "Climbs on Tuesdays"})
+    assert note.status_code == 403
 
 
 def test_a_key_whose_spaces_are_gone_sees_nothing(api, world):

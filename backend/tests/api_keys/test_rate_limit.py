@@ -78,3 +78,23 @@ def test_count_request_stops_at_the_limit(world):
         services.count_request(api_key, now=now + datetime.timedelta(seconds=20))
 
     assert raised.value.retry_after == 40
+
+
+def test_full_while_this_request_looked_the_key_up(world):
+    """Many requests on a new key at once: this one read it before any was counted."""
+    api_key, _ = make(world.ela)  # window_start is still empty here
+    now = timezone.now()
+    ApiKey.objects.filter(pk=api_key.pk).update(window_start=now, window_count=120)
+
+    with pytest.raises(services.TooManyRequests) as raised:
+        services.count_request(api_key, now=now + datetime.timedelta(seconds=15))
+
+    assert raised.value.retry_after == 45
+
+
+def test_revoked_while_this_request_looked_the_key_up(world):
+    api_key, _ = make(world.ela)
+    ApiKey.objects.filter(pk=api_key.pk).delete()
+
+    with pytest.raises(services.InvalidApiKey):
+        services.count_request(api_key)

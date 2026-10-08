@@ -6,10 +6,7 @@ from ninja.security import HttpBearer, django_auth
 from accounts.models import User
 from api_keys import services
 from api_keys.models import ApiKey
-
-
-class InvalidApiKey(Exception):
-    """Unknown, expired, or its owner is disabled: all look the same from outside."""
+from api_keys.services import InvalidApiKey
 
 
 class ApiKeyAuth(HttpBearer):

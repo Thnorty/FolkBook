@@ -39,12 +39,15 @@ def hash_key(key: str) -> str:
 @transaction.atomic
 def create_api_key(access: Access, data: ApiKeyIn) -> tuple[ApiKey, str]:
     """A new key and the key itself, which is never stored or shown again."""
+    name = data.name.strip()
+    if not name:
+        raise ValidationError({"name": "Give the key a name."})
     spaces = _spaces(access, data.space_ids)
     key = new_key()
     expires_in = EXPIRY[data.expires_in]
     api_key = ApiKey.objects.create(
         owner=access.user,
-        name=data.name.strip(),
+        name=name,
         hashed=hash_key(key),
         last_five=key[-5:],
         read_only=data.read_only,
@@ -55,6 +58,10 @@ def create_api_key(access: Access, data: ApiKeyIn) -> tuple[ApiKey, str]:
     if spaces:
         api_key.spaces.set(spaces)
     return api_key, key
+
+
+class InvalidApiKey(Exception):
+    """Unknown, expired, revoked, or its owner is disabled: all look the same from outside."""
 
 
 class TooManyRequests(Exception):
@@ -75,7 +82,12 @@ def count_request(api_key: ApiKey, now: datetime.datetime | None = None) -> None
         window_count=F("window_count") + 1, last_used_at=now
     ):
         return
-    left = (api_key.window_start + WINDOW - now).total_seconds()
+    # Read again: other requests may have started the window since this one looked the
+    # key up, or the key was revoked in between.
+    start = key.values_list("window_start", flat=True).first()
+    if start is None:
+        raise InvalidApiKey
+    left = (start + WINDOW - now).total_seconds()
     raise TooManyRequests(retry_after=max(1, math.ceil(left)))
 
 
