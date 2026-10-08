@@ -14,7 +14,9 @@ const SHOWN = 5
 /** Settings → Import / export → Recent imports: show an import's people, or undo it. */
 export function RecentImports() {
   const imports = useQuery(recentImportsQuery).data?.items.slice(0, SHOWN) ?? []
-  const [undoing, setUndoing] = useState<RecentImport | null>(null)
+  // Each opening is new (`at`), so the dialog asks again rather than reusing an answer
+  // from an earlier opening that's still closing.
+  const [undoing, setUndoing] = useState<{ batch: RecentImport; at: number } | null>(null)
   const [shown, closing] = useClosing(undoing)
   if (imports.length === 0) return null
   return (
@@ -39,7 +41,7 @@ export function RecentImports() {
                 </Link>
               </Button>
               {!batch.undone_at && (
-                <Button variant="secondary" onClick={() => setUndoing(batch)}>
+                <Button variant="secondary" onClick={() => setUndoing({ batch, at: Date.now() })}>
                   Undo this import…
                 </Button>
               )}
@@ -47,7 +49,14 @@ export function RecentImports() {
           </li>
         ))}
       </ul>
-      {shown && <UndoImportDialog batch={shown} open={!closing} onClose={() => setUndoing(null)} />}
+      {shown && (
+        <UndoImportDialog
+          key={shown.at}
+          batch={shown.batch}
+          open={!closing}
+          onClose={() => setUndoing(null)}
+        />
+      )}
     </SettingsPart>
   )
 }

@@ -96,7 +96,6 @@ export function FilterChips({
   )
 }
 
-/** Shown above the list when a space is picked: what it is, and a way to its page. */
 /** "From contacts.vcf": the list shows only the people that import added. */
 export function FromImport({ importId, onClear }: { importId: string; onClear: () => void }) {
   const batch = useQuery(importQuery(importId)).data
@@ -117,6 +116,7 @@ export function FromImport({ importId, onClear }: { importId: string; onClear: (
   )
 }
 
+/** Shown above the list when a space is picked: what it is, and a way to its page. */
 export function SpaceBanner({ space }: { space: Space }) {
   const facts = [peopleCount(space.people_count), ownership(space)]
   return (

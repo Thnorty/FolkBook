@@ -38,7 +38,9 @@ export function UndoImportDialog({
       })
     },
   })
-  const { goes = [], stays = [], loses_details: loses = [] } = preview.data ?? {}
+  // Only a fresh answer: numbers from an earlier opening may be out of date by now.
+  const ready = preview.data && !preview.isFetching ? preview.data : undefined
+  const { goes = [], stays = [], loses_details: loses = [] } = ready ?? {}
 
   return (
     <ConfirmDialog
@@ -48,7 +50,7 @@ export function UndoImportDialog({
       description="The people it added are deleted, and what it added to people you had is taken back. Anything you've changed since stays."
       cancelLabel="Keep"
       confirmLabel="Undo import"
-      busy={!preview.data || undo.isPending}
+      busy={!ready || undo.isPending}
       onConfirm={() => undo.mutate()}
     >
       {preview.error && (
@@ -56,11 +58,14 @@ export function UndoImportDialog({
           {preview.error.message}
         </p>
       )}
-      {preview.data && (
+      {preview.isFetching && (
+        <p role="status" className="mt-3 type-small text-ink-soft">
+          Working out who goes…
+        </p>
+      )}
+      {ready && (
         <ul className="mt-3 flex flex-col gap-2 type-small">
-          <Line people={goes}>
-            {goes.length === 1 ? '1 person goes' : `${peopleCount(goes.length)} go`}
-          </Line>
+          <Line people={goes}>{goesLine(goes.length)}</Line>
           {stays.length > 0 && (
             <Line people={stays}>
               {stays.length} you've written about since {stays.length === 1 ? 'stays' : 'stay'}
@@ -83,6 +88,11 @@ export function UndoImportDialog({
       )}
     </ConfirmDialog>
   )
+}
+
+function goesLine(count: number): string {
+  if (count === 0) return 'Nobody goes'
+  return count === 1 ? '1 person goes' : `${peopleCount(count)} go`
 }
 
 /** One line of what happens, with who: "Chen Wei, Greta Holm and 3 more". */

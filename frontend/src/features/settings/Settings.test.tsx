@@ -62,6 +62,12 @@ const IMPORTS = [
   },
 ]
 const ref = (id: string, name: string) => ({ id, name })
+type UndoPreview = { goes: object[]; stays: object[]; loses_details: object[] }
+const PREVIEW: UndoPreview = {
+  goes: [ref('p1', 'Chen Wei'), ref('p2', 'Greta Holm'), ref('p3', 'Lars Eriksen')],
+  stays: [ref('p4', 'Ines Berg')],
+  loses_details: [ref('p5', 'Emma')],
+}
 
 const RESTORABLE = {
   name: 'Ela Demir',
@@ -89,7 +95,15 @@ vi.mock('./queries', async (importOriginal) => ({
   },
 }))
 
-function server() {
+function server({
+  preview = () => PREVIEW,
+  previewWait,
+}: {
+  /** What the undo preview says, asked each time. */
+  preview?: () => UndoPreview
+  /** Holds the preview's answer back until this settles. */
+  previewWait?: () => Promise<void> | undefined
+} = {}) {
   const writes: Write[] = []
   let settings = { nudges_on: true, default_interval_days: null as number | null }
   const record = async (request: Request) => {
@@ -153,12 +167,10 @@ function server() {
     'GET /api/about': () => json({ version: '0.1.0', source_url: 'https://example.com/folkbook' }),
     'GET /api/export/summary': () => json({ people: 148, photos: 1, size: 84_200_000 }),
     'GET /api/imports': () => json({ items: IMPORTS, count: IMPORTS.length }),
-    'GET /api/imports/i1/undo-preview': () =>
-      json({
-        goes: [ref('p1', 'Chen Wei'), ref('p2', 'Greta Holm'), ref('p3', 'Lars Eriksen')],
-        stays: [ref('p4', 'Ines Berg')],
-        loses_details: [ref('p5', 'Emma')],
-      }),
+    'GET /api/imports/i1/undo-preview': async () => {
+      await previewWait?.()
+      return json(preview())
+    },
     'POST /api/imports/i1/undo': async (request) => {
       await record(request)
       return json({ ...IMPORTS[0], undone_at: '2026-10-08T10:00:00Z' })
@@ -337,6 +349,53 @@ describe('settings', () => {
     await waitFor(() =>
       expect(writes.at(-1)).toEqual({ method: 'POST', path: '/api/imports/i1/redo', body: null }),
     )
+  })
+
+  it('says it is working out who goes, and when nobody does', async () => {
+    let answer = () => {}
+    const waiting = new Promise<void>((resolve) => (answer = resolve))
+    server({
+      preview: () => ({ goes: [], stays: [ref('p4', 'Ines Berg')], loses_details: [] }),
+      previewWait: () => waiting,
+    })
+    renderApp('/settings/import-export')
+    const recent = await screen.findByRole('list', { name: 'Recent imports' })
+
+    await userEvent.click(within(recent).getByRole('button', { name: 'Undo this import…' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(within(dialog).getByText('Working out who goes…')).toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Undo import' })).toBeDisabled()
+    answer()
+
+    expect(await within(dialog).findByText('Nobody goes')).toBeInTheDocument()
+    expect(within(dialog).queryByText('Working out who goes…')).not.toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Undo import' })).toBeEnabled()
+  })
+
+  it('never shows the last numbers again while it asks anew', async () => {
+    let current = PREVIEW
+    let wait: Promise<void> | undefined
+    server({ preview: () => current, previewWait: () => wait })
+    renderApp('/settings/import-export')
+    const recent = await screen.findByRole('list', { name: 'Recent imports' })
+    const open = async () => {
+      await userEvent.click(within(recent).getByRole('button', { name: 'Undo this import…' }))
+      return screen.findByRole('alertdialog')
+    }
+    await within(await open()).findByText(/3 people go/)
+    await userEvent.click(screen.getByRole('button', { name: 'Keep' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+
+    let answer = () => {}
+    wait = new Promise<void>((resolve) => (answer = resolve))
+    current = { ...PREVIEW, goes: [ref('p1', 'Chen Wei')] }
+    const dialog = await open()
+
+    expect(within(dialog).getByText('Working out who goes…')).toBeInTheDocument()
+    expect(within(dialog).queryByText(/3 people go/)).not.toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: 'Undo import' })).toBeDisabled()
+    answer()
+    expect(await within(dialog).findByText(/1 person goes/)).toBeInTheDocument()
   })
 
   it('exports everything as one .zip', async () => {
