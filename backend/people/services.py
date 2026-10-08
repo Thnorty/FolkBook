@@ -139,7 +139,7 @@ def purge_deleted_people(now: datetime.datetime | None = None) -> int:
     purged = 0
     for person in Person.objects.filter(deleted_at__lt=cutoff).select_related("owner__me"):
         with transaction.atomic():
-            files = _photo_files(person)
+            files = photo_files(person)
             writers = User.objects.filter(pk__in=kept.writers_about(person)).exclude(
                 pk=person.owner_id
             )
@@ -154,7 +154,7 @@ def purge_deleted_people(now: datetime.datetime | None = None) -> int:
                 person.deleted_at = deleted_at
                 person.save(update_fields=["deleted_at"])
             person.delete()
-            _delete_after_commit(files)
+            delete_after_commit(files)
         purged += 1
     return purged
 
@@ -167,33 +167,39 @@ def set_photo(access: Access, person: Person, upload: UploadedFile) -> Person:
     """Replace the person's photo with `upload`, cropped and re-encoded."""
     if not can_edit_person(access, person):
         raise PermissionDenied("You can't change this person's photo.")
+    old_files = photo_files(person)
+    store_photo(person, upload)
+    person.save(update_fields=["photo", "photo_thumbnail", "updated_at"])
+    delete_after_commit(old_files)
+    return person
+
+
+def store_photo(person: Person, upload: UploadedFile) -> None:
+    """Crop and re-encode `upload` and store it as the person's photo; the caller saves
+    the person."""
     full, thumbnail = photos.prepare(upload)
-    old_files = _photo_files(person)
     # A new name for every photo, so its URL changes and browsers never show the old one.
     name = secrets.token_hex(8)
     person.photo.save(f"{name}.webp", full, save=False)
     person.photo_thumbnail.save(f"{name}-thumbnail.webp", thumbnail, save=False)
-    person.save(update_fields=["photo", "photo_thumbnail", "updated_at"])
-    _delete_after_commit(old_files)
-    return person
 
 
 @transaction.atomic
 def remove_photo(access: Access, person: Person) -> Person:
     if not can_edit_person(access, person):
         raise PermissionDenied("You can't change this person's photo.")
-    old_files = _photo_files(person)
+    old_files = photo_files(person)
     person.photo = person.photo_thumbnail = ""
     person.save(update_fields=["photo", "photo_thumbnail", "updated_at"])
-    _delete_after_commit(old_files)
+    delete_after_commit(old_files)
     return person
 
 
-def _photo_files(person: Person) -> list[str]:
+def photo_files(person: Person) -> list[str]:
     return [f.name for f in (person.photo, person.photo_thumbnail) if f]
 
 
-def _delete_after_commit(names: list[str]) -> None:
+def delete_after_commit(names: list[str]) -> None:
     # Only once the database agrees, so a failed save never loses the old photo.
     transaction.on_commit(lambda: [default_storage.delete(name) for name in names])
 

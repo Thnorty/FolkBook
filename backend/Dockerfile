@@ -18,4 +18,6 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 ENTRYPOINT ["sh", "./docker-entrypoint.sh"]
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# A long timeout: uploading and restoring a big export (or downloading one) takes more
+# than gunicorn's default 30 seconds.
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "300"]

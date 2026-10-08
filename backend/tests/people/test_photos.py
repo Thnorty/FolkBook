@@ -51,6 +51,22 @@ class TestProcessing:
 
         assert dict(Image.open(full).getexif()) == {}
 
+    def test_a_photo_that_is_already_a_polaroid_is_kept_as_it_is(self):
+        # Restoring an export brings back photos made here; re-encoding them is slow.
+        already = photo_file(size=photos.FULL_SIZE, fmt="WEBP")
+
+        full, thumbnail = photos.prepare(already)
+
+        assert full.read() == already.open().read()
+        assert Image.open(thumbnail).size == photos.THUMBNAIL_SIZE
+
+    def test_a_polaroid_sized_webp_with_exif_is_still_re_encoded(self):
+        exif = Image.Exif()
+        exif.get_ifd(0x8825)[2] = (41.0, 2.0, 30.0)
+        full, _ = photos.prepare(photo_file(size=photos.FULL_SIZE, fmt="WEBP", exif=exif))
+
+        assert dict(Image.open(full).getexif()) == {}
+
     def test_transparent_parts_become_paper(self):
         full, _ = photos.prepare(photo_file(fmt="PNG", mode="RGBA", size=(400, 500)))
 

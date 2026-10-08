@@ -1,4 +1,4 @@
-import { api, unwrap } from '@/api/client'
+import { api, formUpload, unwrap } from '@/api/client'
 
 /** Where the crop step's frame sits on the (rotated) photo, in the photo's pixels. */
 export type CropArea = { x: number; y: number; width: number; height: number }
@@ -47,13 +47,7 @@ export function uploadPhoto(personId: string, photo: Blob) {
   return unwrap(
     api.POST('/api/people/{person_id}/photo', {
       ...personPath(personId),
-      // The generated type says string for binary fields; the form really sends the file.
-      body: { file: photo as unknown as string },
-      bodySerializer: (body) => {
-        const form = new FormData()
-        form.append('file', body.file as unknown as Blob, 'photo.jpg')
-        return form
-      },
+      ...formUpload({ file: new File([photo], 'photo.jpg', { type: photo.type }) }),
     }),
   )
 }

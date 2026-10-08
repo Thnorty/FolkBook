@@ -326,6 +326,16 @@ def can_export_everything(access: Access) -> bool:
     return access.include_private and not access.is_space_limited
 
 
+def can_restore(access: Access) -> bool:
+    """Restore replaces the whole book, private data included: full read-write access only."""
+    return can_export_everything(access) and not access.read_only
+
+
+def shares_book(user: User) -> bool:
+    """Whether anyone else sees part of the user's book, or the user part of theirs."""
+    return SpaceMembership.objects.filter(Q(user=user) | Q(space__owner=user)).exists()
+
+
 def can_write_private(access: Access, person: Person) -> bool:
     """Add notes, memory aids, timeline entries or reminders about a person."""
     return not access.read_only and access.include_private and can_see_person(access, person)

@@ -28,6 +28,10 @@ class ApiClient:
     def delete(self, path: str):
         return self._client.delete(f"/api{path}")
 
+    def upload(self, path: str, data: dict):
+        """POST as a form (multipart), for files."""
+        return self._client.post(f"/api{path}", data)
+
     def _send(self, method: str, path: str, data):
         return getattr(self._client, method)(
             f"/api{path}", json.dumps(data or {}), content_type="application/json"

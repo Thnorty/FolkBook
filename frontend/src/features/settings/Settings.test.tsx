@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '@/api/errors'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
 import { setAppearance } from '@/lib/appearance'
@@ -40,6 +41,32 @@ const device = (id: string, name: string, isCurrent = false) => ({
 })
 
 type Write = { method: string; path: string; body: unknown }
+
+const RESTORABLE = {
+  name: 'Ela Demir',
+  email: 'ela@old.example.com',
+  exported_at: '2026-10-03T09:00:00Z',
+  people: 42,
+  spaces: 3,
+  photos: 12,
+}
+const SHARED =
+  'Restore is for moving to a new server, so it only works while nothing in your book is shared.'
+
+// jsdom's files can't go into a real form upload, so the two calls are faked here
+// (queries.test.ts sends real ones).
+const restores = vi.hoisted(() => [] as { file: string; email: string }[])
+vi.mock('./queries', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./queries')>()),
+  checkRestore: async (file: File) => {
+    if (file.name === 'shared.zip') throw new ApiError(409, SHARED)
+    return RESTORABLE
+  },
+  restoreBook: async (_queryClient: unknown, file: File, email: string) => {
+    restores.push({ file: file.name, email })
+    return RESTORABLE
+  },
+}))
 
 function server() {
   const writes: Write[] = []
@@ -240,6 +267,48 @@ describe('settings', () => {
       await within(exports).findByRole('option', { name: 'Climbing club' }),
     )
     expect(link()).toHaveAttribute('href', '/api/export/contacts?space=s1')
+  })
+
+  it('restores a full export once you type your email', async () => {
+    server()
+    renderApp('/settings/import-export')
+    const exports = await page('Import / export')
+
+    await userEvent.upload(
+      within(exports).getByLabelText('Choose .zip'),
+      new File(['zip'], 'folkbook.zip', { type: 'application/zip' }),
+    )
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'Replace everything in your book?',
+    })
+    expect(within(dialog).getByText(/Ela Demir's book \(ela@old.example.com\)/)).toBeVisible()
+    expect(within(dialog).getByText('42 people · 3 spaces · 12 photos')).toBeVisible()
+    expect(within(dialog).getByText(/148 people in your book now/)).toBeVisible()
+    const restore = within(dialog).getByRole('button', { name: 'Restore' })
+    expect(restore).toBeDisabled()
+
+    await userEvent.type(within(dialog).getByLabelText(/Type your email/), 'Ela@example.com')
+    await userEvent.click(restore)
+
+    await waitFor(() =>
+      expect(restores).toEqual([{ file: 'folkbook.zip', email: 'Ela@example.com' }]),
+    )
+    expect(await screen.findByText('Your book is restored')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+  })
+
+  it("says why a file can't be restored before asking anything", async () => {
+    server()
+    renderApp('/settings/import-export')
+    const exports = await page('Import / export')
+
+    await userEvent.upload(
+      within(exports).getByLabelText('Choose .zip'),
+      new File(['zip'], 'shared.zip', { type: 'application/zip' }),
+    )
+
+    expect(await within(exports).findByRole('alert')).toHaveTextContent(/nothing in your book/)
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 
   it('lists the sections, without the admin ones for members', async () => {
