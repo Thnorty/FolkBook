@@ -3987,6 +3987,122 @@
           }
         ]
       }
+    },
+    "/api/imports/{import_id}/undo-preview": {
+      "get": {
+        "operationId": "imports_api_undo_preview",
+        "summary": "Undo Preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Import Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UndoPreviewOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Who undoing the import deletes, who stays because you wrote about them since, and\nwho loses details its merges added.",
+        "tags": [
+          "import"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/imports/{import_id}/undo": {
+      "post": {
+        "operationId": "imports_api_undo_import",
+        "summary": "Undo Import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Import Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecentImportOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "import"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/imports/{import_id}/redo": {
+      "post": {
+        "operationId": "imports_api_redo_import",
+        "summary": "Redo Import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Import Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecentImportOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Undo the undo, within a minute.",
+        "tags": [
+          "import"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -7611,6 +7727,39 @@
           "undone_at"
         ],
         "title": "RecentImportOut",
+        "type": "object"
+      },
+      "UndoPreviewOut": {
+        "description": "What undoing an import would do.",
+        "properties": {
+          "goes": {
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            },
+            "title": "Goes",
+            "type": "array"
+          },
+          "stays": {
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            },
+            "title": "Stays",
+            "type": "array"
+          },
+          "loses_details": {
+            "items": {
+              "$ref": "#/components/schemas/PersonRef"
+            },
+            "title": "Loses Details",
+            "type": "array"
+          }
+        },
+        "required": [
+          "goes",
+          "stays",
+          "loses_details"
+        ],
+        "title": "UndoPreviewOut",
         "type": "object"
       }
     },

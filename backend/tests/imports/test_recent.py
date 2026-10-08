@@ -12,18 +12,17 @@ from tests.imports.test_import import CHEN, GRETA, INES, LARS, merge, new, run, 
 
 
 def test_your_imports_newest_first(api, world):
-    run(api, world.ela, vcf(GRETA, LARS), new(0, 1))
-    run(api, world.ela, vcf(CHEN, INES), new(0) + merge(1, world.ines))
-    older, newer = Import.objects.order_by("created_at")
+    older = run(api, world.ela, vcf(GRETA, LARS), new(0, 1)).json()["import_id"]
+    newer = run(api, world.ela, vcf(CHEN, INES), new(0) + merge(1, world.ines)).json()["import_id"]
     yesterday = timezone.now() - datetime.timedelta(days=1)
-    Import.objects.filter(pk=older.pk).update(created_at=yesterday)
+    Import.objects.filter(pk=older).update(created_at=yesterday)
 
     body = api.login(world.ela).get("/imports").json()
 
     assert body["count"] == 2
     assert [(i["id"], i["added"], i["merged"]) for i in body["items"]] == [
-        (str(newer.pk), 1, 1),
-        (str(older.pk), 2, 0),
+        (newer, 1, 1),
+        (older, 2, 0),
     ]
     assert body["items"][0]["file_name"] == "contacts.vcf"
     assert body["items"][0]["undone_at"] is None

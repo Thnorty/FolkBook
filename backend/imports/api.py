@@ -6,9 +6,15 @@ from ninja.pagination import PageNumberPagination, paginate
 
 from access.policy import visible_imports
 from core.api import access_for
-from imports import services
+from imports import services, undo
 from imports.models import Import
-from imports.schemas import ChoicesIn, ImportOut, PreviewOut, RecentImportOut
+from imports.schemas import (
+    ChoicesIn,
+    ImportOut,
+    PreviewOut,
+    RecentImportOut,
+    UndoPreviewOut,
+)
 
 router = Router(tags=["import"])
 
@@ -38,6 +44,24 @@ def list_imports(request):
 @router.get("/{uuid:import_id}", response=RecentImportOut)
 def get_import(request, import_id: UUID):
     return _import(request, import_id)
+
+
+@router.get("/{uuid:import_id}/undo-preview", response=UndoPreviewOut)
+def undo_preview(request, import_id: UUID):
+    """Who undoing the import deletes, who stays because you wrote about them since, and
+    who loses details its merges added."""
+    return undo.undo_preview(access_for(request), _import(request, import_id))
+
+
+@router.post("/{uuid:import_id}/undo", response=RecentImportOut)
+def undo_import(request, import_id: UUID):
+    return undo.undo_import(access_for(request), _import(request, import_id))
+
+
+@router.post("/{uuid:import_id}/redo", response=RecentImportOut)
+def redo_import(request, import_id: UUID):
+    """Undo the undo, within a minute."""
+    return undo.redo_import(access_for(request), _import(request, import_id))
 
 
 def _import(request, import_id: UUID) -> Import:

@@ -1388,6 +1388,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/imports/{import_id}/undo-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Undo Preview
+         * @description Who undoing the import deletes, who stays because you wrote about them since, and
+         *     who loses details its merges added.
+         */
+        get: operations["imports_api_undo_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{import_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Undo Import */
+        post: operations["imports_api_undo_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{import_id}/redo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redo Import
+         * @description Undo the undo, within a minute.
+         */
+        post: operations["imports_api_redo_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2723,6 +2781,18 @@ export interface components {
             merged: number;
             /** Undone At */
             undone_at: string | null;
+        };
+        /**
+         * UndoPreviewOut
+         * @description What undoing an import would do.
+         */
+        UndoPreviewOut: {
+            /** Goes */
+            goes: components["schemas"]["PersonRef"][];
+            /** Stays */
+            stays: components["schemas"]["PersonRef"][];
+            /** Loses Details */
+            loses_details: components["schemas"]["PersonRef"][];
         };
     };
     responses: never;
@@ -4926,6 +4996,72 @@ export interface operations {
         };
     };
     imports_api_get_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentImportOut"];
+                };
+            };
+        };
+    };
+    imports_api_undo_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UndoPreviewOut"];
+                };
+            };
+        };
+    };
+    imports_api_undo_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecentImportOut"];
+                };
+            };
+        };
+    };
+    imports_api_redo_import: {
         parameters: {
             query?: never;
             header?: never;

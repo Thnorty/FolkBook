@@ -84,3 +84,11 @@ class RecentImportOut(Schema):
     added: int  # people it added, even if they've been deleted since
     merged: int
     undone_at: datetime | None
+
+
+class UndoPreviewOut(Schema):
+    """What undoing an import would do."""
+
+    goes: list[PersonRef]
+    stays: list[PersonRef]  # written about since
+    loses_details: list[PersonRef]  # people it merged into
