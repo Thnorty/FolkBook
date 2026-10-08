@@ -4103,6 +4103,130 @@
           }
         ]
       }
+    },
+    "/api/api-keys": {
+      "get": {
+        "operationId": "api_keys_api_list_api_keys",
+        "summary": "List Api Keys",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedApiKeyOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Your API keys, newest first. The keys themselves are never sent again.",
+        "tags": [
+          "api keys"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "api_keys_api_create_api_key",
+        "summary": "Create Api Key",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedApiKeyOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "A new key. The response has the key itself: the only time it's sent.",
+        "tags": [
+          "api keys"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/api-keys/{key_id}": {
+      "delete": {
+        "operationId": "api_keys_api_revoke_api_key",
+        "summary": "Revoke Api Key",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "api keys"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -7760,6 +7884,251 @@
           "loses_details"
         ],
         "title": "UndoPreviewOut",
+        "type": "object"
+      },
+      "ApiKeyOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "last_five": {
+            "title": "Last Five",
+            "type": "string"
+          },
+          "read_only": {
+            "title": "Read Only",
+            "type": "boolean"
+          },
+          "include_private": {
+            "title": "Include Private",
+            "type": "boolean"
+          },
+          "limited": {
+            "title": "Limited",
+            "type": "boolean"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceRef"
+            },
+            "title": "Spaces",
+            "type": "array"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expired": {
+            "title": "Expired",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "last_five",
+          "read_only",
+          "include_private",
+          "limited",
+          "spaces",
+          "expires_at",
+          "last_used_at",
+          "created_at",
+          "expired"
+        ],
+        "title": "ApiKeyOut",
+        "type": "object"
+      },
+      "PagedApiKeyOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ApiKeyOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedApiKeyOut",
+        "type": "object"
+      },
+      "CreatedApiKeyOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "last_five": {
+            "title": "Last Five",
+            "type": "string"
+          },
+          "read_only": {
+            "title": "Read Only",
+            "type": "boolean"
+          },
+          "include_private": {
+            "title": "Include Private",
+            "type": "boolean"
+          },
+          "limited": {
+            "title": "Limited",
+            "type": "boolean"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceRef"
+            },
+            "title": "Spaces",
+            "type": "array"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expired": {
+            "title": "Expired",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "last_five",
+          "read_only",
+          "include_private",
+          "limited",
+          "spaces",
+          "expires_at",
+          "last_used_at",
+          "created_at",
+          "expired",
+          "key"
+        ],
+        "title": "CreatedApiKeyOut",
+        "type": "object"
+      },
+      "ApiKeyIn": {
+        "properties": {
+          "name": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "read_only": {
+            "default": true,
+            "title": "Read Only",
+            "type": "boolean"
+          },
+          "include_private": {
+            "default": false,
+            "title": "Include Private",
+            "type": "boolean"
+          },
+          "space_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space Ids"
+          },
+          "expires_in": {
+            "default": "90d",
+            "enum": [
+              "30d",
+              "90d",
+              "1y",
+              "never"
+            ],
+            "title": "Expires In",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ApiKeyIn",
         "type": "object"
       }
     },

@@ -26,6 +26,7 @@ from django.db.models import (
 )
 
 from accounts.models import User
+from api_keys.models import ApiKey
 from imports.models import Import
 from interactions.models import Interaction
 from people.models import AccessEnded, ContactMethod, HiddenPerson, MemoryAid, Note, Person
@@ -366,3 +367,8 @@ def shares_book(user: User) -> bool:
 def can_write_private(access: Access, person: Person) -> bool:
     """Add notes, memory aids, timeline entries or reminders about a person."""
     return not access.read_only and access.include_private and can_see_person(access, person)
+
+
+def visible_api_keys(access: Access) -> QuerySet[ApiKey]:
+    """The user's own API keys. Nobody else's, not even an admin's view."""
+    return ApiKey.objects.filter(owner=access.user)

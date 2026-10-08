@@ -6,6 +6,7 @@ from ninja.security import django_auth
 
 from accounts.api import router as auth_router
 from accounts.api import users_router
+from api_keys.api import router as api_keys_router
 from core.api import Conflict, validation_detail
 from exports.api import router as export_router
 from graph.api import router as graph_router
@@ -39,6 +40,8 @@ api.add_router("/today", today_router)
 api.add_router("/search", search_router)
 api.add_router("/export", export_router)
 api.add_router("/imports", imports_router)
+# Your account, not your book: only with the login cookie, never an API key.
+api.add_router("/api-keys", api_keys_router, auth=django_auth)
 
 
 @api.exception_handler(PermissionDenied)

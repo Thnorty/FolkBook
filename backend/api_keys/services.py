@@ -1,0 +1,69 @@
+"""Personal API keys: making them, and revoking them."""
+
+import datetime
+import hashlib
+import secrets
+import string
+
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.utils import timezone
+
+from access.policy import Access, visible_spaces
+from api_keys.models import ApiKey
+from api_keys.schemas import ApiKeyIn
+
+PREFIX = "fb_live_"
+LETTERS = string.ascii_letters + string.digits
+EXPIRY = {
+    "30d": datetime.timedelta(days=30),
+    "90d": datetime.timedelta(days=90),
+    "1y": datetime.timedelta(days=365),
+    "never": None,
+}
+
+
+def new_key() -> str:
+    return PREFIX + "".join(secrets.choice(LETTERS) for _ in range(32))
+
+
+def hash_key(key: str) -> str:
+    # Keys are long and random, so a fast hash is enough (unlike passwords).
+    return hashlib.sha256(key.encode()).hexdigest()
+
+
+@transaction.atomic
+def create_api_key(access: Access, data: ApiKeyIn) -> tuple[ApiKey, str]:
+    """A new key and the key itself, which is never stored or shown again."""
+    spaces = _spaces(access, data.space_ids)
+    key = new_key()
+    expires_in = EXPIRY[data.expires_in]
+    api_key = ApiKey.objects.create(
+        owner=access.user,
+        name=data.name.strip(),
+        hashed=hash_key(key),
+        last_five=key[-5:],
+        read_only=data.read_only,
+        include_private=data.include_private,
+        limited=spaces is not None,
+        expires_at=timezone.now() + expires_in if expires_in else None,
+    )
+    if spaces:
+        api_key.spaces.set(spaces)
+    return api_key, key
+
+
+def revoke_api_key(access: Access, api_key: ApiKey) -> None:
+    """Anything using it stops working right away."""
+    api_key.delete()
+
+
+def _spaces(access: Access, ids: list | None) -> list | None:
+    if ids is None:
+        return None
+    if not ids:
+        raise ValidationError({"space_ids": "Pick at least one space, or All spaces."})
+    spaces = list(visible_spaces(access).filter(pk__in=ids))
+    if len(spaces) != len(set(ids)):
+        raise ValidationError({"space_ids": "That space isn't one you can pick."})
+    return spaces

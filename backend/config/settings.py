@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "search",
     "exports",
     "imports",
+    "api_keys",
     "invites",
     "jobs",
     "django_tasks_db",

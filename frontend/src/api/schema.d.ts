@@ -1446,6 +1446,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Api Keys
+         * @description Your API keys, newest first. The keys themselves are never sent again.
+         */
+        get: operations["api_keys_api_list_api_keys"];
+        put?: never;
+        /**
+         * Create Api Key
+         * @description A new key. The response has the key itself: the only time it's sent.
+         */
+        post: operations["api_keys_api_create_api_key"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/api-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Api Key */
+        delete: operations["api_keys_api_revoke_api_key"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2793,6 +2834,100 @@ export interface components {
             stays: components["schemas"]["PersonRef"][];
             /** Loses Details */
             loses_details: components["schemas"]["PersonRef"][];
+        };
+        /** ApiKeyOut */
+        ApiKeyOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Last Five */
+            last_five: string;
+            /** Read Only */
+            read_only: boolean;
+            /** Include Private */
+            include_private: boolean;
+            /** Limited */
+            limited: boolean;
+            /** Spaces */
+            spaces: components["schemas"]["SpaceRef"][];
+            /** Expires At */
+            expires_at: string | null;
+            /** Last Used At */
+            last_used_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Expired */
+            expired: boolean;
+        };
+        /** PagedApiKeyOut */
+        PagedApiKeyOut: {
+            /** Items */
+            items: components["schemas"]["ApiKeyOut"][];
+            /** Count */
+            count: number;
+        };
+        /** CreatedApiKeyOut */
+        CreatedApiKeyOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Last Five */
+            last_five: string;
+            /** Read Only */
+            read_only: boolean;
+            /** Include Private */
+            include_private: boolean;
+            /** Limited */
+            limited: boolean;
+            /** Spaces */
+            spaces: components["schemas"]["SpaceRef"][];
+            /** Expires At */
+            expires_at: string | null;
+            /** Last Used At */
+            last_used_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Expired */
+            expired: boolean;
+            /** Key */
+            key: string;
+        };
+        /** ApiKeyIn */
+        ApiKeyIn: {
+            /** Name */
+            name: string;
+            /**
+             * Read Only
+             * @default true
+             */
+            read_only?: boolean;
+            /**
+             * Include Private
+             * @default false
+             */
+            include_private?: boolean;
+            /** Space Ids */
+            space_ids?: string[] | null;
+            /**
+             * Expires In
+             * @default 90d
+             * @enum {string}
+             */
+            expires_in?: "30d" | "90d" | "1y" | "never";
         };
     };
     responses: never;
@@ -5080,6 +5215,73 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RecentImportOut"];
                 };
+            };
+        };
+    };
+    api_keys_api_list_api_keys: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedApiKeyOut"];
+                };
+            };
+        };
+    };
+    api_keys_api_create_api_key: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedApiKeyOut"];
+                };
+            };
+        };
+    };
+    api_keys_api_revoke_api_key: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
