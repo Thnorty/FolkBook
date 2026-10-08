@@ -98,7 +98,7 @@ A wizard at `/people/import` (Upload · Choose · Duplicates · Space · Done). 
 3. **Duplicates** (only if any): one at a time, "Looks like Anna K. already exists", the reason, both sides compared with what a merge adds in blue → **Merge** (only into your own people) / **Skip** / **Import as new**
 4. **Space** (optional) for the new people; a shared space asks first
 5. **Done:** "Imported 5 new people, in Work · 1 merged into Anna Kowalska · 208 left out" → Later / **Fill in the blanks** (card-by-card: "How do you know Anna?", a space chip, Friend of…, a memory aid; swipe on mobile, keys on desktop). People not filled in are found later under the **Needs details** filter (no Today reminder), which also has a **Fill in the blanks** button for everyone without "how we met". The mode (`/people/fill-in`) reads its list once, shows Done / Now on desktop, and after a full page of 50 offers to keep going.
-6. **Recent imports** (Settings → Import / export): Show these people · Undo this import (keeps anyone you've written about since; takes back what merges added unless it changed since)
+6. **Recent imports** (Settings → Import / export, the last five): "contacts.vcf · 8 Oct 2026 · 5 people added" (or "· undone"). **Show these people** opens People with a clearable "From contacts.vcf" chip. **Undo this import…** asks first: "3 people go", "1 you've written about since stays", "1 person you had loses the details this import added", each with names; anything changed since stays. Then "Import undone" with Undo for ten seconds.
 
 ### 3.7 Spaces
 - **Create:** name, color/tab, optional description. Private by default
