@@ -42,6 +42,10 @@ BATCH = 500
 NOT_AN_EXPORT = "That file isn't a FolkBook export. Use the .zip from Export → Everything."
 NEWER = "This export is from a newer version of FolkBook. Update this server first."
 DAMAGED = "This export is damaged, so it can't be restored."
+A_PERSON = (
+    "This is a copy of one person, not a whole book, so it can't be restored. "
+    "Use the .zip from Export → Everything."
+)
 TOO_BIG = "This export is too big to restore."
 SHARED = (
     "Restore is for moving to a new server, so it only works while nothing in your "
@@ -123,6 +127,8 @@ def _read(upload: IO[bytes]) -> tuple[ExportFile, zipfile.ZipFile]:
         export = ExportFile.model_validate(data)
     except pydantic.ValidationError:
         raise _refusal(DAMAGED) from None
+    if export.contents != "everything":
+        raise _refusal(A_PERSON)
     if not _fits_together(export, set(archive.namelist())):
         raise _refusal(DAMAGED)
     return export, archive

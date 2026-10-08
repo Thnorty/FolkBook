@@ -55,6 +55,10 @@ export const aboutQuery = queryOptions({
 /** The full export (.zip): downloaded by the browser from a plain link. */
 export const EXPORT_URL = '/api/export/everything'
 
+/** A copy of one person (.zip, like the full export) to keep before tearing them out. */
+export const personCopyUrl = (personId: string) =>
+  `/api/export/people/${encodeURIComponent(personId)}`
+
 /** The contacts (.vcf): everyone in your book, or one space's people. */
 export const contactsExportUrl = (spaceId?: string) =>
   spaceId ? `/api/export/contacts?space=${encodeURIComponent(spaceId)}` : '/api/export/contacts'

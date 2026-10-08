@@ -284,6 +284,9 @@ describe('settings', () => {
     expect(within(dialog).getByText(/Ela Demir's book \(ela@old.example.com\)/)).toBeVisible()
     expect(within(dialog).getByText('42 people · 3 spaces · 12 photos')).toBeVisible()
     expect(within(dialog).getByText(/148 people in your book now/)).toBeVisible()
+    expect(
+      within(dialog).getByRole('link', { name: 'Download a copy of your book first' }),
+    ).toHaveAttribute('href', '/api/export/everything')
     const restore = within(dialog).getByRole('button', { name: 'Restore' })
     expect(restore).toBeDisabled()
 

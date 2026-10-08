@@ -142,6 +142,16 @@ describe('tearing someone out of the book', () => {
     expect(writes).toEqual(['DELETE /api/people/emma', 'POST /api/people/emma/restore'])
   })
 
+  it('offers a copy of them to download first', async () => {
+    server()
+    const { dialog } = await openTearOut()
+
+    expect(within(dialog).getByRole('link', { name: 'Download a copy first' })).toHaveAttribute(
+      'href',
+      '/api/export/people/emma',
+    )
+  })
+
   it('keeps them when you change your mind', async () => {
     const writes = server()
     const { router, dialog } = await openTearOut()

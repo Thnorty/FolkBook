@@ -4,8 +4,10 @@ import { DropdownMenu } from 'radix-ui'
 import { useState, type RefObject } from 'react'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { DownloadLink } from '@/components/ui/download-link'
 import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass } from '@/components/ui/menu'
+import { personCopyUrl } from '@/features/settings/queries'
 import { membersQuery, spacesQuery, type Space } from '@/features/spaces/queries'
 import { notify, type Notice } from '@/lib/notify'
 import { cn } from '@/lib/utils'
@@ -123,6 +125,9 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
         {gone.shared.map((space) => (
           <SharedSpaceNote key={space.id} space={space} firstName={firstName} />
         ))}
+        <DownloadLink href={personCopyUrl(person.id)} variant="secondary" className="mt-3">
+          Download a copy first
+        </DownloadLink>
       </ConfirmDialog>
 
       <ConfirmDialog

@@ -58,6 +58,16 @@ them: notes, memory aids, timeline and reminders. photos/ holds their photos.
 It includes your private notes. Keep it somewhere safe.
 """
 
+PERSON_README = """\nFolkBook copy of one person
+
+folkbook.json holds {name}, their links and spaces, and everything you wrote about them:
+notes, memory aids, timeline and reminders. The people they're linked to come with just
+their names and basics. photos/ holds {name}'s photo.
+
+It's a copy to keep, not a book to restore. It includes your private notes. Keep it
+somewhere safe.
+"""
+
 Photos = list[tuple[str, str]]  # (path in the .zip, file in storage)
 
 
@@ -76,13 +86,24 @@ def exported_people(access: Access) -> QuerySet[Person]:
     return visible_people(access).filter(yours_or_written)
 
 
-def build(access: Access) -> tuple[ExportFile, Photos]:
+def build(access: Access, only: Person | None = None) -> tuple[ExportFile, Photos]:
+    """Everything in the book; or, with `only`, a copy of just that person (the people
+    they're linked to come with their basic profile only)."""
     if not can_export_everything(access):
         raise PermissionDenied("This access can't take a full export.")
     user = access.user
+    your_links = visible_relationships(access).filter(owner=user)
+    if only:
+        your_links = your_links.filter(Q(person_a=only) | Q(person_b=only))
+        in_file = visible_people(access).filter(
+            Q(pk=only.pk)
+            | Q(pk__in=your_links.values("person_a"))
+            | Q(pk__in=your_links.values("person_b"))
+        )
+    else:
+        in_file = exported_people(access)
     people = list(
-        exported_people(access)
-        .select_related("owner__me")
+        in_file.select_related("owner__me")
         .prefetch_related(
             "tags",
             Prefetch(
@@ -94,19 +115,24 @@ def build(access: Access) -> tuple[ExportFile, Photos]:
         )
         .order_by("created_at", "pk")
     )
-    ids = {person.pk for person in people}
+    ids = {row.pk for row in people}
+    # Whose private data comes along, and in full: everyone, or just the one person.
+    in_full = {only.pk} if only else ids
+    own_spaces = visible_spaces(access).filter(owner=user)
+    if only:
+        own_spaces = own_spaces.filter(people=only)
     spaces = list(
-        visible_spaces(access)
-        .filter(owner=user)
-        .prefetch_related(Prefetch("people", Person.objects.filter(pk__in=ids), to_attr="exported"))
-        .order_by("created_at", "pk")
+        own_spaces.prefetch_related(
+            Prefetch("people", Person.objects.filter(pk__in=ids), to_attr="exported")
+        ).order_by("created_at", "pk")
     )
     space_ids = {space.pk for space in spaces}
     photos: Photos = []
 
     def person_out(person: Person) -> PersonExport:
+        full = person.pk in in_full
         photo = None
-        if person.photo:
+        if person.photo and full:
             photo = f"photos/{person.pk}{os.path.splitext(person.photo.name)[1]}"
             photos.append((photo, person.photo.name))
         has_birthday = person.birth_day and person.birth_month
@@ -122,13 +148,15 @@ def build(access: Access) -> tuple[ExportFile, Photos]:
             )
             if has_birthday
             else None,
-            tags=sorted((tag.name for tag in person.tags.all()), key=str.casefold),
+            tags=sorted((tag.name for tag in person.tags.all()), key=str.casefold) if full else [],
             photo=photo,
             photo_caption=person.photo_caption,
             contacts=[
                 ContactExport(kind=c.kind, label=c.label, value=c.value)
                 for c in person.contacts_shown
-            ],
+            ]
+            if full
+            else [],
             kept=KeptExport(at=person.kept_at, owner=person.kept_from, space=person.kept_space)
             if person.kept_at
             else None,
@@ -141,8 +169,10 @@ def build(access: Access) -> tuple[ExportFile, Photos]:
             added_at=person.created_at,
         )
 
-    settings = ReminderSettings.objects.filter(user=user).first()
+    # Settings belong to the account, not to anyone in a copy.
+    settings = None if only else ReminderSettings.objects.filter(user=user).first()
     export = ExportFile(
+        contents="person" if only else "everything",
         exported_at=timezone.now(),
         account=AccountExport(name=user.display_name, email=user.email),
         people=[person_out(person) for person in people],
@@ -170,13 +200,13 @@ def build(access: Access) -> tuple[ExportFile, Photos]:
                 # A link in someone else's space comes along as a private one.
                 space=link.space_id if link.space_id in space_ids else None,
             )
-            for link in visible_relationships(access)
-            .filter(owner=user, person_a__in=ids, person_b__in=ids)
-            .order_by("created_at", "pk")
+            for link in your_links.filter(person_a__in=ids, person_b__in=ids).order_by(
+                "created_at", "pk"
+            )
         ],
         notes=[
             NoteExport(person=note.person_id, body=note.body, updated_at=note.updated_at)
-            for note in visible_notes(access).filter(person__in=ids).order_by("created_at")
+            for note in visible_notes(access).filter(person__in=in_full).order_by("created_at")
         ],
         memory_aids=[
             MemoryAidExport(
@@ -186,7 +216,7 @@ def build(access: Access) -> tuple[ExportFile, Photos]:
                 position=aid.position,
                 added_at=aid.created_at,
             )
-            for aid in visible_memory_aids(access).filter(person__in=ids)
+            for aid in visible_memory_aids(access).filter(person__in=in_full)
         ],
         timeline=[
             TimelineExport(
@@ -197,7 +227,7 @@ def build(access: Access) -> tuple[ExportFile, Photos]:
                 at=entry.occurred_at,
                 note=entry.note,
             )
-            for entry in visible_interactions(access).filter(person__in=ids)
+            for entry in visible_interactions(access).filter(person__in=in_full)
         ],
         keep_in_touch=[
             KeepInTouchExport(
@@ -206,7 +236,7 @@ def build(access: Access) -> tuple[ExportFile, Photos]:
                 snoozed_until=row.snoozed_until,
                 stopped=row.stopped,
             )
-            for row in visible_keep_in_touch(access).filter(person__in=ids)
+            for row in visible_keep_in_touch(access).filter(person__in=in_full)
         ],
         reminder_settings=ReminderSettingsExport(
             nudges_on=settings.nudges_on, default_interval_days=settings.default_interval_days
@@ -217,21 +247,23 @@ def build(access: Access) -> tuple[ExportFile, Photos]:
     return export, photos
 
 
-def write_zip(export: ExportFile, photos: Photos, out: IO[bytes]) -> None:
+def write_zip(export: ExportFile, photos: Photos, out: IO[bytes], readme: str = README) -> None:
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("folkbook.json", export.model_dump_json(indent=2))
-        archive.writestr("README.txt", README)
+        archive.writestr("README.txt", readme)
         for path, name in photos:
             with default_storage.open(name) as photo:
                 # Photos are already compressed (WebP).
                 archive.writestr(path, photo.read(), compress_type=zipfile.ZIP_STORED)
 
 
-def export_zip(access: Access) -> IO[bytes]:
-    """The .zip in a temporary file, rewound, for the response to stream."""
-    export, photos = build(access)
+def export_zip(access: Access, only: Person | None = None) -> IO[bytes]:
+    """The .zip (of everything, or of `only`) in a temporary file, rewound, for the
+    response to stream."""
+    export, photos = build(access, only)
     out = tempfile.TemporaryFile()  # noqa: SIM115 (the response closes it once sent)
-    write_zip(export, photos, out)
+    readme = PERSON_README.format(name=only.name) if only else README
+    write_zip(export, photos, out, readme)
     out.seek(0)
     return out
 

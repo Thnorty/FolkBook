@@ -2,13 +2,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useId, useState } from 'react'
 import { currentUserQuery } from '@/api/session'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { DownloadLink } from '@/components/ui/download-link'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { countOf } from '@/features/person/labels'
 import { peopleCount } from '@/features/spaces/labels'
 import { formatDay } from '@/lib/dates'
 import { notify } from '@/lib/notify'
-import { exportSummaryQuery, restoreBook, type RestoreSummary } from './queries'
+import { EXPORT_URL, exportSummaryQuery, restoreBook, type RestoreSummary } from './queries'
 
 type RestoreDialogProps = {
   file: File
@@ -68,6 +69,9 @@ export function RestoreDialog({ file, summary, open, onClose }: RestoreDialogPro
           wrote about them.
         </p>
       )}
+      <DownloadLink href={EXPORT_URL} variant="secondary" className="mt-3">
+        Download a copy of your book first
+      </DownloadLink>
       <div className="mt-4 flex flex-col gap-1.5">
         <Label htmlFor={emailId}>Type your email to confirm</Label>
         <Input

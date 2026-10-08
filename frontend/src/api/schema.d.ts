@@ -1239,6 +1239,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/export/people/{person_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Person
+         * @description A copy of one person to keep (before tearing them out): them, everything you wrote
+         *     about them, and your links to them. Not a book to restore.
+         */
+        get: operations["exports_api_export_person"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/export/contacts": {
         parameters: {
             query?: never;
@@ -4482,6 +4503,28 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description A .zip: folkbook.json (see ExportFile) and photos/ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": unknown;
+                };
+            };
+        };
+    };
+    exports_api_export_person: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A .zip like the full export, of one person */
             200: {
                 headers: {
                     [name: string]: unknown;

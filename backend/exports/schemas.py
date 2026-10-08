@@ -120,6 +120,8 @@ class AccountExport(Schema):
 class ExportFile(Schema):
     format: Literal["folkbook"] = "folkbook"
     version: Literal[1] = 1
+    # A copy of one person (taken before tearing them out) is a keepsake, not a book.
+    contents: Literal["everything", "person"] = "everything"
     exported_at: datetime.datetime
     account: AccountExport
     people: list[PersonExport]

@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.http import content_disposition_header
 from ninja import File, Form, Router, UploadedFile
 
-from access.policy import visible_spaces
+from access.policy import visible_people, visible_spaces
 from core.api import access_for
 from exports import restore, services
 from exports.schemas import ExportSummary, RestoreSummary
@@ -35,6 +35,27 @@ def export_everything(request):
     """Everything in your book, private notes included, as one .zip."""
     out = services.export_zip(access_for(request))
     name = f"folkbook-{timezone.localdate():%Y-%m-%d}.zip"
+    return FileResponse(out, as_attachment=True, filename=name, content_type="application/zip")
+
+
+@router.get(
+    "/people/{uuid:person_id}",
+    openapi_extra={
+        "responses": {
+            200: {
+                "description": "A .zip like the full export, of one person",
+                "content": {"application/zip": {}},
+            }
+        }
+    },
+)
+def export_person(request, person_id: UUID):
+    """A copy of one person to keep (before tearing them out): them, everything you wrote
+    about them, and your links to them. Not a book to restore."""
+    access = access_for(request)
+    person = get_object_or_404(visible_people(access), pk=person_id)
+    out = services.export_zip(access, person)
+    name = f"FolkBook - {person.name} - {timezone.localdate():%Y-%m-%d}.zip"
     return FileResponse(out, as_attachment=True, filename=name, content_type="application/zip")
 
 
