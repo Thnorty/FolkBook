@@ -1260,6 +1260,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/export/restore/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Restore
+         * @description What a full export (.zip) holds, and whether it can be restored. Changes nothing.
+         */
+        post: operations["exports_api_check_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/export/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restore Everything
+         * @description Replace everything in your book with a full export (.zip). Only while nothing in
+         *     your book is shared; `confirm_email` must be your account's email.
+         */
+        post: operations["exports_api_restore_everything"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2420,6 +2461,27 @@ export interface components {
             photos: number;
             /** Size */
             size: number;
+        };
+        /**
+         * RestoreSummary
+         * @description What's in an export: shown before restoring it, and after.
+         */
+        RestoreSummary: {
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /**
+             * Exported At
+             * Format: date-time
+             */
+            exported_at: string;
+            /** People */
+            people: number;
+            /** Spaces */
+            spaces: number;
+            /** Photos */
+            photos: number;
         };
     };
     responses: never;
@@ -4448,6 +4510,68 @@ export interface operations {
                 };
                 content: {
                     "text/vcard": unknown;
+                };
+            };
+        };
+    };
+    exports_api_check_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * File
+                     * Format: binary
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreSummary"];
+                };
+            };
+        };
+    };
+    exports_api_restore_everything: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * File
+                     * Format: binary
+                     */
+                    file: string;
+                    /** Confirm Email */
+                    confirm_email: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreSummary"];
                 };
             };
         };

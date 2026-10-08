@@ -132,6 +132,17 @@ class ExportFile(Schema):
     reminder_settings: ReminderSettingsExport | None
 
 
+class RestoreSummary(Schema):
+    """What's in an export: shown before restoring it, and after."""
+
+    name: str
+    email: str
+    exported_at: datetime.datetime
+    people: int
+    spaces: int
+    photos: int
+
+
 class ExportSummary(Schema):
     """What "Export .zip" would download: shown before you click."""
 

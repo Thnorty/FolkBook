@@ -1,5 +1,6 @@
 import { queryOptions, type QueryClient } from '@tanstack/react-query'
-import { api, unwrap } from '@/api/client'
+import { api, formUpload, unwrap } from '@/api/client'
+import { currentUserQuery, forgetOtherData } from '@/api/session'
 import type { components } from '@/api/schema'
 
 export type ReminderSettings = components['schemas']['ReminderSettingsSchema']
@@ -63,6 +64,24 @@ export const exportSummaryQuery = queryOptions({
   queryKey: ['export', 'summary'],
   queryFn: ({ signal }) => unwrap(api.GET('/api/export/summary', { signal })),
 })
+
+export type RestoreSummary = components['schemas']['RestoreSummary']
+
+/** What a full export holds, if it can be restored into your book. Changes nothing. */
+export function checkRestore(file: File) {
+  return unwrap(api.POST('/api/export/restore/check', formUpload({ file })))
+}
+
+/** Replace everything in your book with the export in `file`. */
+export async function restoreBook(queryClient: QueryClient, file: File, confirmEmail: string) {
+  const restored = await unwrap(
+    api.POST('/api/export/restore', formUpload({ file, confirm_email: confirmEmail })),
+  )
+  // Nothing cached from the old book stays; Me (and so who you are) may have changed.
+  forgetOtherData(queryClient)
+  await queryClient.invalidateQueries({ queryKey: currentUserQuery.queryKey })
+  return restored
+}
 
 export type User = components['schemas']['UserOut']
 export type Invite = components['schemas']['InviteOut']

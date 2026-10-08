@@ -1,15 +1,25 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Download } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
+import { FileButton } from '@/components/ui/file-button'
 import { selectClass } from '@/components/ui/select'
 import { countOf } from '@/features/person/labels'
 import { peopleCount } from '@/features/spaces/labels'
 import { spacesQuery } from '@/features/spaces/queries'
-import { contactsExportUrl, EXPORT_URL, exportSummaryQuery } from './queries'
+import { cn } from '@/lib/utils'
+import { useClosing } from '@/motion/useClosing'
+import {
+  checkRestore,
+  contactsExportUrl,
+  EXPORT_URL,
+  exportSummaryQuery,
+  type RestoreSummary,
+} from './queries'
+import { RestoreDialog } from './RestoreDialog'
 import { SettingsPage, SettingsPart } from './SettingsPage'
 
-/** Settings → Import / export (screen 5s): take everything with you. */
+/** Settings → Import / export (screen 5s): take everything with you, or bring it back. */
 export function ImportExportSettings() {
   const summary = useQuery(exportSummaryQuery).data
   const spaces = useQuery(spacesQuery).data?.items ?? []
@@ -55,7 +65,55 @@ export function ImportExportSettings() {
           </DownloadLink>
         </ExportRow>
       </SettingsPart>
+      <SettingsPart title="Restore">
+        <RestoreRow />
+      </SettingsPart>
     </SettingsPage>
+  )
+}
+
+/** Choose a .zip; the server checks it before the dialog asks you to confirm. */
+function RestoreRow() {
+  const [picked, setPicked] = useState<{ file: File; summary: RestoreSummary } | null>(null)
+  const [shown, closing] = useClosing(picked)
+  const check = useMutation({
+    mutationFn: checkRestore,
+    onSuccess: (summary, file) => setPicked({ file, summary }),
+  })
+  return (
+    <>
+      <ExportRow
+        title="Restore from a full export (.zip)"
+        description="For moving to a new server. Brings back people, links, spaces, notes, memory aids and photos."
+        className="border-danger/30"
+        footer={
+          <>
+            {check.error && (
+              <p role="alert" className="mt-3 type-small text-danger">
+                {check.error.message}
+              </p>
+            )}
+            <p className="mt-3 flex gap-2 border-t border-danger/15 pt-3 type-small text-danger">
+              <b aria-hidden className="font-semibold">
+                !
+              </b>
+              Replaces everything in your book. Nothing is merged. You'll type your email to
+              confirm.
+            </p>
+          </>
+        }
+      >
+        <FileButton
+          accept=".zip,application/zip"
+          onFile={(file) => file && check.mutate(file)}
+          disabled={check.isPending}
+          className="border-danger/45 text-danger hover:bg-danger-hover"
+        >
+          {check.isPending ? 'Checking…' : 'Choose .zip'}
+        </FileButton>
+      </ExportRow>
+      {shown && <RestoreDialog {...shown} open={!closing} onClose={() => setPicked(null)} />}
+    </>
   )
 }
 
@@ -63,21 +121,28 @@ function ExportRow({
   title,
   description,
   meta,
+  footer,
+  className,
   children,
 }: {
   title: string
   description: string
   meta?: ReactNode
+  footer?: ReactNode
+  className?: string
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-card border border-line bg-card px-4 py-3.5">
-      <div className="min-w-0 flex-1 basis-64">
-        <p className="font-medium">{title}</p>
-        <p className="type-small text-ink-soft">{description}</p>
-        {meta && <p className="mt-1 type-meta text-ink-faint">{meta}</p>}
+    <div className={cn('rounded-card border border-line bg-card px-4 py-3.5', className)}>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="min-w-0 flex-1 basis-64">
+          <p className="font-medium">{title}</p>
+          <p className="type-small text-ink-soft">{description}</p>
+          {meta && <p className="mt-1 type-meta text-ink-faint">{meta}</p>}
+        </div>
+        <div className="flex items-center gap-2">{children}</div>
       </div>
-      <div className="flex items-center gap-2">{children}</div>
+      {footer}
     </div>
   )
 }

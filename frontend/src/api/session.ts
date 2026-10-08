@@ -18,8 +18,11 @@ export const currentUserQuery = queryOptions({
   },
 })
 
-/** Forget everything cached except who is logged in, so one account never sees another's data. */
-function forgetOtherData(queryClient: QueryClient) {
+/**
+ * Forget everything cached except who is logged in, so one account never sees another's
+ * data, and a restored book shows none of the one it replaced.
+ */
+export function forgetOtherData(queryClient: QueryClient) {
   queryClient.removeQueries({
     predicate: (query) => query.queryKey.join() !== currentUserQuery.queryKey.join(),
   })

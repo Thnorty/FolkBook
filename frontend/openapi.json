@@ -3627,6 +3627,109 @@
           }
         ]
       }
+    },
+    "/api/export/restore/check": {
+      "post": {
+        "operationId": "exports_api_check_restore",
+        "summary": "Check Restore",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreSummary"
+                }
+              }
+            }
+          }
+        },
+        "description": "What a full export (.zip) holds, and whether it can be restored. Changes nothing.",
+        "tags": [
+          "export"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "FileParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/export/restore": {
+      "post": {
+        "operationId": "exports_api_restore_everything",
+        "summary": "Restore Everything",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreSummary"
+                }
+              }
+            }
+          }
+        },
+        "description": "Replace everything in your book with a full export (.zip). Only while nothing in\nyour book is shared; `confirm_email` must be your account's email.",
+        "tags": [
+          "export"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  },
+                  "confirm_email": {
+                    "title": "Confirm Email",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "confirm_email"
+                ],
+                "title": "MultiPartBodyParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -6757,6 +6860,46 @@
           "size"
         ],
         "title": "ExportSummary",
+        "type": "object"
+      },
+      "RestoreSummary": {
+        "description": "What's in an export: shown before restoring it, and after.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "exported_at": {
+            "format": "date-time",
+            "title": "Exported At",
+            "type": "string"
+          },
+          "people": {
+            "title": "People",
+            "type": "integer"
+          },
+          "spaces": {
+            "title": "Spaces",
+            "type": "integer"
+          },
+          "photos": {
+            "title": "Photos",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "exported_at",
+          "people",
+          "spaces",
+          "photos"
+        ],
+        "title": "RestoreSummary",
         "type": "object"
       }
     },

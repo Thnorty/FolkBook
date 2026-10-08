@@ -172,6 +172,7 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 - **Nudges:** global on/off, default interval, email frequency (daily / weekly digest), "Send test email"
 - **Admin only: email (SMTP):** host, port, user, password, from address, TLS, "Send test email". Can also be set via env vars. Not configured → banner: "Email isn't set up; reminders only show on Today"
 - **Import / Export:** .vcf import, full export (JSON + photos: "Everything", with how many people and photos and the rough size, and a reminder that it holds private notes), .vcf export, restore
+  - **Restore:** "Choose .zip" → the server checks the file (a broken file, one from a newer FolkBook, or a shared book is explained right under the button) → "Replace everything in your book?" shows whose book the file is, its people, spaces and photos, and how many people you have now → type your email to turn Restore on → toast "Your book is restored"
 - **Appearance:** light / dark / system, reduce motion
 - **Admin only:** users, invite links, server info
 
