@@ -238,6 +238,17 @@ describe('settings', () => {
     )
   })
 
+  it('links to the contacts import', async () => {
+    server()
+    renderApp('/settings/import-export')
+    const settings = await page('Import / export')
+
+    expect(await within(settings).findByRole('link', { name: 'Import contacts' })).toHaveAttribute(
+      'href',
+      '/people/import',
+    )
+  })
+
   it('exports everything as one .zip', async () => {
     server()
     renderApp('/settings/import-export')
