@@ -19,6 +19,7 @@ from access.policy import (
     visible_people,
     visible_spaces,
 )
+from core.db import by_name
 from imports.vcard import Card
 from people.models import ContactMethod, Person
 
@@ -55,7 +56,7 @@ def find_matches(access: Access, cards: list[Card]) -> list[Match | None]:
         .select_related("owner")
         .prefetch_related(
             Prefetch("contact_methods", visible_contact_methods(access), to_attr="shown"),
-            Prefetch("spaces", visible_spaces(access).order_by("name"), to_attr="spaces_shown"),
+            Prefetch("spaces", visible_spaces(access).order_by(by_name()), to_attr="spaces_shown"),
         )
     )
     # The user's own people first, so they win a tie with someone shared.

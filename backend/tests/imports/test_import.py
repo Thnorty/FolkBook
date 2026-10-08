@@ -4,6 +4,7 @@ from io import BytesIO
 
 import pytest
 from django.core.exceptions import PermissionDenied
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from PIL import Image
@@ -210,20 +211,58 @@ def stored_files(settings) -> list[str]:
     return sorted(p.name for p in photos.rglob("*") if p.is_file()) if photos.exists() else []
 
 
-def test_one_transaction_and_no_files_left_behind(api, world, settings):
+def test_an_unreadable_photo_is_dropped_not_the_contact(api, world):
     broken = base64.b64encode(b"not a photo").decode()
     upload = vcf(
         vcard("Greta Holm", f"PHOTO;ENCODING=b;TYPE=JPEG:{jpeg()}"),
         vcard("Lars Eriksen", f"PHOTO;ENCODING=b;TYPE=JPEG:{broken}"),
     )
+
+    assert run(api, world.ela, upload, new(0, 1)).json()["added"] == 2
+    assert Person.objects.get(name="Greta Holm").photo
+    assert not Person.objects.get(name="Lars Eriksen").photo
+
+
+def test_one_transaction_and_no_files_left_behind(world, settings, monkeypatch):
+    def broken(*args):
+        raise RuntimeError("the database went away")
+
+    monkeypatch.setattr(services, "_contact_methods", broken)
     people = Person.objects.count()
+    upload = vcf(vcard("Greta Holm", f"PHOTO;ENCODING=b;TYPE=JPEG:{jpeg()}"))
 
-    response = run(api, world.ela, upload, new(0, 1))
+    with pytest.raises(RuntimeError):
+        services.run_import(Access.for_user(world.ela), upload, ChoicesIn(picked=new(0)))
 
-    assert response.status_code == 422
-    assert response.json()["detail"][0]["msg"] == "Lars Eriksen's photo can't be read."
     assert Person.objects.count() == people
     assert stored_files(settings) == []
+
+
+def test_the_same_detail_twice_in_a_contact_is_saved_once(api, world):
+    twice = vcard("Greta Holm", "TEL:+46 73 111 22 33", "TEL:+46 (73) 111 22 33")
+    ines = vcard("Ines B", "TEL:070 555 12 90", "EMAIL:ines@example.com", "EMAIL:INES@example.com")
+
+    run(api, world.ela, vcf(twice, ines), new(0) + merge(1, world.ines))
+
+    assert Person.objects.get(name="Greta Holm").contact_methods.count() == 1
+    assert world.ines.contact_methods.filter(kind="email").count() == 1
+
+
+def test_a_merge_never_replaces_a_photo(api, world):
+    world.emma.photo.save("emma.webp", ContentFile(b"emma's face"))
+    world.emma.save()
+    before = world.emma.photo.name
+
+    run(
+        api,
+        world.ela,
+        vcf(vcard("Emma", f"PHOTO;ENCODING=b;TYPE=JPEG:{jpeg()}")),
+        merge(0, world.emma),
+    )
+
+    world.emma.refresh_from_db()
+    assert world.emma.photo.name == before
+    assert "photo" not in Merge.objects.get(person=world.emma).filled
 
 
 def test_needs_full_access(world):

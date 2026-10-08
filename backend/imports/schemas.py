@@ -11,6 +11,17 @@ class DetailOut(Schema):
     label: str
 
 
+class AdditionsOut(Schema):
+    """What a merge would add: details they don't have, fields that are still empty."""
+
+    phones: list[str]
+    emails: list[str]
+    work: str
+    birthday: Birthday | None
+    photo: bool
+    note: bool
+
+
 class MatchOut(Schema):
     """Who the contact may already be, with what they have now, to compare."""
 
@@ -24,6 +35,7 @@ class MatchOut(Schema):
     sure: bool
     can_merge: bool
     by_details: bool  # same phone or email: already in your book
+    adds: AdditionsOut | None  # None when they can't be merged into
 
 
 class ContactOut(Schema):

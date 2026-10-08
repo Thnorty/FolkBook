@@ -3,14 +3,16 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Choice } from '@/components/ui/choice'
 import { SharedSpaceConfirm } from '@/features/spaces/SharedSpaceConfirm'
-import { spacesQuery, type Space } from '@/features/spaces/queries'
-import { useDismissed } from '@/lib/useDismissed'
+import { canAddPeople, spacesQuery, type Space } from '@/features/spaces/queries'
+import { useSharedSpaceConfirmed } from '@/features/spaces/useSharedSpaceConfirmed'
 import type { ContactMatch } from './queries'
 import { WizardBar } from './WizardBar'
 
 type SpaceStepProps = {
   newPeople: string[]
+  /** Who the picked contacts merge into, each once; and how many contacts merge. */
   merges: ContactMatch[]
+  mergeCount: number
   space: string | null
   onSpace: (spaceId: string | null) => void
   onBack: () => void
@@ -23,6 +25,7 @@ type SpaceStepProps = {
 export function SpaceStep({
   newPeople,
   merges,
+  mergeCount,
   space,
   onSpace,
   onBack,
@@ -30,12 +33,9 @@ export function SpaceStep({
   busy,
   error,
 }: SpaceStepProps) {
-  const spaces = (useQuery(spacesQuery).data?.items ?? []).filter(
-    (item) => item.role === 'owner' || item.role === 'editor',
-  )
+  const spaces = (useQuery(spacesQuery).data?.items ?? []).filter(canAddPeople)
   const [askFor, setAskFor] = useState<Space | null>(null)
-  // The same "don't ask again" as the person form's.
-  const [confirmedShared, dontAskAgain] = useDismissed('folkbook.sharedSpaceConfirmed')
+  const [confirmedShared, dontAskAgain] = useSharedSpaceConfirmed()
   const count = newPeople.length
 
   const choose = (item: Space) => {
@@ -99,7 +99,7 @@ export function SpaceStep({
         {(count > 0 || merges.length > 0) && (
           <Button disabled={busy} onClick={onImport}>
             {count === 0
-              ? `Merge ${merges.length}`
+              ? `Merge ${mergeCount}`
               : `Import ${count === 1 ? '1 person' : `${count} people`}`}
           </Button>
         )}

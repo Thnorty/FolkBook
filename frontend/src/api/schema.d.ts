@@ -2547,6 +2547,23 @@ export interface components {
             /** Photos */
             photos: number;
         };
+        /**
+         * AdditionsOut
+         * @description What a merge would add: details they don't have, fields that are still empty.
+         */
+        AdditionsOut: {
+            /** Phones */
+            phones: string[];
+            /** Emails */
+            emails: string[];
+            /** Work */
+            work: string;
+            birthday: components["schemas"]["Birthday"] | null;
+            /** Photo */
+            photo: boolean;
+            /** Note */
+            note: boolean;
+        };
         /** ContactOut */
         ContactOut: {
             /** Index */
@@ -2597,6 +2614,7 @@ export interface components {
             can_merge: boolean;
             /** By Details */
             by_details: boolean;
+            adds: components["schemas"]["AdditionsOut"] | null;
         };
         /** PreviewOut */
         PreviewOut: {

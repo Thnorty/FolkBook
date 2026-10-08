@@ -1,6 +1,9 @@
 """Importing contacts from a .vcf: a preview that stores nothing, then the import itself
 from the same file plus the user's choices."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -19,6 +22,7 @@ from accounts.models import User
 from imports.matching import Match, find_matches, phone_key
 from imports.models import Import, Merge
 from imports.schemas import (
+    AdditionsOut,
     ChoicesIn,
     ContactOut,
     DetailOut,
@@ -89,31 +93,55 @@ def run_import(access: Access, upload: UploadedFile, choices: ChoicesIn) -> Impo
     )
 
 
+@dataclass
+class Additions:
+    """What merging a card into someone would add: what they don't have yet."""
+
+    phones: list[Detail]
+    emails: list[Detail]
+    work: str  # "" when there's nothing to fill in
+    birthday: tuple[int, int, int | None] | None
+    photo: bool
+    note: bool
+
+
+def merge_additions(person: Person, methods: list[ContactMethod], card: Card) -> Additions:
+    """The one rule for what a merge adds, shown in the preview and applied by
+    merge_into: phones and emails they don't have (compared like matching does), and
+    fields that are still empty."""
+    phones = {_phone(m.value) for m in methods if m.kind == ContactMethod.ContactKind.PHONE}
+    emails = {_email(m.value) for m in methods if m.kind == ContactMethod.ContactKind.EMAIL}
+    return Additions(
+        phones=_new_details(card.phones, phones, _phone),
+        emails=_new_details(card.emails, emails, _email),
+        work="" if person.work else card.work,
+        birthday=card.birthday if person.birth_day is None else None,
+        photo=card.photo is not None and not person.photo,
+        note=bool(card.note),
+    )
+
+
 def merge_into(person: Person, card: Card, user: User, batch: Import, stored: list[str]) -> None:
     """Add to `person` what the card has and they don't, and record what that was, so the
     import can be undone. Overwrites nothing."""
     methods = list(person.contact_methods.all())
-    phones = {_phone(m.value) for m in methods if m.kind == ContactMethod.ContactKind.PHONE}
-    emails = {_email(m.value) for m in methods if m.kind == ContactMethod.ContactKind.EMAIL}
-    new_phones = [d for d in card.phones if _phone(d.value) not in phones]
-    new_emails = [d for d in card.emails if _email(d.value) not in emails]
+    adds = merge_additions(person, methods, card)
     start = max((m.position for m in methods), default=-1) + 1
-    added = _contact_methods(person, new_phones, new_emails, start)
+    added = _contact_methods(person, adds.phones, adds.emails, start)
     for method in added:
         method.added_by_import = batch
     ContactMethod.objects.bulk_create(added)
     filled: dict = {}
-    if not person.work and card.work:
-        person.work = filled["work"] = card.work
-    if card.birthday and person.birth_day is None:
-        person.birth_day, person.birth_month, person.birth_year = card.birthday
-        filled["birthday"] = list(card.birthday)
-    if card.photo and not person.photo:
-        _store_photo(person, card, stored)
+    if adds.work:
+        person.work = filled["work"] = adds.work
+    if adds.birthday:
+        person.birth_day, person.birth_month, person.birth_year = adds.birthday
+        filled["birthday"] = list(adds.birthday)
+    if adds.photo and _store_photo(person, card, stored):
         filled["photo"] = person.photo.name
     person.save()
     appended = ""
-    if card.note:
+    if adds.note:
         note, created = Note.objects.get_or_create(
             author=user, person=person, defaults={"body": card.note}
         )
@@ -148,23 +176,25 @@ def _refusal(message: str) -> ValidationError:
 
 
 def _contact_out(index: int, card: Card, match: Match | None) -> ContactOut:
-    day_month_year = card.birthday
     return ContactOut(
         index=index,
         name=card.name,
         phones=[DetailOut(value=d.value, label=d.label) for d in card.phones],
         emails=[DetailOut(value=d.value, label=d.label) for d in card.emails],
-        birthday=dict(zip(("day", "month", "year"), day_month_year, strict=True))
-        if day_month_year
-        else None,
+        birthday=_birthday_out(card.birthday),
         work=card.work,
         has_photo=card.photo is not None,
-        match=_match_out(match) if match else None,
+        match=_match_out(match, card) if match else None,
     )
 
 
-def _match_out(match: Match) -> MatchOut:
+def _birthday_out(birthday: tuple[int, int, int | None] | None) -> dict | None:
+    return dict(zip(("day", "month", "year"), birthday, strict=True)) if birthday else None
+
+
+def _match_out(match: Match, card: Card) -> MatchOut:
     person = match.person
+    adds = merge_additions(person, person.shown, card) if match.can_merge else None
 
     def details(kind: str) -> list[str]:
         return [method.value for method in person.shown if method.kind == kind]
@@ -180,6 +210,16 @@ def _match_out(match: Match) -> MatchOut:
         sure=match.sure,
         can_merge=match.can_merge,
         by_details=match.by_details,
+        adds=AdditionsOut(
+            phones=[d.value for d in adds.phones],
+            emails=[d.value for d in adds.emails],
+            work=adds.work,
+            birthday=_birthday_out(adds.birthday),
+            photo=adds.photo,
+            note=adds.note,
+        )
+        if adds
+        else None,
     )
 
 
@@ -235,7 +275,12 @@ def _add(user: User, cards: list[Card], batch: Import, stored: list[str]) -> lis
     ContactMethod.objects.bulk_create(
         method
         for person, card in pairs
-        for method in _contact_methods(person, card.phones, card.emails, 0)
+        for method in _contact_methods(
+            person,
+            _new_details(card.phones, set(), _phone),
+            _new_details(card.emails, set(), _email),
+            0,
+        )
     )
     Note.objects.bulk_create(
         Note(author=user, person=person, body=card.note) for person, card in pairs if card.note
@@ -263,12 +308,25 @@ def _email(value: str) -> str:
     return value.strip().casefold()
 
 
-def _store_photo(person: Person, card: Card, stored: list[str]) -> None:
+def _new_details(details: list[Detail], have: set[str], key: Callable[[str], str]) -> list[Detail]:
+    """The details not in `have`, each once (a card can list a number twice)."""
+    seen = set(have)
+    new = []
+    for detail in details:
+        if key(detail.value) not in seen:
+            seen.add(key(detail.value))
+            new.append(detail)
+    return new
+
+
+def _store_photo(person: Person, card: Card, stored: list[str]) -> bool:
+    """Store the card's photo; one that can't be read is left out, like a bad birthday."""
     try:
         store_photo(person, ContentFile(card.photo, name="photo"))
     except ValidationError:
-        raise _refusal(f"{card.name}'s photo can't be read.") from None
+        return False
     stored.extend(photo_files(person))
+    return True
 
 
 def _choice_error(message: str) -> ValidationError:

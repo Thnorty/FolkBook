@@ -7039,6 +7039,57 @@
         "title": "RestoreSummary",
         "type": "object"
       },
+      "AdditionsOut": {
+        "description": "What a merge would add: details they don't have, fields that are still empty.",
+        "properties": {
+          "phones": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Phones",
+            "type": "array"
+          },
+          "emails": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Emails",
+            "type": "array"
+          },
+          "work": {
+            "title": "Work",
+            "type": "string"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "photo": {
+            "title": "Photo",
+            "type": "boolean"
+          },
+          "note": {
+            "title": "Note",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "phones",
+          "emails",
+          "work",
+          "birthday",
+          "photo",
+          "note"
+        ],
+        "title": "AdditionsOut",
+        "type": "object"
+      },
       "ContactOut": {
         "properties": {
           "index": {
@@ -7185,6 +7236,16 @@
           "by_details": {
             "title": "By Details",
             "type": "boolean"
+          },
+          "adds": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdditionsOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -7197,7 +7258,8 @@
           "reason",
           "sure",
           "can_merge",
-          "by_details"
+          "by_details",
+          "adds"
         ],
         "title": "MatchOut",
         "type": "object"

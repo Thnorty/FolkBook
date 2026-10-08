@@ -2,7 +2,7 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
-from access.policy import Access
+from access.policy import Access, can_merge_into
 from imports.matching import find_matches, fold, phone_key
 from imports.vcard import Card, Detail
 from tests.factories import ContactMethodFactory, PersonFactory
@@ -126,3 +126,9 @@ def test_read_only_access_cant_merge(world):
     [match] = find_matches(access, [contact("Emma")])
 
     assert match.can_merge is False
+
+
+def test_torn_out_people_cant_be_merged_into(world):
+    world.emma.deleted_at = timezone.now()
+
+    assert can_merge_into(Access.for_user(world.ela), world.emma) is False

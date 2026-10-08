@@ -7,6 +7,15 @@ import { renderApp } from '@/test/renderApp'
 
 const ME = { id: 'u1', email: 'ela@example.com', is_admin: false, me: { id: 'me', name: 'Ela' } }
 const noMatch = { emails: [], birthday: null, work: '', has_photo: false, match: null }
+const adds = (fields: object = {}) => ({
+  phones: [],
+  emails: [],
+  work: '',
+  birthday: null,
+  photo: false,
+  note: false,
+  ...fields,
+})
 const match = (fields: object) => ({
   owner: 'Ela Demir',
   photo: null,
@@ -16,6 +25,7 @@ const match = (fields: object) => ({
   sure: true,
   can_merge: true,
   by_details: false,
+  adds: adds(),
   ...fields,
 })
 const PREVIEW = {
@@ -39,6 +49,7 @@ const PREVIEW = {
         spaces: [{ id: 's2', name: "Uni '15", color: 'plum' }],
         reason: 'initial',
         sure: false,
+        adds: adds({ phones: ['+48 601 234 567'], emails: ['anna.k@post.pl'], work: 'Acme' }),
       }),
     },
     {
@@ -183,6 +194,17 @@ describe('importing contacts', () => {
     expect(within(page).getByText('Nothing is added until the last step')).toBeInTheDocument()
   })
 
+  it('says how big a file can be', async () => {
+    server()
+    renderApp('/people/import')
+
+    expect(
+      await screen.findByText(
+        'Up to 20 MB. A bigger export? Export it without photos, or in parts.',
+      ),
+    ).toBeInTheDocument()
+  })
+
   it('shows the steps', async () => {
     const page = await upload()
     await within(page).findByText('3 contacts in contacts.vcf')
@@ -198,12 +220,15 @@ describe('importing contacts', () => {
     expect(within(page).getByText('Looks like Anna K. already exists')).toBeInTheDocument()
     expect(within(page).getByText(/Same first name and initial/)).toBeInTheDocument()
     expect(within(page).getByText('Anna Kowalska')).toBeInTheDocument()
-    expect(within(page).getByText('anna.k@post.pl')).toBeInTheDocument()
+    expect(within(page).getByText('anna.k@post.pl').closest('ins')).not.toBeNull()
+    expect(within(page).getByText('Merge also fills in their work.')).toBeInTheDocument()
     expect(within(page).getByText('1 of 2 possible duplicates')).toBeInTheDocument()
     await userEvent.click(within(page).getByRole('button', { name: 'Merge' }))
 
     expect(within(page).getByText('Looks like Ines Berg already exists')).toBeInTheDocument()
     expect(within(page).getByText(/Same phone number/)).toBeInTheDocument()
+    // Already theirs, though written differently: not something the merge adds.
+    expect(within(page).getByText('070 555 12 90').closest('ins')).toBeNull()
     await userEvent.click(within(page).getByRole('button', { name: 'Import as new' }))
 
     expect(within(page).getByText('Put the new person in a space?')).toBeInTheDocument()
@@ -244,6 +269,7 @@ describe('importing contacts', () => {
             owner: 'Defne Aydın',
             reason: 'name',
             can_merge: false,
+            adds: null,
           }),
         },
       ],
@@ -293,5 +319,21 @@ describe('importing contacts', () => {
       'href',
       '/people?needs=true',
     )
+  })
+
+  it('names someone two contacts merge into once', async () => {
+    const ines = PREVIEW.contacts[2]
+    calls.preview = {
+      ...PREVIEW,
+      contacts: [...PREVIEW.contacts, { ...ines, index: 3, name: 'Ines B.' }],
+    }
+    calls.result = { import_id: 'i1', added: 0, merged: 2, left_out: 2, space: null }
+    const page = await pick('Ines Berg', 'Ines B\\.')
+    await userEvent.click(within(page).getByRole('button', { name: 'Merge' }))
+    await userEvent.click(within(page).getByRole('button', { name: 'Merge' }))
+
+    expect(within(page).getAllByText(/Ines, merged/)).toHaveLength(1)
+    await userEvent.click(within(page).getByRole('button', { name: 'Merge 2' }))
+    expect(await within(page).findByText('2 merged into Ines')).toBeInTheDocument()
   })
 })

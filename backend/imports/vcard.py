@@ -13,11 +13,15 @@ import quopri
 import re
 from dataclasses import dataclass
 
+from people.schemas import FIRST_YEAR, LAST_YEAR
+
 # Field lengths of the models they end up in.
 NAME_LENGTH = 200
 VALUE_LENGTH = 255
 WORK_LENGTH = 200
 NO_YEAR = 1604  # Apple's year for "no year" (vCard 3.0 can't say it)
+ENCODINGS = {"QUOTED-PRINTABLE", "BASE64", "B", "8BIT"}  # 2.1 may name them bare
+URI_PREFIXES = ("tel:", "mailto:")
 LABELS = {"cell": "mobile", "mobile": "mobile", "iphone": "mobile", "home": "home", "work": "work"}
 
 
@@ -79,20 +83,23 @@ def _decode(data: bytes) -> str:
 def _unfold(text: str) -> list[str]:
     """Join continued lines: folded ones (starting with a space or tab) and 2.1's
     quoted-printable soft line breaks (a line ending in "=")."""
-    lines: list[str] = []
+    # Each logical line as its pieces, joined once at the end: adding to a growing
+    # string would copy it every time, which is slow for a folded photo.
+    lines: list[list[str]] = []
     for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n"):
         if lines and line[:1] in (" ", "\t"):
-            lines[-1] += line[1:]
+            lines[-1].append(line[1:])
         elif lines and _soft_break(lines[-1]):
-            lines[-1] = lines[-1][:-1] + line
+            lines[-1][-1] = lines[-1][-1][:-1]
+            lines[-1].append(line)
         elif line.strip():
-            lines.append(line)
-    return lines
+            lines.append([line])
+    return ["".join(pieces) for pieces in lines]
 
 
-def _soft_break(line: str) -> bool:
-    head = line.partition(":")[0].upper()
-    return line.endswith("=") and "QUOTED-PRINTABLE" in head
+def _soft_break(pieces: list[str]) -> bool:
+    head = pieces[0].partition(":")[0].upper()
+    return pieces[-1].endswith("=") and "QUOTED-PRINTABLE" in head
 
 
 def _cards(lines: list[str]) -> list[list[_Line]]:
@@ -117,8 +124,8 @@ def _parse(raw: str) -> _Line:
     params: dict[str, list[str]] = {}
     for part in parts:
         key, equals, values = part.partition("=")
-        if not equals:  # 2.1 style: TEL;CELL;VOICE
-            key, values = "TYPE", key
+        if not equals:  # 2.1 style: TEL;CELL;VOICE, FN;QUOTED-PRINTABLE
+            key, values = ("ENCODING" if key.strip().upper() in ENCODINGS else "TYPE"), key
         params.setdefault(key.strip().upper(), []).extend(
             v.strip().strip('"').lower() for v in values.split(",")
         )
@@ -126,7 +133,10 @@ def _parse(raw: str) -> _Line:
     if "quoted-printable" in params.get("ENCODING", []):
         charset = (params.get("CHARSET") or ["utf-8"])[0]
         decoded = quopri.decodestring(value.encode("latin-1", errors="replace"))
-        value = decoded.decode(charset, errors="replace")
+        try:
+            value = decoded.decode(charset, errors="replace")
+        except LookupError:  # a charset Python doesn't know
+            value = decoded.decode("utf-8", errors="replace")
     return _Line(name, params, value)
 
 
@@ -165,7 +175,10 @@ def _name(fn: _Line | None, n: _Line | None, org: _Line | None) -> str:
 def _detail(line: _Line) -> Detail:
     types = line.params.get("TYPE", [])
     label = next((LABELS[t] for t in types if t in LABELS), "")
-    return Detail(_text(line.value).strip()[:VALUE_LENGTH], label)
+    value = _text(line.value).strip()
+    if value.lower().startswith(URI_PREFIXES):  # 4.0: TEL;VALUE=uri:tel:+1-555-0100
+        value = value.partition(":")[2]
+    return Detail(value[:VALUE_LENGTH], label)
 
 
 def _birthday(line: _Line | None) -> tuple[int, int, int | None] | None:
@@ -180,6 +193,8 @@ def _birthday(line: _Line | None) -> tuple[int, int, int | None] | None:
         return None
     if year == NO_YEAR or "X-APPLE-OMIT-YEAR" in line.params:
         year = None
+    if year is not None and not FIRST_YEAR <= year <= LAST_YEAR:
+        year = None  # a typo like 0000 or 2999: keep the day and month
     try:
         datetime.date(year or 2000, month, day)  # 2000: a leap year, so 29 Feb passes
     except ValueError:

@@ -105,3 +105,38 @@ def test_long_text_is_cut():
 def test_not_a_vcard():
     with pytest.raises(NotAVcard):
         read(b"hello")
+
+
+@pytest.mark.parametrize("value", ["0000-06-14", "1700-06-14", "2999-06-14"])
+def test_a_year_we_cant_keep_is_dropped_not_the_birthday(value):
+    assert card(f"FN:Emma\nBDAY:{value}").birthday == (14, 6, None)
+
+
+def test_an_unknown_charset_reads_as_utf8():
+    text = "FN;CHARSET=x-bogus;ENCODING=QUOTED-PRINTABLE:Ay=C5=9Fe"
+
+    assert card(text).name == "Ayşe"
+
+
+def test_bare_21_encodings():
+    jpeg = (SAMPLES / "google-4.0.vcf").read_text().split("base64,")[1].split("\n")[0]
+
+    assert card("FN;CHARSET=UTF-8;QUOTED-PRINTABLE:Ay=C5=9Fe").name == "Ayşe"
+    assert card(f"FN:Emma\nPHOTO;JPEG;BASE64:{jpeg}").photo.startswith(b"\xff\xd8")
+
+
+def test_tel_uris_lose_their_prefix():
+    assert card("FN:Emma\nTEL;VALUE=uri;TYPE=cell:tel:+1-555-0100").phones == [
+        Detail("+1-555-0100", "mobile")
+    ]
+
+
+def test_long_folded_lines_are_read_in_linear_time():
+    import time
+
+    photo = "PHOTO;ENCODING=b;TYPE=JPEG:" + "\n ".join(["QUJD" * 18] * 60_000)  # ~4 MB
+    started = time.perf_counter()
+
+    read(f"BEGIN:VCARD\nVERSION:3.0\nFN:Emma\n{photo}\nEND:VCARD\n".encode())
+
+    assert time.perf_counter() - started < 2

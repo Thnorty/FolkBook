@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { peopleListQuery } from '@/features/people/queries'
 import { warnAt } from '@/lib/fieldWarnings'
 import { cn } from '@/lib/utils'
-import { spacesQuery } from '@/features/spaces/queries'
+import { canAddPeople, spacesQuery } from '@/features/spaces/queries'
 import {
   KIND_GROUPS,
   kindChip,
@@ -267,9 +267,7 @@ function Hint({ children }: { children: ReactNode }) {
  */
 function useSharedSpaces(person: PersonDetail, other: Other | null) {
   const editable = new Set(
-    (useQuery(spacesQuery).data?.items ?? [])
-      .filter((space) => space.role !== 'viewer')
-      .map((space) => space.id),
+    (useQuery(spacesQuery).data?.items ?? []).filter(canAddPeople).map((space) => space.id),
   )
   const theirs = new Set(other && 'id' in other ? other.spaces.map((space) => space.id) : [])
   return person.spaces.filter((space) => editable.has(space.id) && theirs.has(space.id))

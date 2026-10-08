@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { words } from '@/lib/names'
 import type { Choice } from './ImportPage'
 import type { Contact, ContactMatch } from './queries'
 import { WizardBar } from './WizardBar'
@@ -31,7 +31,15 @@ export function DuplicateStep({
   onBack,
 }: DuplicateStepProps) {
   const { match } = contact
-  const theirs = new Set([...match.phones, ...match.emails])
+  const { adds } = match
+  const added = new Set([...(adds?.phones ?? []), ...(adds?.emails ?? [])])
+  const fills = adds
+    ? [
+        adds.work && 'their work',
+        adds.birthday !== null && 'their birthday',
+        adds.photo && 'their photo',
+      ]
+    : []
   const owner = match.owner.split(' ')[0]
   return (
     <div className="flex flex-col gap-4">
@@ -49,16 +57,25 @@ export function DuplicateStep({
           <Field label="Spaces" values={match.spaces.map((space) => space.name)} />
         </Side>
         <Side title={`From ${fileName}`} name={contact.name}>
-          <Field label="Phone" values={contact.phones.map((d) => d.value)} isNew={theirs} />
-          <Field label="Email" values={contact.emails.map((d) => d.value)} isNew={theirs} />
+          <Field label="Phone" values={contact.phones.map((d) => d.value)} added={added} />
+          <Field label="Email" values={contact.emails.map((d) => d.value)} added={added} />
           <Field label="Spaces" values={[]} />
         </Side>
       </div>
-      <p className="type-small text-ink-soft">
-        {match.can_merge
-          ? `Merge keeps ${match.person.name} and adds what's new, in blue.`
-          : `Shared by ${owner}, so you can't merge into them`}
-      </p>
+      <div className="type-small text-ink-soft">
+        {match.can_merge ? (
+          <>
+            <p>
+              Merge keeps {match.person.name}
+              {added.size > 0 ? ' and adds the details in blue.' : '.'}
+            </p>
+            {fills.some(Boolean) && <p>Merge also fills in {words(fills)}.</p>}
+            {adds?.note && <p>The contact's note is added to yours.</p>}
+          </>
+        ) : (
+          <p>Shared by {owner}, so you can't merge into them</p>
+        )}
+      </div>
       <WizardBar start={`${position} of ${total} possible duplicates`}>
         <Button variant="ghost" onClick={onBack}>
           Back
@@ -89,15 +106,15 @@ function Side({ title, name, children }: { title: string; name: string; children
   )
 }
 
-/** One row of the comparison; values the other side lacks are what a merge adds. */
+/** One row of the comparison; what a merge would add is marked as inserted. */
 function Field({
   label,
   values,
-  isNew,
+  added,
 }: {
   label: string
   values: string[]
-  isNew?: ReadonlySet<string>
+  added?: ReadonlySet<string>
 }) {
   return (
     <>
@@ -105,14 +122,17 @@ function Field({
       <dd className="min-w-0">
         {values.length === 0
           ? '—'
-          : values.map((value) => (
-              <span
-                key={value}
-                className={cn('block truncate', isNew && !isNew.has(value) && 'text-accent')}
-              >
-                {value}
-              </span>
-            ))}
+          : values.map((value) =>
+              added?.has(value) ? (
+                <ins key={value} className="block truncate text-accent no-underline">
+                  {value}
+                </ins>
+              ) : (
+                <span key={value} className="block truncate">
+                  {value}
+                </span>
+              ),
+            )}
       </dd>
     </>
   )

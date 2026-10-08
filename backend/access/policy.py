@@ -184,7 +184,7 @@ def can_edit_person(access: Access, person: Person) -> bool:
 def can_merge_into(access: Access, person: Person) -> bool:
     """Merge an imported contact into someone the user can already see: only their own
     people, since contact details are the owner's to change."""
-    return not access.read_only and person.owner_id == access.user.pk
+    return not access.read_only and person.owner_id == access.user.pk and person.deleted_at is None
 
 
 def can_delete_person(access: Access, person: Person) -> bool:

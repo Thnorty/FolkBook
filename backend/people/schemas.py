@@ -7,11 +7,14 @@ from ninja import Field, Schema
 from people.models import ContactMethod, Pronouns
 from spaces.models import Space
 
+# The years a birthday can have.
+FIRST_YEAR, LAST_YEAR = 1800, 2200
+
 
 class Birthday(Schema):
     day: int = Field(ge=1, le=31)
     month: int = Field(ge=1, le=12)
-    year: int | None = Field(None, ge=1800, le=2200)
+    year: int | None = Field(None, ge=FIRST_YEAR, le=LAST_YEAR)
 
 
 class PersonRef(Schema):

@@ -115,3 +115,23 @@ def test_needs_full_access(world):
 
 def test_needs_a_login(api):
     assert api.upload("/imports/preview", {"file": vcf()}).status_code == 401
+
+
+def test_preview_says_exactly_what_a_merge_would_add(api, world):
+    upload = vcf(
+        b"BEGIN:VCARD\nVERSION:3.0\nFN:Ines B\nTEL:070 555 12 90\nTEL:+46 70 555 12 90\n"
+        b"EMAIL:ines@example.com\nTITLE:Doctor\nBDAY:--0302\nNOTE:Gym\nEND:VCARD\n"
+        b"BEGIN:VCARD\nVERSION:3.0\nFN:Tom\nEMAIL:tom@example.com\nEND:VCARD\n"
+    )
+
+    ines, tom = preview(api, world.ela, upload).json()["contacts"]
+
+    assert ines["match"]["adds"] == {
+        "phones": [],  # the same number, written two ways: already there
+        "emails": ["ines@example.com"],
+        "work": "Doctor",
+        "birthday": {"day": 2, "month": 3, "year": None},
+        "photo": False,
+        "note": True,
+    }
+    assert tom["match"]["adds"] is None  # Defne's: can't be merged into

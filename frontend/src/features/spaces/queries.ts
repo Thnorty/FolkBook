@@ -3,6 +3,9 @@ import { api, unwrap } from '@/api/client'
 import type { components } from '@/api/schema'
 
 export type Space = components['schemas']['SpaceOut']
+
+/** Owners and editors can put people (and links) in a space; viewers can't. */
+export const canAddPeople = (space: Space) => space.role !== 'viewer'
 export type SpaceInput = components['schemas']['SpaceIn']
 
 /** The spaces you can see, by name (first page; enough until #44 adds more). */

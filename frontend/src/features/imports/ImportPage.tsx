@@ -63,6 +63,8 @@ export function ImportPage() {
   const choiceFor = (contact: Contact): Choice => choices.get(contact.index) ?? { action: 'new' }
   const added = contacts.filter((contact) => choiceFor(contact).action === 'new')
   const merges = duplicates.filter((contact) => choiceFor(contact).action === 'merge')
+  // Two contacts can merge into the same person: name them once.
+  const mergedPeople = [...new Map(merges.map(({ match }) => [match.person.id, match])).values()]
 
   const save = useMutation({
     mutationFn: () =>
@@ -131,7 +133,8 @@ export function ImportPage() {
       {step === 'space' && (
         <SpaceStep
           newPeople={added.map((contact) => contact.name)}
-          merges={merges.map((contact) => contact.match)}
+          merges={mergedPeople}
+          mergeCount={merges.length}
           space={space}
           onSpace={setSpace}
           onBack={() => setStep(duplicates.length > 0 ? 'duplicates' : 'choose')}
@@ -141,7 +144,7 @@ export function ImportPage() {
         />
       )}
       {step === 'done' && result && (
-        <DoneStep result={result} mergedInto={merges.map((contact) => contact.match.person.name)} />
+        <DoneStep result={result} mergedInto={mergedPeople.map((match) => match.person.name)} />
       )}
     </div>
   )

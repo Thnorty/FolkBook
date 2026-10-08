@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { FileButton } from '@/components/ui/file-button'
 import { cn } from '@/lib/utils'
 
+// The server's limit (backend/imports/services.py MAX_FILE_MB): it refuses bigger files.
+const MAX_FILE_MB = 20
+
 type UploadStepProps = {
   onFile: (file: File) => void
   busy: boolean
@@ -51,6 +54,9 @@ export function UploadStep({ onFile, busy, error }: UploadStepProps) {
           {error}
         </p>
       )}
+      <p className="type-small text-ink-soft">
+        Up to {MAX_FILE_MB} MB. A bigger export? Export it without photos, or in parts.
+      </p>
       <p className="type-meta text-ink-faint">Nothing is added until the last step</p>
     </div>
   )
