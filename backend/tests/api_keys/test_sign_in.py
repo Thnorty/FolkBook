@@ -1,9 +1,11 @@
 """Signing in with an API key instead of the login cookie."""
 
 import datetime
+import logging
 import re
 
 import pytest
+from django.test import Client
 from django.utils import timezone
 
 from access.policy import Access
@@ -12,6 +14,7 @@ from api_keys.auth import api_key_auth
 from api_keys.schemas import ApiKeyIn
 from config.api import api as folkbook_api
 from spaces import services as space_services
+from tests.api_client import ApiClient
 
 INVALID = {"detail": "This API key isn't valid."}
 
@@ -23,6 +26,7 @@ COOKIE_ONLY = (
     "/api/invites",
     "/api/api-keys",
     "/api/export/restore",
+    "/api/keep-in-touch/settings",  # nudges for the whole book: the account's
 )
 # The book: API keys work here. A new router goes in one list or the other, on purpose.
 TAKES_KEYS = (
@@ -89,6 +93,7 @@ def test_bad_keys_are_401(api, world, problem):
 
     assert response.status_code == 401
     assert response.json() == INVALID
+    assert response["WWW-Authenticate"] == "Bearer"
 
 
 def test_a_bad_key_never_falls_back_to_the_login_cookie(api, world, client):
@@ -106,6 +111,9 @@ def test_cookie_only_endpoints_refuse_keys(api, world):
     assert client.get("/auth/devices").status_code == 401
     assert client.get("/api-keys").status_code == 401
     assert client.post("/api-keys", {"name": "Another"}).status_code == 401
+    assert client.get("/keep-in-touch/settings").status_code == 401
+    assert client.put("/keep-in-touch/settings", {"nudges_on": False}).status_code == 401
+    assert client.get(f"/keep-in-touch/{world.oskar.pk}").status_code == 200
     assert client.post("/export/restore/check").status_code == 401
     me = client.get("/auth/me")
     assert me.status_code == 200
@@ -150,3 +158,26 @@ def test_a_key_whose_spaces_are_gone_sees_nothing(api, world):
 
     # Only Ela's own Me, which any key of hers sees (access/test_limited_access.py).
     assert names(client.get("/people")) == ["Ela"]
+
+
+def test_re_enabling_the_owner_brings_the_key_back(api, world):
+    client = api.with_key(key_for(world.ela))
+    world.ela.is_active = False
+    world.ela.save()
+    assert client.get("/people").status_code == 401
+
+    world.ela.is_active = True
+    world.ela.save()
+
+    assert client.get("/people").status_code == 200
+
+
+def test_a_key_without_the_bearer_word_is_never_logged(api, world, settings, caplog):
+    settings.DEBUG = True  # Ninja logs odd Authorization headers in full when debugging
+    key = key_for(world.ela)
+
+    with caplog.at_level(logging.DEBUG):
+        response = ApiClient(Client(headers={"Authorization": key})).get("/people")
+
+    assert response.status_code == 401
+    assert key not in caplog.text

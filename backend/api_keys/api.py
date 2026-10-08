@@ -33,5 +33,5 @@ def create_api_key(request, payload: ApiKeyIn):
 @router.delete("/{uuid:key_id}", response={204: None})
 def revoke_api_key(request, key_id: UUID):
     access = access_for(request)
-    services.revoke_api_key(access, get_object_or_404(visible_api_keys(access), pk=key_id))
+    services.revoke_api_key(get_object_or_404(visible_api_keys(access), pk=key_id))
     return Status(204, None)
