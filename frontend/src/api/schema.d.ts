@@ -409,6 +409,7 @@ export interface paths {
          *     copies: you didn't add those).
          *     `kept`: your copies of people you lost sight of.
          *     `import`: the people one of your .vcf imports added.
+         *     `mine`: only people in your own book, not ones shared with you.
          *
          *     `search` matches names, how you met, work, tags, spaces and your own notes and
          *     memory aids, ignoring case and accents.
@@ -3257,6 +3258,7 @@ export interface operations {
                 recent?: boolean;
                 kept?: boolean;
                 import?: string | null;
+                mine?: boolean;
                 page?: number;
                 page_size?: number | null;
             };

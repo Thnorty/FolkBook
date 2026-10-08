@@ -114,12 +114,14 @@ def list_people(
     recent: bool = False,
     kept: bool = False,
     import_id: UUID | None = IMPORT_PARAM,
+    mine: bool = False,
 ):
     """Everyone the user can see, by name. `needs_details`: no "how we met" yet.
     `recent`: people added to your own book in the last 30 days, newest first (not kept
     copies: you didn't add those).
     `kept`: your copies of people you lost sight of.
     `import`: the people one of your .vcf imports added.
+    `mine`: only people in your own book, not ones shared with you.
 
     `search` matches names, how you met, work, tags, spaces and your own notes and
     memory aids, ignoring case and accents.
@@ -130,6 +132,8 @@ def list_people(
         people = people.filter(spaces__in=visible_spaces(access).filter(pk=space))
     if needs_details:
         people = people.filter(needs_details=True)
+    if mine:
+        people = people.filter(owner=access.user)
     if import_id:
         people = people.filter(added_by_import__in=visible_imports(access).filter(pk=import_id))
     if kept:

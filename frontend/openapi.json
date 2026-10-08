@@ -946,6 +946,16 @@
           },
           {
             "in": "query",
+            "name": "mine",
+            "schema": {
+              "default": false,
+              "title": "Mine",
+              "type": "boolean"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
             "name": "page",
             "schema": {
               "default": 1,
@@ -985,7 +995,7 @@
             }
           }
         },
-        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.\n`recent`: people added to your own book in the last 30 days, newest first (not kept\ncopies: you didn't add those).\n`kept`: your copies of people you lost sight of.\n`import`: the people one of your .vcf imports added.\n\n`search` matches names, how you met, work, tags, spaces and your own notes and\nmemory aids, ignoring case and accents.",
+        "description": "Everyone the user can see, by name. `needs_details`: no \"how we met\" yet.\n`recent`: people added to your own book in the last 30 days, newest first (not kept\ncopies: you didn't add those).\n`kept`: your copies of people you lost sight of.\n`import`: the people one of your .vcf imports added.\n`mine`: only people in your own book, not ones shared with you.\n\n`search` matches names, how you met, work, tags, spaces and your own notes and\nmemory aids, ignoring case and accents.",
         "tags": [
           "people"
         ],

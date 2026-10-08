@@ -81,3 +81,10 @@ def test_query_count_does_not_grow_with_the_import(api, world):
         person.save()
 
     assert queries() == before
+
+
+def test_mine_lists_only_your_own_people(api, world):
+    # Deniz sees Ela's Oskar and Ines through Climbing club, and has his own Yuki.
+    response = api.login(world.deniz).get("/people", needs_details=True, mine=True)
+
+    assert names(response) == ["Yuki"]

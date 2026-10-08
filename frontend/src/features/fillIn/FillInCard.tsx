@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { UsersRound } from 'lucide-react'
 import { useMotionValue, useTransform } from 'motion/react'
 import * as m from 'motion/react-m'
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { ApiError } from '@/api/errors'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { Button } from '@/components/ui/button'
@@ -52,7 +52,8 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
   const x = useMotionValue(0)
   const tilt = useTransform(x, [-200, 200], [-6, 6])
 
-  const theirs = new Set(person.spaces.map((space) => space.id))
+  // Their spaces as they are now (the queue was read when the mode opened).
+  const theirs = new Set((detail ?? person).spaces.map((space) => space.id))
   const spaces = picked ?? theirs
   const spacesChanged = picked !== null && !sameSet(picked, theirs)
   const changed = Boolean(howWeMet.trim() || spacesChanged || aid?.trim())
@@ -91,9 +92,17 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
   const submit = () => {
     if (changed && !save.isPending) save.mutate()
   }
+  // Not while a save is on its way: that save moves on by itself.
+  const skip = () => {
+    if (!save.isPending) onSkipped()
+  }
+  const card = useRef<HTMLFieldSetElement>(null)
+  // A new card takes the focus, so the keys and screen readers start from it.
+  useEffect(() => card.current?.focus(), [])
 
   useShortcut(SAVE, submit)
-  useShortcut(SKIP, onSkipped)
+  // In a field Ctrl/⌘+→ moves the cursor by a word; it skips only from outside one.
+  useShortcut(SKIP, skip, { whileTyping: false })
   // 1–4 pick a space, 5 is Friend of… (only while not typing).
   useShortcut({ key: '1' }, () => quick[0] && toggle(quick[0]))
   useShortcut({ key: '2' }, () => quick[1] && toggle(quick[1]))
@@ -121,7 +130,7 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
       dragElastic={0.6}
       onDragEnd={(_, { offset, velocity }) => {
         const swipe = swipeOf(offset.x, velocity.x)
-        if (swipe === 'skip') onSkipped()
+        if (swipe === 'skip') skip()
         else if (swipe === 'save') submit()
       }}
       className="flex touch-pan-y flex-col gap-5 rounded-card border border-line bg-card p-5 shadow-note"
@@ -133,7 +142,12 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
           {source && <p className="type-meta text-ink-faint">{source}</p>}
         </div>
       </div>
-      <fieldset aria-label={`Fill in ${firstName}`} className="flex flex-col gap-3">
+      <fieldset
+        ref={card}
+        tabIndex={-1}
+        aria-label={`Fill in ${firstName}`}
+        className="flex flex-col gap-3 outline-none"
+      >
         <Label
           htmlFor={`${fieldId}-input`}
           className="mb-0 font-serif text-xl font-normal tracking-normal text-ink normal-case"
@@ -197,7 +211,7 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
         </p>
       )}
       <div className="flex items-center justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onSkipped}>
+        <Button type="button" variant="ghost" onClick={skip} disabled={save.isPending}>
           Skip
         </Button>
         <Button type="submit" disabled={!changed || save.isPending}>
@@ -211,8 +225,8 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
         </p>
       )}
       <p className="hidden type-meta text-ink-faint md:block">
-        <Kbd shortcut={SAVE} /> save &amp; next · <Kbd shortcut={SKIP} /> skip · 1–5 pick a quick
-        answer
+        <Kbd shortcut={SAVE} /> save &amp; next · <Kbd shortcut={SKIP} /> skip ·{' '}
+        <Kbd shortcut={{ key: '1' }} />–<Kbd shortcut={{ key: '5' }} /> pick a quick answer
       </p>
       {askFor && (
         <SharedSpaceConfirm
