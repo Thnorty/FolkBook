@@ -317,9 +317,9 @@ describe('importing contacts', () => {
     expect(within(page).getByText('1 merged into Anna Kowalska')).toBeInTheDocument()
     expect(within(page).getByText('208 left out — they stay in your phone')).toBeInTheDocument()
     expect(within(page).getByRole('link', { name: 'Later' })).toHaveAttribute('href', '/people')
-    expect(within(page).getByRole('link', { name: 'Show them' })).toHaveAttribute(
+    expect(within(page).getByRole('link', { name: /Fill in the blanks/ })).toHaveAttribute(
       'href',
-      '/people?needs=true',
+      '/people/fill-in?import=i1',
     )
   })
 

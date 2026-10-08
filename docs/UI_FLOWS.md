@@ -97,7 +97,7 @@ A wizard at `/people/import` (Upload · Choose · Duplicates · Space · Done). 
 2. **Choose:** the file's contacts, all unchecked ("select who you actually know"), with a search, "Maybe in your book" on possible matches and "Hide N already in your book"
 3. **Duplicates** (only if any): one at a time, "Looks like Anna K. already exists", the reason, both sides compared with what a merge adds in blue → **Merge** (only into your own people) / **Skip** / **Import as new**
 4. **Space** (optional) for the new people; a shared space asks first
-5. **Done:** "Imported 5 new people, in Work · 1 merged into Anna Kowalska · 208 left out" → Later / **Fill in the blanks** (card-by-card: "How do you know Anna?", a space chip, Friend of…, a memory aid; swipe on mobile, keys on desktop). People not filled in are found later under the **Needs details** filter (no Today reminder).
+5. **Done:** "Imported 5 new people, in Work · 1 merged into Anna Kowalska · 208 left out" → Later / **Fill in the blanks** (card-by-card: "How do you know Anna?", a space chip, Friend of…, a memory aid; swipe on mobile, keys on desktop). People not filled in are found later under the **Needs details** filter (no Today reminder), which also has a **Fill in the blanks** button for everyone without "how we met". The mode (`/people/fill-in`) reads its list once, shows Done / Now on desktop, and after a full page of 50 offers to keep going.
 6. **Recent imports** (Settings → Import / export): Show these people · Undo this import (keeps anyone you've written about since; takes back what merges added unless it changed since)
 
 ### 3.7 Spaces

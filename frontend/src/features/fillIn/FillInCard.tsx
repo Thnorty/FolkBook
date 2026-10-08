@@ -134,7 +134,12 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
         </div>
       </div>
       <fieldset aria-label={`Fill in ${firstName}`} className="flex flex-col gap-3">
-        <Label htmlFor={`${fieldId}-input`}>How do you know {firstName}?</Label>
+        <Label
+          htmlFor={`${fieldId}-input`}
+          className="mb-0 font-serif text-xl font-normal tracking-normal text-ink normal-case"
+        >
+          How do you know {firstName}?
+        </Label>
         <Input
           id={`${fieldId}-input`}
           value={howWeMet}
@@ -161,7 +166,7 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
               )}
             </Choice>
           ))}
-          <Button type="button" variant="secondary" onClick={friendOf}>
+          <Button type="button" variant="secondary" className="rounded-full" onClick={friendOf}>
             Friend of…
           </Button>
         </div>

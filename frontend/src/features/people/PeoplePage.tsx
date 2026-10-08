@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { LayoutGrid, List, UserPlus } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { PageHeader } from '@/components/PageHeader'
@@ -120,6 +120,11 @@ export function PeoplePage() {
             }
           />
           {pickedSpace && <SpaceBanner space={pickedSpace} />}
+          {needs && (
+            <Button asChild variant="secondary" className="self-start">
+              <Link to="/people/fill-in">Fill in the blanks</Link>
+            </Button>
+          )}
         </div>
 
         <div className="mt-5">

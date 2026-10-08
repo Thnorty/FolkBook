@@ -126,6 +126,10 @@ describe('People list', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Needs details · 1' }))
 
     await waitFor(async () => expect(await cards()).toEqual(['Anna Kowalska']))
+    expect(screen.getByRole('link', { name: 'Fill in the blanks' })).toHaveAttribute(
+      'href',
+      '/people/fill-in',
+    )
   })
 
   it('filters to kept copies, only when there are some', async () => {

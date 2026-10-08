@@ -30,7 +30,8 @@ export function DoneStep({ result, mergedInto }: DoneStepProps) {
       </ul>
       {result.added > 0 && (
         <p className="type-small text-ink-soft">
-          They don't know how you know them yet. Find them under Needs details.
+          They don't know how you know them yet. A few quick questions, one per person, or find them
+          later under Needs details.
         </p>
       )}
       <div className="flex justify-end gap-2">
@@ -39,8 +40,8 @@ export function DoneStep({ result, mergedInto }: DoneStepProps) {
         </Button>
         {result.added > 0 && (
           <Button asChild>
-            <Link to="/people" search={{ needs: true }}>
-              Show them
+            <Link to="/people/fill-in" search={{ import: result.import_id }}>
+              Fill in the blanks →
             </Link>
           </Button>
         )}
