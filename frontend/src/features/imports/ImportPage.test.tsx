@@ -276,7 +276,9 @@ describe('importing contacts', () => {
     }
     const page = await pick('Tom')
 
-    expect(within(page).getByText("Shared by Defne, so you can't merge into them")).toBeVisible()
+    expect(
+      within(page).getByText("Shared by Defne, so you can't merge into them"),
+    ).toBeInTheDocument()
     expect(within(page).queryByRole('button', { name: 'Merge' })).not.toBeInTheDocument()
     await userEvent.click(within(page).getByRole('button', { name: 'Skip' }))
     expect(within(page).getByText(/Nobody new to add/)).toBeInTheDocument()

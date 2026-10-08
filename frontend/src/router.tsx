@@ -12,6 +12,7 @@ import { currentUserQuery, setupStatusQuery } from './api/session'
 import { AppLayout } from './app/AppLayout'
 import { safeRedirect } from './lib/redirect'
 import { LoginPage } from './pages/LoginPage'
+import { FillInPage } from './features/fillIn/FillInPage'
 import { ImportPage } from './features/imports/ImportPage'
 import { PeoplePage } from './features/people/PeoplePage'
 import { ProfilePage } from './features/person/ProfilePage'
@@ -156,6 +157,14 @@ const appPages = [
     component: PeoplePage,
   }),
   createRoute({ getParentRoute: () => appRoute, path: 'people/import', component: ImportPage }),
+  createRoute({
+    getParentRoute: () => appRoute,
+    path: 'people/fill-in',
+    validateSearch: (search: Record<string, unknown>): { import?: string } => ({
+      import: typeof search.import === 'string' && search.import ? search.import : undefined,
+    }),
+    component: FillInPage,
+  }),
   createRoute({
     getParentRoute: () => appRoute,
     path: 'people/$personId',

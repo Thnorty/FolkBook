@@ -7,6 +7,8 @@ export const pickedBoxClass = 'border-accent text-ink ring-3 ring-focus-glow'
 type ChoiceProps = {
   /** The radio group's name. */
   name: string
+  /** A radio (one of the row) or a checkbox (any of the row, e.g. spaces). */
+  type?: 'radio' | 'checkbox'
   checked: boolean
   onChange: () => void
   /** A chip fills in when picked; a box gets outlined (screens 2k, 2o). */
@@ -16,9 +18,10 @@ type ChoiceProps = {
   children: ReactNode
 }
 
-/** One option in a row of choices: a radio button drawn as a chip or a box. */
+/** One option in a row of choices: a radio button (or checkbox) drawn as a chip or a box. */
 export function Choice({
   name,
+  type = 'radio',
   checked,
   onChange,
   look = 'chip',
@@ -28,7 +31,7 @@ export function Choice({
   return (
     <label className={cn('cursor-pointer', className)}>
       <input
-        type="radio"
+        type={type}
         name={name}
         checked={checked}
         onChange={onChange}
