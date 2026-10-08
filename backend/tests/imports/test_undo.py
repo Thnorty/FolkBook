@@ -1,13 +1,16 @@
 """Undoing an import: who goes, who stays, merges taken back, and bringing it all back."""
 
 import datetime
+import importlib
 
 import pytest
+from django.apps import apps
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage
 from django.utils import timezone
 
-from access.policy import Access
+from access.policy import Access, visible_imports
+from core.api import Conflict
 from imports import tasks, undo
 from imports.models import Import, Merge
 from people import services as people_services
@@ -20,6 +23,10 @@ from tests.factories import (
     RelationshipFactory,
 )
 from tests.imports.test_import import CHEN, GRETA, INES, LARS, jpeg, merge, new, run, vcard, vcf
+
+count_earlier_imports = importlib.import_module(
+    "imports.migrations.0003_import_counts_and_taken_back"
+).count_earlier_imports
 
 LATER = people_services.UNDO_WINDOW + datetime.timedelta(seconds=1)
 AGO = datetime.timedelta(seconds=10)
@@ -311,16 +318,93 @@ def test_someone_elses_import_is_404(api, world, imported):
     assert person("Greta Holm").deleted_at is None
 
 
-def test_limited_access_cant_undo(api, world, imported):
+@pytest.mark.parametrize(
+    "limits",
+    [
+        {"include_private": True, "read_only": True},
+        {"include_private": False, "read_only": False},
+    ],
+    ids=["read-only", "without private notes"],
+)
+def test_limited_access_cant_undo(api, world, imported, limits):
     batch = imported(GRETA, picked=new(0))
-    read_only = Access(user=world.ela, read_only=True, include_private=True)
+    access = Access.limited(world.ela, **limits)
 
     with pytest.raises(PermissionDenied):
-        undo.undo_import(read_only, batch)
+        undo.undo_import(access, batch)
     with pytest.raises(PermissionDenied):
-        undo.redo_import(read_only, batch)
+        undo.redo_import(access, batch)
     with pytest.raises(PermissionDenied):
-        undo.undo_preview(read_only, batch)
+        undo.undo_preview(access, batch)
+    assert person("Greta Holm").deleted_at is None
+
+
+def test_space_limited_access_sees_no_imports(api, world, imported):
+    imported(GRETA, picked=new(0))
+    access = Access.limited(
+        world.ela, space_ids=[world.climbing.pk], include_private=True, read_only=False
+    )
+
+    assert not visible_imports(access).exists()
+
+
+def test_two_undos_at_once_leave_redo_working(api, world, imported):
+    batch = imported(GRETA, INES, picked=new(0) + merge(1, world.ines))
+    stale = Import.objects.get(pk=batch.pk)  # read by a second request before the first ends
+    access = Access.for_user(world.ela)
+    undo.undo_import(access, batch)
+
+    with pytest.raises(Conflict):
+        undo.undo_import(access, stale)
+
+    undo.redo_import(access, Import.objects.get(pk=batch.pk))
+    assert person("Greta Holm").deleted_at is None
+    assert world.ines.contact_methods.filter(value="ines@example.com").exists()
+
+
+def test_two_redos_at_once_put_back_once(api, world, imported):
+    batch = imported(INES, picked=merge(0, world.ines))
+    access = Access.for_user(world.ela)
+    undo.undo_import(access, batch)
+    stale = Import.objects.get(pk=batch.pk)
+    undo.redo_import(access, Import.objects.get(pk=batch.pk))
+
+    with pytest.raises(Conflict):
+        undo.redo_import(access, stale)
+
+    assert world.ines.contact_methods.filter(value="ines@example.com").count() == 1
+    assert Note.objects.get(author=world.ela, person=world.ines).body == "From the climbing gym"
+
+
+def test_a_taken_back_photo_goes_when_its_person_is_purged(
+    api, world, imported, django_capture_on_commit_callbacks
+):
+    upload = vcard("Emma", f"PHOTO;ENCODING=b;TYPE=JPEG:{jpeg()}")
+    batch = imported(upload, picked=merge(0, world.emma))
+    world.emma.refresh_from_db()
+    files = [world.emma.photo.name, world.emma.photo_thumbnail.name]
+    api.login(world.ela).post(f"/imports/{batch.pk}/undo")
+    people_services.delete_person(Access.for_user(world.ela), world.emma)
+
+    with django_capture_on_commit_callbacks(execute=True):
+        people_services.purge_deleted_people(now=timezone.now() + LATER)
+
+    assert not any(default_storage.exists(name) for name in files)
+
+
+def test_imports_made_before_finished_at_was_kept(api, world, imported):
+    """Migration 0003 works out when earlier imports finished: their people and notes
+    were written after the import row."""
+    batch = imported(GRETA, LARS, INES, picked=new(0, 1) + merge(2, world.ines))
+    Import.objects.filter(pk=batch.pk).update(finished_at=None, added=0, merged=0)
+    # As PR 1 wrote them: the import row first, its people and notes a moment later.
+    Import.objects.filter(pk=batch.pk).update(created_at=batch.created_at - AGO)
+
+    count_earlier_imports(apps, None)
+
+    batch.refresh_from_db()
+    assert (batch.added, batch.merged) == (2, 1)
+    assert names(preview(api, world, batch)["goes"]) == ["Greta Holm", "Lars Eriksen"]
 
 
 def test_forget_taken_back_photos(api, world, imported):

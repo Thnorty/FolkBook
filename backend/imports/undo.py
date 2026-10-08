@@ -41,9 +41,10 @@ def undo_preview(access: Access, batch: Import) -> UndoPreviewOut:
 
 def undo_import(access: Access, batch: Import) -> Import:
     _check_can_undo(access)
-    if batch.undone_at:
-        raise Conflict("This import has already been undone.")
     with transaction.atomic():
+        batch = _locked(batch)
+        if batch.undone_at:
+            raise Conflict("This import has already been undone.")
         # Set first: everyone this undo deletes is deleted at or after it, which is how
         # bringing them back tells them from people deleted by hand before.
         batch.undone_at = timezone.now()
@@ -59,11 +60,12 @@ def undo_import(access: Access, batch: Import) -> Import:
 def redo_import(access: Access, batch: Import) -> Import:
     """The toast's Undo: bring back everyone and everything the undo took."""
     _check_can_undo(access)
-    if batch.undone_at is None:
-        raise Conflict("This import hasn't been undone.")
-    if batch.undone_at < timezone.now() - UNDO_WINDOW:
-        raise Conflict(TOO_LATE)
     with transaction.atomic():
+        batch = _locked(batch)
+        if batch.undone_at is None:
+            raise Conflict("This import hasn't been undone.")
+        if batch.undone_at < timezone.now() - UNDO_WINDOW:
+            raise Conflict(TOO_LATE)
         for person in batch.people.filter(deleted_at__gte=batch.undone_at):
             restore_person(access, person)
         for merges in _by_person(batch.merges.filter(taken_back__isnull=False)).values():
@@ -71,6 +73,13 @@ def redo_import(access: Access, batch: Import) -> Import:
         batch.undone_at = None
         batch.save(update_fields=["undone_at", "updated_at"])
     return batch
+
+
+def forget_photo_of(merge: Merge) -> None:
+    """A merge record is going (its person or its import was deleted for good): so does
+    the photo its undo took back, which nothing else points to."""
+    if merge.taken_back and "photo" in merge.taken_back:
+        delete_after_commit(merge.taken_back["photo"])
 
 
 def forget_taken_back_photos(now: datetime.datetime | None = None) -> int:
@@ -85,6 +94,12 @@ def forget_taken_back_photos(now: datetime.datetime | None = None) -> int:
         merge.save(update_fields=["taken_back", "updated_at"])
         forgotten += 1
     return forgotten
+
+
+def _locked(batch: Import) -> Import:
+    """The import as it is now, locked until the transaction ends, so a second undo or
+    redo sent at the same moment waits and then sees what the first did."""
+    return Import.objects.select_for_update().get(pk=batch.pk)
 
 
 def _check_can_undo(access: Access) -> None:
