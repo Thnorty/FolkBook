@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "today",
     "search",
     "exports",
+    "imports",
     "invites",
     "jobs",
     "django_tasks_db",
