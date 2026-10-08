@@ -3893,6 +3893,99 @@
             "SessionAuth": []
           }
         ]
+      },
+      "get": {
+        "operationId": "imports_api_list_imports",
+        "summary": "List Imports",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedRecentImportOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Your imports, newest first.",
+        "tags": [
+          "import"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/imports/{import_id}": {
+      "get": {
+        "operationId": "imports_api_get_import",
+        "summary": "Get Import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Import Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecentImportOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "import"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
       }
     }
   },
@@ -7448,6 +7541,76 @@
           "action"
         ],
         "title": "PickIn",
+        "type": "object"
+      },
+      "PagedRecentImportOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecentImportOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedRecentImportOut",
+        "type": "object"
+      },
+      "RecentImportOut": {
+        "description": "An import as Recent imports lists it.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "file_name": {
+            "title": "File Name",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "added": {
+            "title": "Added",
+            "type": "integer"
+          },
+          "merged": {
+            "title": "Merged",
+            "type": "integer"
+          },
+          "undone_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Undone At"
+          }
+        },
+        "required": [
+          "id",
+          "file_name",
+          "created_at",
+          "added",
+          "merged",
+          "undone_at"
+        ],
+        "title": "RecentImportOut",
         "type": "object"
       }
     },
