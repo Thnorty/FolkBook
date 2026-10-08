@@ -223,6 +223,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1001,6 +1004,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1035,6 +1041,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1073,6 +1082,9 @@
           "people"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1120,6 +1132,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1148,6 +1163,9 @@
           "people"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1194,6 +1212,9 @@
           "people"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1253,6 +1274,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1288,6 +1312,9 @@
           "people"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1332,6 +1359,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1363,6 +1393,9 @@
           "people"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1403,6 +1436,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1442,6 +1478,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1480,6 +1519,9 @@
           "people"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1527,6 +1569,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1584,6 +1629,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1618,6 +1666,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1656,6 +1707,9 @@
           "spaces"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1703,6 +1757,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1731,6 +1788,9 @@
           "spaces"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1774,6 +1834,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1814,6 +1877,9 @@
           "spaces"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1882,6 +1948,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -1924,6 +1993,9 @@
           "spaces"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -1971,6 +2043,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2025,6 +2100,9 @@
           "spaces"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2084,6 +2162,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2124,6 +2205,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2155,6 +2239,9 @@
           "spaces"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2195,6 +2282,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2233,6 +2323,9 @@
           "spaces"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2324,6 +2417,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2358,6 +2454,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2396,6 +2495,9 @@
           "relationships"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2443,6 +2545,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2471,6 +2576,9 @@
           "relationships"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2520,6 +2628,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2574,6 +2685,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2612,6 +2726,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2639,6 +2756,9 @@
           "graph"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2691,6 +2811,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2741,6 +2864,9 @@
           "graph"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2816,6 +2942,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2850,6 +2979,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -2899,6 +3031,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -2927,6 +3062,9 @@
           "memory aids"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3002,6 +3140,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3036,6 +3177,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3085,6 +3229,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3113,6 +3260,9 @@
           "timeline"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3164,6 +3314,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3190,6 +3343,9 @@
           "reminders"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3225,6 +3381,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3264,6 +3423,9 @@
           "reminders"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3310,6 +3472,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3373,6 +3538,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3422,6 +3590,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3454,6 +3625,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3485,6 +3659,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3515,6 +3692,9 @@
           "today"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3556,6 +3736,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3584,6 +3767,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3607,6 +3793,9 @@
           "export"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3642,6 +3831,9 @@
           "export"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3684,6 +3876,9 @@
           "export"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3837,6 +4032,9 @@
         },
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3889,6 +4087,9 @@
           "required": true
         },
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -3945,6 +4146,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -3982,6 +4186,9 @@
           "import"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -4022,6 +4229,9 @@
         ],
         "security": [
           {
+            "ApiKeyAuth": []
+          },
+          {
             "SessionAuth": []
           }
         ]
@@ -4059,6 +4269,9 @@
           "import"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -4098,6 +4311,9 @@
           "import"
         ],
         "security": [
+          {
+            "ApiKeyAuth": []
+          },
           {
             "SessionAuth": []
           }
@@ -8137,6 +8353,10 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "sessionid"
+      },
+      "ApiKeyAuth": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   },

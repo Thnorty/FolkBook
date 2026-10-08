@@ -53,6 +53,17 @@ def create_api_key(access: Access, data: ApiKeyIn) -> tuple[ApiKey, str]:
     return api_key, key
 
 
+def access_for_key(api_key: ApiKey) -> Access:
+    """What a request signed in with this key may see and do."""
+    space_ids = list(api_key.spaces.values_list("pk", flat=True)) if api_key.limited else None
+    return Access.limited(
+        api_key.owner,
+        space_ids=space_ids,
+        include_private=api_key.include_private,
+        read_only=api_key.read_only,
+    )
+
+
 def revoke_api_key(access: Access, api_key: ApiKey) -> None:
     """Anything using it stops working right away."""
     api_key.delete()

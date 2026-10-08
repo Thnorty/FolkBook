@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.http import content_disposition_header
 from ninja import File, Form, Router, UploadedFile
+from ninja.security import django_auth
 
 from access.policy import visible_people, visible_spaces
 from core.api import access_for
@@ -80,13 +81,13 @@ def export_contacts(request, space: UUID | None = None):
     return response
 
 
-@router.post("/restore/check", response=RestoreSummary)
+@router.post("/restore/check", response=RestoreSummary, auth=django_auth)
 def check_restore(request, file: File[UploadedFile]):
     """What a full export (.zip) holds, and whether it can be restored. Changes nothing."""
     return restore.check(access_for(request), file)
 
 
-@router.post("/restore", response=RestoreSummary)
+@router.post("/restore", response=RestoreSummary, auth=django_auth)
 def restore_everything(request, file: File[UploadedFile], confirm_email: Form[str]):
     """Replace everything in your book with a full export (.zip). Only while nothing in
     your book is shared; `confirm_email` must be your account's email."""
