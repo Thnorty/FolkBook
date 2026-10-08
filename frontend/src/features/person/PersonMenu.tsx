@@ -10,7 +10,7 @@ import { menuContentClass, menuItemClass } from '@/components/ui/menu'
 import { personCopyUrl } from '@/features/settings/queries'
 import { membersQuery, spacesQuery, type Space } from '@/features/spaces/queries'
 import { words } from '@/lib/names'
-import { notify, type Notice } from '@/lib/notify'
+import { notify, UNDO_FOR, type Notice } from '@/lib/notify'
 import { cn } from '@/lib/utils'
 import { tearOut } from '@/motion/tearOut'
 import { useReducedMotion } from '@/motion/useReducedMotion'
@@ -28,8 +28,6 @@ import {
   timelineQuery,
   type PersonDetail,
 } from './queries'
-
-const UNDO_FOR = 10_000 // the server keeps them a little longer, for slow connections
 
 type PersonMenuProps = {
   person: PersonDetail

@@ -5,6 +5,7 @@ import { ApiError } from '@/api/errors'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
 import { setAppearance } from '@/lib/appearance'
+import { formatDay } from '@/lib/dates'
 
 const ME = {
   id: 'u1',
@@ -41,6 +42,26 @@ const device = (id: string, name: string, isCurrent = false) => ({
 })
 
 type Write = { method: string; path: string; body: unknown }
+
+const IMPORTS = [
+  {
+    id: 'i1',
+    file_name: 'contacts.vcf',
+    created_at: '2026-10-08T09:00:00Z',
+    added: 5,
+    merged: 1,
+    undone_at: null,
+  },
+  {
+    id: 'i0',
+    file_name: 'old phone.vcf',
+    created_at: '2026-09-30T09:00:00Z',
+    added: 1,
+    merged: 0,
+    undone_at: '2026-10-01T09:00:00Z',
+  },
+]
+const ref = (id: string, name: string) => ({ id, name })
 
 const RESTORABLE = {
   name: 'Ela Demir',
@@ -131,6 +152,21 @@ function server() {
     },
     'GET /api/about': () => json({ version: '0.1.0', source_url: 'https://example.com/folkbook' }),
     'GET /api/export/summary': () => json({ people: 148, photos: 1, size: 84_200_000 }),
+    'GET /api/imports': () => json({ items: IMPORTS, count: IMPORTS.length }),
+    'GET /api/imports/i1/undo-preview': () =>
+      json({
+        goes: [ref('p1', 'Chen Wei'), ref('p2', 'Greta Holm'), ref('p3', 'Lars Eriksen')],
+        stays: [ref('p4', 'Ines Berg')],
+        loses_details: [ref('p5', 'Emma')],
+      }),
+    'POST /api/imports/i1/undo': async (request) => {
+      await record(request)
+      return json({ ...IMPORTS[0], undone_at: '2026-10-08T10:00:00Z' })
+    },
+    'POST /api/imports/i1/redo': async (request) => {
+      await record(request)
+      return json(IMPORTS[0])
+    },
   })
   return writes
 }
@@ -246,6 +282,60 @@ describe('settings', () => {
     expect(await within(settings).findByRole('link', { name: 'Import contacts' })).toHaveAttribute(
       'href',
       '/people/import',
+    )
+  })
+
+  it('lists recent imports', async () => {
+    server()
+    renderApp('/settings/import-export')
+    const recent = await screen.findByRole('list', { name: 'Recent imports' })
+
+    const [latest, older] = within(recent).getAllByRole('listitem')
+    expect(within(latest).getByText('contacts.vcf')).toBeInTheDocument()
+    expect(
+      within(latest).getByText(`${formatDay('2026-10-08')} · 5 people added`),
+    ).toBeInTheDocument()
+    expect(
+      within(older).getByText(`${formatDay('2026-09-30')} · 1 person added · undone`),
+    ).toBeInTheDocument()
+    expect(within(older).queryByRole('button', { name: /Undo/ })).not.toBeInTheDocument()
+  })
+
+  it("shows an import's people", async () => {
+    server()
+    renderApp('/settings/import-export')
+    const recent = await screen.findByRole('list', { name: 'Recent imports' })
+
+    expect(
+      within(within(recent).getAllByRole('listitem')[0]).getByRole('link', {
+        name: 'Show these people',
+      }),
+    ).toHaveAttribute('href', '/people?import=i1')
+  })
+
+  it('undoes an import after saying what happens, and can bring it back', async () => {
+    const writes = server()
+    renderApp('/settings/import-export')
+    const recent = await screen.findByRole('list', { name: 'Recent imports' })
+
+    await userEvent.click(within(recent).getByRole('button', { name: 'Undo this import…' }))
+    const dialog = await screen.findByRole('alertdialog', {
+      name: 'Undo the import of contacts.vcf?',
+    })
+    expect(await within(dialog).findByText(/3 people go/)).toBeInTheDocument()
+    expect(within(dialog).getByText(/Chen Wei, Greta Holm and Lars Eriksen/)).toBeInTheDocument()
+    expect(within(dialog).getByText(/1 you've written about since stays/)).toBeInTheDocument()
+    expect(
+      within(dialog).getByText(/1 person you had loses the details this import added/),
+    ).toBeInTheDocument()
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Undo import' }))
+
+    expect(await screen.findByText('Import undone')).toBeInTheDocument()
+    expect(writes).toEqual([{ method: 'POST', path: '/api/imports/i1/undo', body: null }])
+    await userEvent.click(screen.getByRole('button', { name: 'Undo' }))
+    await waitFor(() =>
+      expect(writes.at(-1)).toEqual({ method: 'POST', path: '/api/imports/i1/redo', body: null }),
     )
   })
 

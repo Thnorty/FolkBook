@@ -4,6 +4,8 @@ export type PeopleSearch = {
   needs?: boolean
   /** Only your kept copies. */
   kept?: boolean
+  /** Only the people one import added. */
+  import?: string
   view?: 'grid'
   /** A person shown in the side panel, on desktop. */
   peek?: string
@@ -16,6 +18,7 @@ export function validatePeopleSearch(search: Record<string, unknown>): PeopleSea
     space: typeof search.space === 'string' && search.space ? search.space : undefined,
     needs: search.needs === true || search.needs === 'true' ? true : undefined,
     kept: search.kept === true || search.kept === 'true' ? true : undefined,
+    import: typeof search.import === 'string' && search.import ? search.import : undefined,
     view: search.view === 'grid' ? 'grid' : undefined,
     peek: typeof search.peek === 'string' && search.peek ? search.peek : undefined,
   }

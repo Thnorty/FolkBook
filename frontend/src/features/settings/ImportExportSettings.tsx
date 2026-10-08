@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { DownloadLink } from '@/components/ui/download-link'
 import { FileButton } from '@/components/ui/file-button'
 import { selectClass } from '@/components/ui/select'
+import { RecentImports } from '@/features/imports/RecentImports'
 import { countOf } from '@/features/person/labels'
 import { peopleCount } from '@/features/spaces/labels'
 import { spacesQuery } from '@/features/spaces/queries'
@@ -41,6 +42,7 @@ export function ImportExportSettings() {
           </Button>
         </ExportRow>
       </SettingsPart>
+      <RecentImports />
       <SettingsPart
         title="Export"
         note="Full exports include your private notes. Keep the file somewhere safe."
