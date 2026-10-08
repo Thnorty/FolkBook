@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { UsersRound } from 'lucide-react'
+import { useMotionValue, useTransform } from 'motion/react'
+import * as m from 'motion/react-m'
 import { useId, useState, type FormEvent } from 'react'
 import { ApiError } from '@/api/errors'
 import { Polaroid } from '@/components/notebook/Polaroid'
@@ -14,8 +16,12 @@ import { useConnectionForm } from '@/features/person/useConnectionForm'
 import { SharedSpaceConfirm } from '@/features/spaces/SharedSpaceConfirm'
 import { canAddPeople, spacesQuery, type Space } from '@/features/spaces/queries'
 import { useSharedSpaceConfirmed } from '@/features/spaces/useSharedSpaceConfirmed'
+import { isWideScreen } from '@/lib/media'
 import { notify } from '@/lib/notify'
 import { useShortcut } from '@/lib/shortcuts'
+import { DURATION, EASE, REDUCED_TRANSITION } from '@/motion/tokens'
+import { useReducedMotion } from '@/motion/useReducedMotion'
+import { swipeOf } from './swipe'
 
 const QUICK_SPACES = 4
 const SAVE = { key: 'Enter', mod: true }
@@ -40,6 +46,11 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
   const [askFor, setAskFor] = useState<Space | null>(null)
   const [confirmedShared, dontAskAgain] = useSharedSpaceConfirmed()
   const fieldId = useId()
+  const reduced = useReducedMotion()
+  // Swiping is for phones; with reduced motion there are only the buttons and keys.
+  const swipeable = !reduced && !isWideScreen()
+  const x = useMotionValue(0)
+  const tilt = useTransform(x, [-200, 200], [-6, 6])
 
   const theirs = new Set(person.spaces.map((space) => space.id))
   const spaces = picked ?? theirs
@@ -96,12 +107,24 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
     .join(' · ')
 
   return (
-    <form
+    <m.form
       onSubmit={(event: FormEvent) => {
         event.preventDefault()
         submit()
       }}
-      className="flex flex-col gap-5 rounded-card border border-line bg-card p-5 shadow-note"
+      initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={reduced ? REDUCED_TRANSITION : { duration: DURATION.card, ease: EASE }}
+      style={swipeable ? { x, rotate: tilt } : undefined}
+      drag={swipeable ? 'x' : false}
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.6}
+      onDragEnd={(_, { offset, velocity }) => {
+        const swipe = swipeOf(offset.x, velocity.x)
+        if (swipe === 'skip') onSkipped()
+        else if (swipe === 'save') submit()
+      }}
+      className="flex touch-pan-y flex-col gap-5 rounded-card border border-line bg-card p-5 shadow-note"
     >
       <div className="flex items-center gap-4">
         <Polaroid seed={person.id} photoUrl={person.photo?.thumbnail_url} />
@@ -176,6 +199,12 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
           Save &amp; next
         </Button>
       </div>
+      {swipeable && (
+        <p aria-hidden className="flex justify-between type-meta text-ink-faint md:hidden">
+          <span>← Swipe to skip</span>
+          <span>Swipe to save →</span>
+        </p>
+      )}
       <p className="hidden type-meta text-ink-faint md:block">
         <Kbd shortcut={SAVE} /> save &amp; next · <Kbd shortcut={SKIP} /> skip · 1–5 pick a quick
         answer
@@ -192,7 +221,7 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
           }}
         />
       )}
-    </form>
+    </m.form>
   )
 }
 

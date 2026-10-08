@@ -20,6 +20,8 @@ export const DURATION = {
   tear: 0.38,
   /** Ink underline drawn under something just saved. Decorative. */
   ink: 0.7,
+  /** A Fill in the blanks card arriving, or swiped away. */
+  card: 0.28,
   /** A dialog or sheet leaving (sliding down on phones). Also in src/index.css. */
   dialogOut: 0.22,
   /** With reduced motion, every effect becomes a plain fade this long. */

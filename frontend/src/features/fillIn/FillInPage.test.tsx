@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
+import { setAppearance } from '@/lib/appearance'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
 
@@ -126,6 +127,7 @@ const card = () => screen.findByRole('group', { name: /^Fill in/ })
 afterEach(() => {
   clearCookies()
   localStorage.clear()
+  setAppearance({ theme: 'system', motion: 'system' })
 })
 
 describe('fill in the blanks', () => {
@@ -297,5 +299,17 @@ describe('fill in the blanks', () => {
 
     await screen.findByText('1 of 3')
     expect(asked[0]).toContain('import=i1')
+  })
+
+  it('swipes on phones, and not with reduced motion', async () => {
+    server()
+    await open()
+    expect(await screen.findByText('Swipe to save →')).toBeInTheDocument()
+    expect(screen.getByText('← Swipe to skip')).toBeInTheDocument()
+
+    setAppearance({ motion: 'reduce' })
+
+    await waitFor(() => expect(screen.queryByText('Swipe to save →')).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Save & next' })).toBeInTheDocument()
   })
 })
