@@ -1,4 +1,5 @@
 from typing import Literal
+from uuid import UUID
 
 from ninja import Schema
 
@@ -40,3 +41,22 @@ class PreviewOut(Schema):
     file_name: str
     contacts: list[ContactOut]
     skipped: int  # contacts without a name
+
+
+class PickIn(Schema):
+    index: int
+    action: Literal["new", "merge", "skip"]
+    into: UUID | None = None  # for "merge": the person the preview matched
+
+
+class ChoicesIn(Schema):
+    picked: list[PickIn]
+    space: UUID | None = None  # for the new people
+
+
+class ImportOut(Schema):
+    import_id: UUID
+    added: int
+    merged: int
+    left_out: int  # not picked, or skipped: they stay in the phone
+    space: SpaceRef | None

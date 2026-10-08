@@ -3814,6 +3814,60 @@
           }
         ]
       }
+    },
+    "/api/imports": {
+      "post": {
+        "operationId": "imports_api_run_import",
+        "summary": "Run Import",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Import a .vcf: the same file as the preview, plus `choices` (JSON, see ChoicesIn):\nwho to add, who to merge into the person they matched, and a space for the new\npeople.",
+        "tags": [
+          "import"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  },
+                  "choices": {
+                    "title": "Choices",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "choices"
+                ],
+                "title": "MultiPartBodyParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -7173,6 +7227,46 @@
           "skipped"
         ],
         "title": "PreviewOut",
+        "type": "object"
+      },
+      "ImportOut": {
+        "properties": {
+          "import_id": {
+            "format": "uuid",
+            "title": "Import Id",
+            "type": "string"
+          },
+          "added": {
+            "title": "Added",
+            "type": "integer"
+          },
+          "merged": {
+            "title": "Merged",
+            "type": "integer"
+          },
+          "left_out": {
+            "title": "Left Out",
+            "type": "integer"
+          },
+          "space": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpaceRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "import_id",
+          "added",
+          "merged",
+          "left_out",
+          "space"
+        ],
+        "title": "ImportOut",
         "type": "object"
       }
     },

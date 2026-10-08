@@ -1343,6 +1343,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run Import
+         * @description Import a .vcf: the same file as the preview, plus `choices` (JSON, see ChoicesIn):
+         *     who to add, who to merge into the person they matched, and a space for the new
+         *     people.
+         */
+        post: operations["imports_api_run_import"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2584,6 +2606,21 @@ export interface components {
             contacts: components["schemas"]["ContactOut"][];
             /** Skipped */
             skipped: number;
+        };
+        /** ImportOut */
+        ImportOut: {
+            /**
+             * Import Id
+             * Format: uuid
+             */
+            import_id: string;
+            /** Added */
+            added: number;
+            /** Merged */
+            merged: number;
+            /** Left Out */
+            left_out: number;
+            space: components["schemas"]["SpaceRef"] | null;
         };
     };
     responses: never;
@@ -4726,6 +4763,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreviewOut"];
+                };
+            };
+        };
+    };
+    imports_api_run_import: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * File
+                     * Format: binary
+                     */
+                    file: string;
+                    /** Choices */
+                    choices: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportOut"];
                 };
             };
         };
