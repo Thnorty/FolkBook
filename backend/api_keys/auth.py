@@ -23,6 +23,7 @@ class ApiKeyAuth(HttpBearer):
         )
         if api_key is None or api_key.expired:
             raise InvalidApiKey
+        services.count_request(api_key)
         request.api_access = services.access_for_key(api_key)
         return api_key.owner
 

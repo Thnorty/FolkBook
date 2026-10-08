@@ -2,11 +2,13 @@
 
 import datetime
 import hashlib
+import math
 import secrets
 import string
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import F, Q
 from django.utils import timezone
 
 from access.policy import Access, visible_spaces
@@ -14,6 +16,8 @@ from api_keys.models import ApiKey
 from api_keys.schemas import ApiKeyIn
 
 PREFIX = "fb_live_"
+RATE_LIMIT = 120
+WINDOW = datetime.timedelta(minutes=1)
 LETTERS = string.ascii_letters + string.digits
 EXPIRY = {
     "30d": datetime.timedelta(days=30),
@@ -51,6 +55,28 @@ def create_api_key(access: Access, data: ApiKeyIn) -> tuple[ApiKey, str]:
     if spaces:
         api_key.spaces.set(spaces)
     return api_key, key
+
+
+class TooManyRequests(Exception):
+    def __init__(self, retry_after: int):
+        super().__init__(retry_after)
+        self.retry_after = retry_after  # whole seconds until the window ends
+
+
+def count_request(api_key: ApiKey, now: datetime.datetime | None = None) -> None:
+    """Count one request against the key's minute, and note it was used. Each statement
+    is atomic on its own, so the count is exact across server processes."""
+    now = now or timezone.now()
+    key = ApiKey.objects.filter(pk=api_key.pk)
+    window_over = Q(window_start__isnull=True) | Q(window_start__lte=now - WINDOW)
+    if key.filter(window_over).update(window_start=now, window_count=1, last_used_at=now):
+        return
+    if key.filter(window_count__lt=RATE_LIMIT).update(
+        window_count=F("window_count") + 1, last_used_at=now
+    ):
+        return
+    left = (api_key.window_start + WINDOW - now).total_seconds()
+    raise TooManyRequests(retry_after=max(1, math.ceil(left)))
 
 
 def access_for_key(api_key: ApiKey) -> Access:

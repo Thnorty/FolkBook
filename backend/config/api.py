@@ -8,6 +8,7 @@ from accounts.api import router as auth_router
 from accounts.api import users_router
 from api_keys.api import router as api_keys_router
 from api_keys.auth import KEY_OR_LOGIN, InvalidApiKey
+from api_keys.services import TooManyRequests
 from core.api import Conflict, validation_detail
 from exports.api import router as export_router
 from graph.api import router as graph_router
@@ -59,6 +60,14 @@ def validation_error(request, exc):
 @api.exception_handler(InvalidApiKey)
 def invalid_api_key(request, exc):
     return api.create_response(request, {"detail": "This API key isn't valid."}, status=401)
+
+
+@api.exception_handler(TooManyRequests)
+def too_many_requests(request, exc):
+    detail = "Too many requests for this API key. Try again in a minute."
+    response = api.create_response(request, {"detail": detail}, status=429)
+    response["Retry-After"] = str(exc.retry_after)
+    return response
 
 
 @api.exception_handler(Conflict)
