@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { logIn } from '@/api/session'
 import { AuthFrame } from '@/components/AuthFrame'
 import { Button } from '@/components/ui/button'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { safeRedirect } from '@/lib/redirect'
@@ -14,6 +15,7 @@ export function LoginPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const { redirect } = useSearch({ from: '/login' })
+  const [remember, setRemember] = useState(true)
   const login = useMutation({
     mutationFn: (form: FormData) =>
       logIn(queryClient, {
@@ -49,10 +51,14 @@ export function LoginPage() {
             required
           />
         </div>
-        <label className="flex items-center gap-2.5 type-small">
-          <input name="remember" type="checkbox" defaultChecked className="size-4 accent-accent" />
+        <CheckboxField
+          name="remember"
+          checked={remember}
+          onChange={setRemember}
+          className="type-small"
+        >
           Keep me logged in on this device
-        </label>
+        </CheckboxField>
         {login.error && (
           <p role="alert" className="type-small text-danger">
             {login.error.message}

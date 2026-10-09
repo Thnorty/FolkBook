@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { peopleCount } from './labels'
 import { membersQuery, type Space } from './queries'
@@ -49,15 +50,9 @@ export function SharedSpaceConfirm({
           ))}
         </ul>
       )}
-      <label className="mt-4 flex items-center gap-2.5 type-small">
-        <input
-          type="checkbox"
-          checked={remember}
-          onChange={(event) => setRemember(event.target.checked)}
-          className="size-4 accent-accent"
-        />
+      <CheckboxField checked={remember} onChange={setRemember} className="mt-4 type-small">
         Don&apos;t ask again for {space.name}
-      </label>
+      </CheckboxField>
     </ConfirmDialog>
   )
 }
