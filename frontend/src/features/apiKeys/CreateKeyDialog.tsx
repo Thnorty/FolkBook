@@ -216,13 +216,13 @@ function KeyCreated({ created, onDone }: { created: CreatedApiKey; onDone: () =>
         </p>
       </div>
       <p className="type-small text-ink-soft">{scopeSummary(created)}</p>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 md:flex-row">
         <Input
           ref={field}
           readOnly
           value={created.key}
           aria-label="API key"
-          className="font-mono text-sm"
+          className="font-mono text-xs md:text-sm"
           onFocus={(event) => event.target.select()}
         />
         <Button type="button" variant="secondary" onClick={() => copy(field.current)}>

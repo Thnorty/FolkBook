@@ -12,7 +12,7 @@ import { accessLabel, PRIVATE_LABEL, spacesLabel } from './scope'
 
 /** Name · Scope · Spaces · Last used · Expires · Revoke, from md up (screen 5o). */
 const COLUMNS =
-  'md:grid md:grid-cols-[minmax(0,1.3fr)_8rem_minmax(0,1fr)_8rem_7rem_6.5rem] md:gap-4'
+  'md:grid md:grid-cols-[minmax(0,1.6fr)_7rem_minmax(0,1fr)_7rem_6.5rem_5.5rem] md:gap-3'
 
 /** Settings → API keys: your keys, what each can do, and revoking one (screens 5o–5q). */
 export function ApiKeysSettings() {
@@ -70,7 +70,7 @@ function KeyRow({ apiKey }: { apiKey: ApiKey }) {
     <li aria-label={apiKey.name} className="px-4 py-3">
       <div className={cn(COLUMNS, 'flex flex-wrap items-center gap-x-3 gap-y-1')}>
         <div className="min-w-0 basis-full md:basis-auto">
-          <p className="truncate font-medium">{apiKey.name}</p>
+          <p className="font-medium break-words">{apiKey.name}</p>
           <p className="font-mono text-xs text-ink-faint">fb_…{apiKey.last_five}</p>
         </div>
         <p className="type-small">
