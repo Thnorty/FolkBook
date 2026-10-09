@@ -63,12 +63,12 @@ type KeyIn = {
 
 function server({
   keys: initial = KEYS,
-  revokedElsewhere = false,
+  deleteStatus = 204,
   createWait,
 }: {
   keys?: typeof KEYS
-  /** DELETE answers 404: the key was revoked on another device. */
-  revokedElsewhere?: boolean
+  /** What DELETE answers, e.g. 404 when the key was revoked on another device. */
+  deleteStatus?: number
   /** Holds the create call's answer back until this settles. */
   createWait?: Promise<void>
 } = {}) {
@@ -85,6 +85,11 @@ function server({
       const body = (await request.json()) as KeyIn
       writes.push({ method: 'POST', path: '/api/api-keys', body })
       await createWait
+      // As the real API: the schema wants at least a character, then the service trims.
+      if (!body.name) {
+        const msg = 'String should have at least 1 character'
+        return json({ detail: [{ loc: ['body', 'data', 'name'], msg }] }, 422)
+      }
       if (!body.name.trim()) {
         return json({ detail: [{ loc: ['body', 'name'], msg: 'Give the key a name.' }] }, 422)
       }
@@ -103,10 +108,12 @@ function server({
   for (const { id } of initial) {
     routes[`DELETE /api/api-keys/${id}`] = (request) => {
       writes.push({ method: 'DELETE', path: new URL(request.url).pathname, body: null })
+      if (deleteStatus >= 500) return json({ detail: 'Server error' }, deleteStatus)
+      const there = keys.some((key) => key.id === id)
       keys = keys.filter((key) => key.id !== id)
-      return revokedElsewhere
-        ? json({ detail: 'Not Found' }, 404)
-        : new Response(null, { status: 204 })
+      return there && deleteStatus === 204
+        ? new Response(null, { status: 204 })
+        : json({ detail: 'Not Found' }, 404)
     }
   }
   fakeServer(routes)
@@ -133,9 +140,11 @@ describe('API keys', () => {
     expect(obsidian.getByText(formatDay('2027-03-12'))).toBeInTheDocument()
 
     const home = await row('Home Assistant')
-    expect(home.getByText(/2 hours ago/)).toBeInTheDocument()
+    // Phone cards have no column heads (and screen readers never hear them): each value says
+    // what it is.
+    expect(home.getByText(/2 hours ago/)).toHaveTextContent(/^Used\s*2 hours ago$/)
     expect(home.getByText('All spaces')).toBeInTheDocument()
-    expect(home.getByText('Never')).toBeInTheDocument()
+    expect(home.getByText('Never')).toHaveTextContent(/^Expires\s*Never$/)
     expect(home.queryByText('+ private notes')).not.toBeInTheDocument()
 
     expect((await row('Birthday script')).getByText('Never used')).toBeInTheDocument()
@@ -186,6 +195,7 @@ describe('API keys', () => {
     expect(writes).toEqual([])
 
     await userEvent.click(birthday.getByRole('button', { name: 'Cancel' }))
+    expect(birthday.getByRole('button', { name: 'Revoke' })).toHaveFocus()
     await userEvent.click(birthday.getByRole('button', { name: 'Revoke' }))
     await userEvent.click(birthday.getByRole('button', { name: 'Revoke key' }))
 
@@ -193,6 +203,42 @@ describe('API keys', () => {
       expect(screen.queryByRole('listitem', { name: 'Birthday script' })).not.toBeInTheDocument(),
     )
     expect(writes).toEqual([{ method: 'DELETE', path: '/api/api-keys/k3', body: null }])
+    // Focus stays where it was: on the next key.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Delete' })).toHaveFocus())
+  })
+
+  it('moves focus to Create key once the last key is gone', async () => {
+    server({ keys: [KEYS[3]] })
+    renderApp('/settings/api-keys')
+
+    await userEvent.click((await row('Old export job')).getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: '+ Create key' })).toHaveFocus())
+  })
+
+  it('revokes once on a double click', async () => {
+    const writes = server()
+    renderApp('/settings/api-keys')
+    const birthday = await row('Birthday script')
+
+    await userEvent.click(birthday.getByRole('button', { name: 'Revoke' }))
+    await userEvent.dblClick(birthday.getByRole('button', { name: 'Revoke key' }))
+
+    await waitFor(() =>
+      expect(screen.queryByRole('listitem', { name: 'Birthday script' })).not.toBeInTheDocument(),
+    )
+    expect(writes).toHaveLength(1)
+    expect(screen.queryByText("Couldn't revoke it")).not.toBeInTheDocument()
+  })
+
+  it('says when deleting fails, and keeps the key', async () => {
+    server({ deleteStatus: 500 })
+    renderApp('/settings/api-keys')
+
+    await userEvent.click((await row('Old export job')).getByRole('button', { name: 'Delete' }))
+
+    expect(await screen.findByText("Couldn't delete it")).toBeInTheDocument()
+    expect(await row('Old export job')).toBeTruthy()
   })
 
   it('deletes an expired key right away', async () => {
@@ -208,14 +254,15 @@ describe('API keys', () => {
   })
 
   it('drops a key revoked elsewhere', async () => {
-    server({ revokedElsewhere: true })
+    server({ deleteStatus: 404 })
     renderApp('/settings/api-keys')
     const birthday = await row('Birthday script')
 
     await userEvent.click(birthday.getByRole('button', { name: 'Revoke' }))
     await userEvent.click(birthday.getByRole('button', { name: 'Revoke key' }))
 
-    expect(await screen.findByText("Couldn't revoke it")).toBeInTheDocument()
+    expect(await screen.findByText('That key was already revoked')).toBeInTheDocument()
+    expect(screen.queryByText("Couldn't revoke it")).not.toBeInTheDocument()
     await waitFor(() =>
       expect(screen.queryByRole('listitem', { name: 'Birthday script' })).not.toBeInTheDocument(),
     )
@@ -228,6 +275,15 @@ describe('creating an API key', () => {
     return within(await screen.findByRole('dialog', { name: 'Create API key' }))
   }
   const posted = (writes: Write[]) => writes.filter((write) => write.method === 'POST')
+  // "I've saved it" waits a moment, so the press that made the key can't also close it.
+  const saveIt = async (
+    user: ReturnType<typeof userEvent.setup>,
+    created: ReturnType<typeof within>,
+  ) => {
+    const button = created.getByRole('button', { name: "I've saved it" })
+    await waitFor(() => expect(button).toBeEnabled())
+    await user.click(button)
+  }
   const createdDialog = async () =>
     within(await screen.findByRole('dialog', { name: 'Key created' }))
 
@@ -333,7 +389,7 @@ describe('creating an API key', () => {
     expect(await created.findByRole('button', { name: 'Copied ✓' })).toBeInTheDocument()
     expect(await navigator.clipboard.readText()).toBe(KEY)
 
-    await user.click(created.getByRole('button', { name: "I've saved it" }))
+    await saveIt(user, created)
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(await row('Obsidian sync')).toBeTruthy()
   })
@@ -360,7 +416,7 @@ describe('creating an API key', () => {
     await user.type(dialog.getByLabelText('Name'), 'Script')
     await user.click(dialog.getByRole('button', { name: 'Create key' }))
 
-    await user.click((await createdDialog()).getByRole('button', { name: "I've saved it" }))
+    await saveIt(user, await createdDialog())
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     await row('Script')
 
@@ -399,7 +455,7 @@ describe('creating an API key', () => {
 
   it("shows the server's answer to a blank name", async () => {
     const user = userEvent.setup()
-    server({ keys: [] })
+    const writes = server({ keys: [] })
     renderApp('/settings/api-keys')
     const dialog = await open(user)
 
@@ -408,5 +464,41 @@ describe('creating an API key', () => {
 
     expect(await dialog.findByText('Give the key a name.')).toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: 'Create API key' })).toBeInTheDocument()
+    // Sent as typed: the server trims, and only it says why the name won't do.
+    expect(posted(writes)[0].body).toMatchObject({ name: '   ' })
+  })
+
+  it('keeps the key on screen after a second quick press', async () => {
+    // The key came back between two presses of Ctrl/⌘+Enter (or a double tap on phones,
+    // where "I've saved it" sits where "Create key" was).
+    const user = userEvent.setup()
+    server({ keys: [] })
+    renderApp('/settings/api-keys')
+    const dialog = await open(user)
+    await user.type(dialog.getByLabelText('Name'), 'Script')
+
+    await user.keyboard('{Control>}{Enter}{/Control}')
+    const created = await createdDialog()
+    await user.keyboard('{Control>}{Enter}{/Control}')
+    await user.click(created.getByRole('button', { name: "I've saved it" }))
+
+    expect(screen.getByRole('dialog', { name: 'Key created' })).toBeInTheDocument()
+    await saveIt(user, created)
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('keeps the key on screen after a tap outside it', async () => {
+    // Radix makes the page behind a dialog unclickable; the tap still reaches the document.
+    const user = userEvent.setup({ pointerEventsCheck: 0 })
+    server({ keys: [] })
+    renderApp('/settings/api-keys')
+    const dialog = await open(user)
+    await user.type(dialog.getByLabelText('Name'), 'Script')
+    await user.click(dialog.getByRole('button', { name: 'Create key' }))
+    await createdDialog()
+
+    await user.click(document.body)
+
+    expect(screen.getByRole('dialog', { name: 'Key created' })).toBeInTheDocument()
   })
 })

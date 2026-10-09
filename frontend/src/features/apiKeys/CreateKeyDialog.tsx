@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Choice } from '@/components/ui/choice'
 import { FormDialog, FormDialogFooter } from '@/components/ui/form-dialog'
@@ -12,6 +12,9 @@ import { createApiKey, type ApiKeyIn, type CreatedApiKey } from './queries'
 import { scopeSummary } from './scope'
 
 const FORM_ID = 'api-key-form'
+/** How long the new key stays put before a submit can close it: the press (or the second tap
+ * of a double tap) that made the key mustn't also close it, unseen. */
+const SETTLE_MS = 500
 const SCOPES = [
   { readOnly: true, label: 'Read-only', note: 'Look up people and links' },
   { readOnly: false, label: 'Read-write', note: 'Also add and edit people' },
@@ -43,6 +46,12 @@ export function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () 
     sent.current = true
     create.mutate(body)
   }
+  const [settled, setSettled] = useState(false)
+  useEffect(() => {
+    if (!created) return
+    const timer = setTimeout(() => setSettled(true), SETTLE_MS)
+    return () => clearTimeout(timer)
+  }, [created])
 
   return (
     <FormDialog
@@ -50,12 +59,14 @@ export function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () 
       title={created ? 'Key created' : 'Create API key'}
       formId={FORM_ID}
       submitLabel={created ? 'Done' : 'Create'}
-      busy={create.isPending}
+      busy={create.isPending || (created !== null && !settled)}
       open={open}
       onClose={onClose}
+      // A stray tap beside the shown-once key would lose it; ✕ and Esc still close.
+      closeOnOutsideClick={!created}
     >
       {created ? (
-        <KeyCreated created={created} onDone={onClose} />
+        <KeyCreated created={created} settled={settled} onDone={onClose} />
       ) : (
         <KeyForm
           busy={create.isPending}
@@ -91,7 +102,7 @@ function KeyForm({ busy, error, onSubmit, onCancel }: KeyFormProps) {
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     onSubmit({
-      name: name.trim(),
+      name, // as typed: the server trims it, and says why a blank one won't do
       read_only: readOnly,
       include_private: includePrivate,
       space_ids: spaceIds.length > 0 ? spaceIds : null,
@@ -193,12 +204,14 @@ function KeyForm({ busy, error, onSubmit, onCancel }: KeyFormProps) {
   )
 }
 
-function KeyCreated({ created, onDone }: { created: CreatedApiKey; onDone: () => void }) {
+type KeyCreatedProps = { created: CreatedApiKey; settled: boolean; onDone: () => void }
+
+function KeyCreated({ created, settled, onDone }: KeyCreatedProps) {
   const field = useRef<HTMLInputElement>(null)
   const { copied, copy } = useCopy(created.key)
   const done = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    onDone()
+    if (settled) onDone()
   }
 
   return (
@@ -235,7 +248,7 @@ function KeyCreated({ created, onDone }: { created: CreatedApiKey; onDone: () =>
           : 'Never expires.'}{' '}
         Use it as <code className="font-mono text-ink">Authorization: Bearer …</code>
       </p>
-      <Button type="submit" className="h-12 md:h-9 md:self-end">
+      <Button type="submit" disabled={!settled} className="h-12 md:h-9 md:self-end">
         I&apos;ve saved it
       </Button>
     </form>
