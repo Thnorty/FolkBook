@@ -1,23 +1,26 @@
 import { Check, Copy } from 'lucide-react'
-import { useState } from 'react'
+import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useCopy } from '@/lib/useCopy'
 
 /** A link to pass on: shown in full, selectable, with a Copy button that says when it worked. */
 export function CopyLink({ link, label }: { link: string; label: string }) {
-  const [copied, setCopied] = useState(false)
-  const copy = () =>
-    navigator.clipboard.writeText(link).then(
-      () => setCopied(true),
-      () => setCopied(false), // no clipboard here: the field is selectable anyway
-    )
+  const field = useRef<HTMLInputElement>(null)
+  const { copied, copy } = useCopy(link)
 
   return (
     <div className="flex gap-2">
-      <Input readOnly value={link} aria-label={label} onFocus={(event) => event.target.select()} />
+      <Input
+        ref={field}
+        readOnly
+        value={link}
+        aria-label={label}
+        onFocus={(event) => event.target.select()}
+      />
       <Button
         variant="secondary"
-        onClick={() => void copy()}
+        onClick={() => copy(field.current)}
         aria-label={copied ? 'Copied' : 'Copy the link'}
       >
         {copied ? <Check aria-hidden /> : <Copy aria-hidden />}

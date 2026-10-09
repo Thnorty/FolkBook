@@ -22,6 +22,8 @@ type FormDialogProps = {
   small?: boolean
   /** False while it animates out (useClosing); it's open as long as it's shown otherwise. */
   open?: boolean
+  /** False: a click beside the dialog leaves it open (✕ and Esc still close it). */
+  closeOnOutsideClick?: boolean
   children: ReactNode
 }
 
@@ -37,6 +39,7 @@ export function FormDialog({
   onClose,
   small = false,
   open = true,
+  closeOnOutsideClick = true,
   children,
 }: FormDialogProps) {
   return (
@@ -45,6 +48,7 @@ export function FormDialog({
         <Dialog.Overlay className="fixed inset-0 z-30 animate-fade-in bg-scrim data-[state=closed]:animate-fade-out" />
         <Dialog.Content
           aria-describedby={undefined}
+          onInteractOutside={(event) => !closeOnOutsideClick && event.preventDefault()}
           // Ctrl/⌘+Enter submits from anywhere in the dialog, not just from inside the form
           // (focus can be outside it, e.g. after the photo crop step closes).
           onKeyDown={(event) => {

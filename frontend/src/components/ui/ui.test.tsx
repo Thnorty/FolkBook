@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Button } from './button'
+import { CopyLink } from './copy-link'
 import { Input } from './input'
 import { Label } from './label'
 import { notify } from '@/lib/notify'
@@ -66,5 +67,35 @@ describe('notify', () => {
 
     await waitFor(() => expect(screen.queryByText('Saved')).not.toBeInTheDocument())
     expect(undo).not.toHaveBeenCalled()
+  })
+})
+
+describe('CopyLink', () => {
+  it('copies the link and says so', async () => {
+    const user = userEvent.setup()
+    render(<CopyLink link="https://folk.example/i/abc" label="Invite link" />)
+
+    await user.click(screen.getByRole('button', { name: 'Copy the link' }))
+
+    expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument()
+    expect(await navigator.clipboard.readText()).toBe('https://folk.example/i/abc')
+  })
+
+  it('selects the link when there is no clipboard', async () => {
+    // Browsers have no clipboard on plain-HTTP pages, as on a server at home.
+    const user = userEvent.setup()
+    const clipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard')
+    Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true })
+    try {
+      render(<CopyLink link="http://folk.home/i/abc" label="Invite link" />)
+
+      await user.click(screen.getByRole('button', { name: 'Copy the link' }))
+
+      const field = screen.getByRole<HTMLInputElement>('textbox', { name: 'Invite link' })
+      expect([field.selectionStart, field.selectionEnd]).toEqual([0, field.value.length])
+      expect(screen.queryByRole('button', { name: 'Copied' })).not.toBeInTheDocument()
+    } finally {
+      if (clipboard) Object.defineProperty(navigator, 'clipboard', clipboard)
+    }
   })
 })

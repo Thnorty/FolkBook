@@ -36,6 +36,19 @@ export function formatRelativeDay(isoDate: string, today: Date = new Date()): st
   return relativeDays(daysFrom(today, isoDate))
 }
 
+const MINUTE = 60 * 1000
+const HOUR = 60 * MINUTE
+
+/** A moment from the API relative to now: "just now", "5 minutes ago", "2 hours ago", "yesterday". */
+export function formatRelativeMoment(isoMoment: string, now: Date = new Date()): string {
+  const moment = new Date(isoMoment)
+  const ago = now.getTime() - moment.getTime()
+  if (ago < MINUTE) return 'just now'
+  if (ago < HOUR) return relative.format(-Math.floor(ago / MINUTE), 'minute')
+  if (ago < DAY) return relative.format(-Math.floor(ago / HOUR), 'hour')
+  return formatRelativeDay(isoDay(0, moment), now)
+}
+
 function daysFrom(today: Date, isoDate: string): number {
   const now = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
   return Math.round((Date.UTC(...ymd(isoDate)) - now) / DAY)

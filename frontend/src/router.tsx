@@ -24,6 +24,7 @@ import {
   AppearanceSettings,
   ReminderSettingsPage,
 } from './features/settings/OtherSettings'
+import { ApiKeysSettings } from './features/apiKeys/ApiKeysSettings'
 import { InvitesSettings, UsersSettings } from './features/settings/AdminSettings'
 import { ImportExportSettings } from './features/settings/ImportExportSettings'
 import { ProfileSettings } from './features/settings/ProfileSettings'
@@ -117,6 +118,11 @@ const settingsTree = settingsRoute.addChildren([
     getParentRoute: () => settingsRoute,
     path: 'profile',
     component: ProfileSettings,
+  }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'api-keys',
+    component: ApiKeysSettings,
   }),
   createRoute({
     getParentRoute: () => settingsRoute,
