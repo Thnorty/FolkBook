@@ -39,7 +39,7 @@ export function Choice({
       />
       <span
         className={cn(
-          'flex h-11 items-center justify-center border border-line-input text-md font-medium text-ink-soft peer-focus-visible:ring-3 peer-focus-visible:ring-focus-glow hover:border-line-strong md:h-9',
+          'flex min-h-11 items-center justify-center border border-line-input py-1.5 text-md font-medium text-ink-soft peer-focus-visible:ring-3 peer-focus-visible:ring-focus-glow hover:border-line-strong md:min-h-9',
           look === 'chip'
             ? 'rounded-full px-3.5 peer-checked:border-accent peer-checked:bg-accent peer-checked:text-on-accent'
             : 'rounded-card bg-card px-3',

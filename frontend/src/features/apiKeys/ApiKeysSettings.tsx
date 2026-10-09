@@ -5,6 +5,8 @@ import { SettingsPage } from '@/features/settings/SettingsPage'
 import { formatDay, formatRelativeMoment } from '@/lib/dates'
 import { notify } from '@/lib/notify'
 import { cn } from '@/lib/utils'
+import { useClosing } from '@/motion/useClosing'
+import { CreateKeyDialog } from './CreateKeyDialog'
 import { apiKeysQuery, revokeApiKey, type ApiKey } from './queries'
 import { accessLabel, PRIVATE_LABEL, spacesLabel } from './scope'
 
@@ -15,7 +17,9 @@ const COLUMNS =
 /** Settings → API keys: your keys, what each can do, and revoking one (screens 5o–5q). */
 export function ApiKeysSettings() {
   const keys = useQuery(apiKeysQuery)
-  const [, setCreating] = useState<number | null>(null)
+  // Each opening is new (`key`), so a key shown earlier is never shown again.
+  const [creating, setCreating] = useState<number | null>(null)
+  const [shown, closing] = useClosing(creating)
 
   return (
     <SettingsPage title="API keys">
@@ -48,6 +52,7 @@ export function ApiKeysSettings() {
           </ul>
         </div>
       )}
+      {shown && <CreateKeyDialog key={shown} open={!closing} onClose={() => setCreating(null)} />}
     </SettingsPage>
   )
 }
