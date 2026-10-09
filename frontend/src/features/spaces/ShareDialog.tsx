@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import { useDeferredValue, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { FormDialog, FooterNote, FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { labelClass } from '@/components/ui/label'
@@ -102,20 +103,13 @@ export function ShareDialog({
             </p>
           </div>
         </div>
-        <label className="flex items-start gap-2.5">
-          <input
-            type="checkbox"
-            checked={contacts}
-            onChange={(event) => setContacts(event.target.checked)}
-            className="mt-1 size-4 accent-accent"
-          />
-          <span>
-            Also share contact details (phone, email)
-            <span className="block type-small text-ink-faint">
-              Off by default. Only turn it on if every member should be able to reach these people.
-            </span>
-          </span>
-        </label>
+        <CheckboxField
+          checked={contacts}
+          onChange={setContacts}
+          note="Off by default. Only turn it on if every member should be able to reach these people."
+        >
+          Also share contact details (phone, email)
+        </CheckboxField>
 
         <AccountSearch
           spaceId={space.id}

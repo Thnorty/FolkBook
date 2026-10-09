@@ -408,7 +408,15 @@ describe('creating an API key', () => {
     expect(created.getByText('Never expires.', { exact: false })).toBeVisible()
   })
 
-  it('forgets the key once closed', async () => {
+  it.each([
+    ["I've saved it", saveIt],
+    [
+      '✕',
+      async (user: ReturnType<typeof userEvent.setup>, created: ReturnType<typeof within>) =>
+        user.click(created.getByRole('button', { name: 'Close' })),
+    ],
+    ['Esc', async (user: ReturnType<typeof userEvent.setup>) => user.keyboard('{Escape}')],
+  ])('forgets the key once closed with %s', async (_way, close) => {
     const user = userEvent.setup()
     server({ keys: [] })
     const router = renderApp('/settings/api-keys')
@@ -416,7 +424,7 @@ describe('creating an API key', () => {
     await user.type(dialog.getByLabelText('Name'), 'Script')
     await user.click(dialog.getByRole('button', { name: 'Create key' }))
 
-    await saveIt(user, await createdDialog())
+    await close(user, await createdDialog())
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     await row('Script')
 
@@ -435,6 +443,25 @@ describe('creating an API key', () => {
     const again = await open(user)
     expect(again.getByLabelText('Name')).toHaveValue('')
     expect(screen.queryByDisplayValue(KEY)).not.toBeInTheDocument()
+  })
+
+  it('stays open while the key is being made', async () => {
+    // Closing now would make a key nobody ever sees.
+    const user = userEvent.setup()
+    let answer = () => {}
+    server({ keys: [], createWait: new Promise((done) => (answer = done)) })
+    renderApp('/settings/api-keys')
+    const dialog = await open(user)
+    await user.type(dialog.getByLabelText('Name'), 'Script')
+    await user.click(dialog.getByRole('button', { name: 'Create key' }))
+
+    await user.keyboard('{Escape}')
+    await user.click(dialog.getByRole('button', { name: 'Close' }))
+    await user.click(dialog.getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByRole('dialog', { name: 'Create API key' })).toBeInTheDocument()
+
+    answer()
+    expect((await createdDialog()).getByRole('textbox', { name: 'API key' })).toHaveValue(KEY)
   })
 
   it('makes one key from two quick submits', async () => {
