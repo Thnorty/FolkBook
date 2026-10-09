@@ -67,6 +67,32 @@ describe('logging in', () => {
     expect(router.state.location.pathname).toBe('/graph')
   })
 
+  it.each([
+    ['as it is', false, true],
+    ['unticked', true, false],
+  ])('keeps you logged in unless you say not to (%s)', async (_how, untick, remember) => {
+    const sent: unknown[] = []
+    fakeServer({
+      'GET /api/auth/me': unauthorized,
+      'GET /api/auth/csrf': noContent,
+      'POST /api/auth/login': async (request) => {
+        sent.push(await request.json())
+        return json({ detail: 'Wrong email or password.' }, 401)
+      },
+    })
+    renderApp('/login')
+
+    await userEvent.type(await screen.findByLabelText('Email'), 'ela@example.com')
+    await userEvent.type(screen.getByLabelText('Password'), 'secret123')
+    const keep = screen.getByRole('checkbox', { name: 'Keep me logged in on this device' })
+    expect(keep).toBeChecked()
+    if (untick) await userEvent.click(keep)
+    await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
+
+    await screen.findByRole('alert')
+    expect(sent).toEqual([expect.objectContaining({ remember })])
+  })
+
   it('shows why a login failed', async () => {
     fakeServer({
       'GET /api/auth/me': unauthorized,

@@ -120,4 +120,43 @@ describe('CheckboxField', () => {
     expect(screen.getByRole('checkbox', { name: /Include my private notes/ })).not.toBeChecked()
     expect(screen.getByText('Off by default.')).toBeInTheDocument()
   })
+
+  it('can be plain, with nothing under it', () => {
+    render(
+      <CheckboxField checked onChange={() => {}}>
+        Reduce motion on this device
+      </CheckboxField>,
+    )
+
+    const box = screen.getByRole('checkbox', { name: 'Reduce motion on this device' })
+    expect(box).toBeChecked()
+    expect(box.closest('label')).toHaveTextContent(/^Reduce motion on this device$/)
+  })
+
+  it("can't be ticked while disabled", async () => {
+    const changes: boolean[] = []
+    render(
+      <CheckboxField checked={false} disabled onChange={(checked) => changes.push(checked)}>
+        Show nudges on Today
+      </CheckboxField>,
+    )
+
+    await userEvent.click(screen.getByText('Show nudges on Today'))
+
+    expect(screen.getByRole('checkbox')).toBeDisabled()
+    expect(changes).toEqual([])
+  })
+
+  it('goes into its form under its name', () => {
+    render(
+      <form aria-label="Log in">
+        <CheckboxField name="remember" checked onChange={() => {}}>
+          Keep me logged in
+        </CheckboxField>
+      </form>,
+    )
+
+    const form = screen.getByRole<HTMLFormElement>('form', { name: 'Log in' })
+    expect(new FormData(form).get('remember')).toBe('on')
+  })
 })

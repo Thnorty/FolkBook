@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ExternalLink } from 'lucide-react'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { Choice } from '@/components/ui/choice'
 import { labelClass } from '@/components/ui/label'
 import { selectClass } from '@/components/ui/select'
@@ -31,16 +32,14 @@ export function ReminderSettingsPage() {
         title="Keep-in-touch nudges"
         note="People you haven't talked to in a while show up on Today. Email reminders come later."
       >
-        <label className="flex items-center gap-2.5">
-          <input
-            type="checkbox"
-            checked={settings.nudges_on}
-            disabled={save.isPending}
-            onChange={(event) => save.mutate({ nudges_on: event.target.checked })}
-            className="size-4 accent-accent"
-          />
+        <CheckboxField
+          // Always in the answer; the type has it optional because a request may leave it out.
+          checked={Boolean(settings.nudges_on)}
+          disabled={save.isPending}
+          onChange={(nudgesOn) => save.mutate({ nudges_on: nudgesOn })}
+        >
           Show nudges on Today
-        </label>
+        </CheckboxField>
       </SettingsPart>
       <SettingsPart
         title="Default interval"
@@ -106,17 +105,12 @@ export function AppearanceSettings() {
         title="Reduce motion"
         note="Page turns, tears and ink strokes become simple fades. On automatically when your device asks for it."
       >
-        <label className="flex items-center gap-2.5">
-          <input
-            type="checkbox"
-            checked={motion === 'reduce'}
-            onChange={(event) =>
-              setAppearance({ motion: event.target.checked ? 'reduce' : 'system' })
-            }
-            className="size-4 accent-accent"
-          />
+        <CheckboxField
+          checked={motion === 'reduce'}
+          onChange={(reduce) => setAppearance({ motion: reduce ? 'reduce' : 'system' })}
+        >
           Reduce motion on this device
-        </label>
+        </CheckboxField>
       </SettingsPart>
     </SettingsPage>
   )

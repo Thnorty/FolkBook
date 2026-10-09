@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { Input } from '@/components/ui/input'
 import { fold } from '@/lib/names'
 import { ContactRow } from './ContactRow'
@@ -51,15 +52,13 @@ export function ChooseStep({ preview, picked, onToggle, onBack, onContinue }: Ch
           />
         </div>
         {known > 0 && (
-          <label className="flex items-center gap-2 type-small text-ink-soft">
-            <input
-              type="checkbox"
-              checked={hideKnown}
-              onChange={(event) => setHideKnown(event.target.checked)}
-              className="size-4 accent-accent"
-            />
+          <CheckboxField
+            checked={hideKnown}
+            onChange={setHideKnown}
+            className="type-small text-ink-soft"
+          >
             Hide {known} already in your book
-          </label>
+          </CheckboxField>
         )}
       </div>
       <ul className="flex flex-col divide-y divide-line rounded-card border border-line bg-card">
