@@ -169,7 +169,10 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 ### 3.15 Settings
 - **Profile & account:** Me profile, password, sessions
 - **AI:** provider (Gemini / OpenAI-compatible base URL), API key, model, "Test connection"
-- **API keys:** list (name, scopes, last used, expiry) → create (shown once, copy button) → revoke
+- **API keys** (right after Profile & account): a table on desktop, cards on phones: the name with `fb_…14k42`, read-only / read-write (+ private notes), "All spaces" or the space names ("No spaces left" once they're gone), last used ("2 hours ago" / "Never used"), expires ("Never", a date, "Expired")
+  - **+ Create key:** name, Read-only ("Look up people and links") or Read-write ("Also add and edit people"), spaces or All spaces, private notes off by default, expires in 30 days / 90 days / 1 year / Never
+  - **Key created:** shown once with Copy ("Copied ✓"; without a clipboard it selects the key), its scope in one line, when it expires and "Use it as `Authorization: Bearer …`"; **I've saved it** closes it and the key is gone
+  - **Revoke** asks in the row: "Revoke “Birthday script”? Anything using it stops working right away." An expired key has **Delete**, which needs no asking
 - **Nudges:** global on/off, default interval, email frequency (daily / weekly digest), "Send test email"
 - **Admin only: email (SMTP):** host, port, user, password, from address, TLS, "Send test email". Can also be set via env vars. Not configured → banner: "Email isn't set up; reminders only show on Today"
 - **Import / Export:** .vcf import, full export (JSON + photos: "Everything", with how many people and photos and the rough size, and a reminder that it holds private notes), .vcf export, restore
