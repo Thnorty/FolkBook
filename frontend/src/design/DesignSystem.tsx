@@ -5,6 +5,7 @@ import { SpaceChip, SpaceTab, type SpaceColor } from '@/components/notebook/spac
 import { StickyNote, type NoteColor } from '@/components/notebook/StickyNote'
 import { TimelineItem } from '@/components/notebook/TimelineItem'
 import { Button } from '@/components/ui/button'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { Choice as ChoiceChip } from '@/components/ui/choice'
 import { FormDialog } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
@@ -153,6 +154,20 @@ function ChoiceDemo() {
         ))}
       </div>
     </div>
+  )
+}
+
+function CheckboxDemo() {
+  const [checked, setChecked] = useState(false)
+  return (
+    <CheckboxField
+      checked={checked}
+      onChange={setChecked}
+      note="Off by default. Only turn it on if every member should be able to reach these people."
+      className="mt-5"
+    >
+      Also share contact details (phone, email)
+    </CheckboxField>
   )
 }
 
@@ -317,6 +332,7 @@ export default function DesignSystem() {
           </div>
         </div>
         <ChoiceDemo />
+        <CheckboxDemo />
       </Section>
 
       <Section title="People">

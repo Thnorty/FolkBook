@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
+import { CheckboxField } from '@/components/ui/checkbox-field'
 import { Choice } from '@/components/ui/choice'
 import { FormDialog, FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
@@ -46,6 +47,10 @@ export function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () 
     sent.current = true
     create.mutate(body)
   }
+  // Closing while the key is being made would make a key nobody ever sees.
+  const close = () => {
+    if (!create.isPending) onClose()
+  }
   const [settled, setSettled] = useState(false)
   useEffect(() => {
     if (!created) return
@@ -61,7 +66,7 @@ export function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () 
       submitLabel={created ? 'Done' : 'Create'}
       busy={create.isPending || (created !== null && !settled)}
       open={open}
-      onClose={onClose}
+      onClose={close}
       // A stray tap beside the shown-once key would lose it; ✕ and Esc still close.
       closeOnOutsideClick={!created}
     >
@@ -72,7 +77,7 @@ export function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () 
           busy={create.isPending}
           error={create.error?.message}
           onSubmit={send}
-          onCancel={onClose}
+          onCancel={close}
         />
       )}
     </FormDialog>
@@ -168,20 +173,14 @@ function KeyForm({ busy, error, onSubmit, onCancel }: KeyFormProps) {
           </Choice>
         </div>
       </fieldset>
-      <label className="flex items-start gap-2.5 rounded-card border border-line bg-card p-3">
-        <input
-          type="checkbox"
-          checked={includePrivate}
-          onChange={(event) => setIncludePrivate(event.target.checked)}
-          className="mt-1 size-4 accent-accent"
-        />
-        <span>
-          Include my private notes, memory aids and timeline
-          <span className="block type-small text-ink-faint">
-            Off by default. Only yours — never what other members write.
-          </span>
-        </span>
-      </label>
+      <CheckboxField
+        checked={includePrivate}
+        onChange={setIncludePrivate}
+        note="Off by default. Only yours — never what other members write."
+        className="rounded-card border border-line bg-card p-3"
+      >
+        Include my private notes, memory aids and timeline
+      </CheckboxField>
       <fieldset>
         <legend className={labelClass}>Expires</legend>
         <div className="grid grid-cols-4 gap-1.5">

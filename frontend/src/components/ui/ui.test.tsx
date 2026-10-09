@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { Button } from './button'
+import { CheckboxField } from './checkbox-field'
 import { CopyLink } from './copy-link'
 import { Input } from './input'
 import { Label } from './label'
@@ -97,5 +98,26 @@ describe('CopyLink', () => {
     } finally {
       if (clipboard) Object.defineProperty(navigator, 'clipboard', clipboard)
     }
+  })
+})
+
+describe('CheckboxField', () => {
+  it('ticks with its label, and says more under it', async () => {
+    const changes: boolean[] = []
+    render(
+      <CheckboxField
+        checked={false}
+        onChange={(checked) => changes.push(checked)}
+        note="Off by default."
+      >
+        Include my private notes
+      </CheckboxField>,
+    )
+
+    await userEvent.click(screen.getByText('Include my private notes'))
+
+    expect(changes).toEqual([true])
+    expect(screen.getByRole('checkbox', { name: /Include my private notes/ })).not.toBeChecked()
+    expect(screen.getByText('Off by default.')).toBeInTheDocument()
   })
 })
