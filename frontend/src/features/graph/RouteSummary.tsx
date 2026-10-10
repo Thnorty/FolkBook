@@ -20,8 +20,8 @@ const gone = (error: Error | null) => error instanceof ApiError && error.status 
 
 /**
  * How you know someone, in words (screens 3f, 3g): the route drawn on the graph, step by
- * step, why they're in your book, and the other routes. A card over the graph on desktop,
- * a sheet from the bottom on phones.
+ * step, why they're in your book, and the other routes. A card over the graph on desktop
+ * (the graph moves aside for it), the bottom part of the graph's frame on phones.
  */
 export function RouteSummary({ personId, shown, onShow, onClear }: RouteSummaryProps) {
   const person = useQuery(personQuery(personId))
@@ -108,7 +108,7 @@ export function RouteSummary({ personId, shown, onShow, onClear }: RouteSummaryP
   return (
     <section
       aria-label={first ? `How you know ${first}` : 'How you know them'}
-      className="fixed inset-x-0 bottom-0 z-20 max-h-[70dvh] overflow-y-auto rounded-t-sheet border-t border-line bg-paper p-5 pb-24 shadow-float md:absolute md:inset-x-auto md:top-3 md:bottom-auto md:left-3 md:w-80 md:rounded-card md:border md:pb-5"
+      className="max-h-[50%] flex-none overflow-y-auto border-t border-line bg-paper p-5 md:absolute md:top-3 md:left-3 md:max-h-[calc(100%-1.5rem)] md:w-80 md:rounded-card md:border md:shadow-float"
     >
       {content}
     </section>

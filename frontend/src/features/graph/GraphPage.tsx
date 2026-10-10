@@ -128,19 +128,61 @@ export function GraphPage() {
             </Button>
           </p>
         )}
-        <div className="relative mt-4 min-h-64 flex-1 overflow-hidden rounded-card border border-line bg-paper">
-          {drawn && (
-            <NetworkCanvas
-              ref={canvas}
-              nodes={drawn.nodes}
-              edges={drawn.edges}
-              clusters={drawn.clusters}
-              colors={colors}
-              selected={selected}
-              onSelect={setSelected}
-              route={drawn.route}
-            />
-          )}
+        <div className="relative mt-4 flex min-h-64 flex-1 flex-col overflow-hidden rounded-card border border-line bg-paper">
+          {/* With a route on desktop, the graph keeps clear of its card, so the route fits in
+              view; on phones the card goes under the graph instead. */}
+          <div className={cn('relative min-h-0 flex-1', how && 'md:ml-84')}>
+            {drawn && (
+              <NetworkCanvas
+                ref={canvas}
+                nodes={drawn.nodes}
+                edges={drawn.edges}
+                clusters={drawn.clusters}
+                colors={colors}
+                selected={selected}
+                onSelect={setSelected}
+                route={drawn.route}
+              />
+            )}
+            {tip && (
+              <p
+                id="graph-tip"
+                className="absolute bottom-3 left-3 max-w-72 rounded-card border border-line bg-card px-3 py-2 type-small text-ink-soft shadow-paper"
+              >
+                Each circle is a person, in the color of their space (the dots on the buttons
+                above); grey ones aren&apos;t in a space.{' '}
+                <span className="hidden md:inline">
+                  Point at someone, or at a line, to see how they&apos;re connected; click someone
+                  to open them beside the graph.
+                </span>
+                <span className="md:hidden">
+                  Tap a line to see what it means; tap someone to open them or show only their
+                  links.
+                </span>
+              </p>
+            )}
+            <div className="absolute right-3 bottom-3 flex flex-col gap-1">
+              <Button
+                variant="secondary"
+                aria-label="How to read the graph"
+                aria-expanded={tip}
+                aria-controls="graph-tip"
+                onClick={() => setTip(!tip)}
+                className={cn('size-9 bg-card px-0', tip && 'bg-hover')}
+              >
+                <Info aria-hidden />
+              </Button>
+              <CanvasButton label="Zoom in" onClick={() => canvas.current?.zoomIn()}>
+                <Plus aria-hidden />
+              </CanvasButton>
+              <CanvasButton label="Zoom out" onClick={() => canvas.current?.zoomOut()}>
+                <Minus aria-hidden />
+              </CanvasButton>
+              <CanvasButton label="Fit" onClick={() => canvas.current?.fitNodesInView()}>
+                <Maximize aria-hidden />
+              </CanvasButton>
+            </div>
+          </div>
           {how && (
             <RouteSummary
               key={how}
@@ -150,43 +192,6 @@ export function GraphPage() {
               onClear={() => showRoute()}
             />
           )}
-          {tip && (
-            <p
-              id="graph-tip"
-              className="absolute bottom-3 left-3 max-w-72 rounded-card border border-line bg-card px-3 py-2 type-small text-ink-soft shadow-paper"
-            >
-              Each circle is a person, in the color of their space (the dots on the buttons above);
-              grey ones aren&apos;t in a space.{' '}
-              <span className="hidden md:inline">
-                Point at someone, or at a line, to see how they&apos;re connected; click someone to
-                open them beside the graph.
-              </span>
-              <span className="md:hidden">
-                Tap a line to see what it means; tap someone to open them or show only their links.
-              </span>
-            </p>
-          )}
-          <div className="absolute right-3 bottom-3 flex flex-col gap-1">
-            <Button
-              variant="secondary"
-              aria-label="How to read the graph"
-              aria-expanded={tip}
-              aria-controls="graph-tip"
-              onClick={() => setTip(!tip)}
-              className={cn('size-9 bg-card px-0', tip && 'bg-hover')}
-            >
-              <Info aria-hidden />
-            </Button>
-            <CanvasButton label="Zoom in" onClick={() => canvas.current?.zoomIn()}>
-              <Plus aria-hidden />
-            </CanvasButton>
-            <CanvasButton label="Zoom out" onClick={() => canvas.current?.zoomOut()}>
-              <Minus aria-hidden />
-            </CanvasButton>
-            <CanvasButton label="Fit" onClick={() => canvas.current?.fitNodesInView()}>
-              <Maximize aria-hidden />
-            </CanvasButton>
-          </div>
         </div>
       </div>
       {selected && (

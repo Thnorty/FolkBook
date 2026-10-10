@@ -3,8 +3,16 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
-import { LineCurve3, Mesh, TubeGeometry, Vector3 } from 'three'
-import { nearestLine } from './lineReach'
+import {
+  LineCurve3,
+  Mesh,
+  PerspectiveCamera,
+  Raycaster,
+  TubeGeometry,
+  Vector2,
+  Vector3,
+} from 'three'
+import { nearestLine, widenLineReach } from './lineReach'
 import {
   NO_FILTERS,
   toCanvas,
@@ -572,6 +580,26 @@ describe('nearestLine', () => {
   it('finds nothing out of reach or past the ends', () => {
     expect(nearestLine([low, high], new Vector3(50, 5, 0), 4)).toBeNull()
     expect(nearestLine([low, high], new Vector3(110, 0, 0), 4)).toBeNull()
+  })
+
+  it('points at nothing until a pointer is really over the graph', () => {
+    // Before any pointer event, three.js aims at the middle of the canvas: whatever line
+    // ran through it lit up and showed its words, on phones too.
+    const camera = new PerspectiveCamera(50, 1, 0.1, 1000)
+    camera.position.set(50, 0, 100)
+    camera.updateMatrixWorld()
+    const raycaster = new Raycaster()
+    raycaster.setFromCamera(new Vector2(0, 0), camera)
+    let pointing = false
+    widenLineReach(
+      raycaster,
+      () => ({ camera, heightPx: 100 }),
+      () => pointing,
+    )
+
+    expect(raycaster.intersectObjects([low, high])).toEqual([])
+    pointing = true
+    expect(raycaster.intersectObjects([low, high]).map((hit) => hit.object)).toEqual([low])
   })
 })
 

@@ -68,6 +68,7 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
   }, [hovered, pointed.line, pickedLine, selected])
   const shownEdges = useMemo(() => labelLinesOf(edges, inFocus), [edges, inFocus])
   // Lit up, so their words stay readable while everything else fades.
+  const inkLines = useMemo(() => edges.filter((edge) => edge.ink).map((edge) => edge.id), [edges])
   const actives = useMemo(
     () => [...(route ?? []), ...linesAround(edges, inFocus)],
     [route, edges, inFocus],
@@ -91,7 +92,9 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         edgeArrowPosition="none"
         edgeLabelPosition="above"
         labelType="all" // every name; lines only have words for the person in focus
-        selections={selected ? [selected] : []}
+        // The route's ink lines count as selected: Reagraph dims everything else only
+        // while something is selected, and lines get no ring.
+        selections={[...(selected ? [selected] : []), ...inkLines]}
         actives={actives}
         onNodeClick={(node) => {
           setPickedLine(null)
@@ -118,14 +121,32 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
 function WideLineReach() {
   const raycaster = useThree((state) => state.raycaster)
   const get = useThree((state) => state.get)
-  useEffect(
-    () =>
-      widenLineReach(raycaster, () => {
+  const element = useThree((state) => state.gl.domElement)
+  useEffect(() => {
+    // Only once a pointer (mouse, pen or finger) has come over the graph, until it leaves.
+    let pointing = false
+    const over = () => (pointing = true)
+    const gone = () => (pointing = false)
+    element.addEventListener('pointermove', over)
+    element.addEventListener('pointerdown', over)
+    element.addEventListener('pointerleave', gone)
+    element.addEventListener('pointercancel', gone)
+    const putBack = widenLineReach(
+      raycaster,
+      () => {
         const { camera, size } = get()
         return { camera, heightPx: size.height }
-      }),
-    [raycaster, get],
-  )
+      },
+      () => pointing,
+    )
+    return () => {
+      putBack()
+      element.removeEventListener('pointermove', over)
+      element.removeEventListener('pointerdown', over)
+      element.removeEventListener('pointerleave', gone)
+      element.removeEventListener('pointercancel', gone)
+    }
+  }, [raycaster, get, element])
   return null
 }
 
