@@ -1,5 +1,6 @@
 import type { components } from '@/api/schema'
 import { linkLabel } from '@/features/person/labels'
+import type { Route } from './route'
 
 /*
  * From the API's graph to what the canvas draws (graph kit, screen 3a), with the
@@ -57,19 +58,29 @@ export type CanvasEdge = {
   /** Dash and gap lengths: long dashes for former links, dots for a shared space. */
   dashArray?: [number, number]
   fill: string
+  /** On the route being shown ("How do I know…?"): drawn thick, like a pen stroke. */
+  ink?: true
+  size?: number
 }
+
+/** How thick a route's ink lines are (Reagraph's lines are 1). */
+export const INK_SIZE = 3
 
 const DOTS: [number, number] = [1, 2]
 
 /**
  * What a line says: "friend", "met at Hackathon", "former partner"; between users who
- * share a space, which one ("shares Hackathon").
+ * share a space, which one ("shares Hackathon"). A route's steps read the same way, and a
+ * step through someone's space (which draws no line) says "in Hackathon".
  */
-function edgeLabel(edge: ApiEdge): string | undefined {
-  if (edge.kind === 'member') return edge.space ? `shares ${edge.space.name}` : undefined
-  if (!edge.type) return undefined
-  const label = linkLabel({ type: edge.type, label: edge.label })
-  return edge.former ? `former ${label}` : label
+export function lineLabel(
+  line: Pick<ApiEdge, 'kind' | 'type' | 'label' | 'former' | 'space'>,
+): string | undefined {
+  if (line.kind === 'member') return line.space ? `shares ${line.space.name}` : undefined
+  if (line.kind === 'space') return line.space ? `in ${line.space.name}` : undefined
+  if (!line.type) return undefined
+  const label = linkLabel({ type: line.type, label: line.label })
+  return line.former ? `former ${label}` : label
 }
 
 /** A person's color: their first space's, ink for you, faint without a space. */
@@ -84,6 +95,8 @@ export function toCanvas(
   palette: Palette,
   /** Drawn faces by id (photo or initials); without one a node is a plain dot. */
   faces: Record<string, string> = {},
+  /** People drawn whatever the filters say: the route being shown. */
+  keep: ReadonlySet<string> = new Set(),
 ) {
   const keepEdge = (edge: ApiEdge) =>
     drawn(edge) &&
@@ -96,7 +109,10 @@ export function toCanvas(
   // Family only: just the people those lines connect, and you.
   const onFamilyLines = new Set(edges.flatMap((edge) => [edge.source, edge.target]))
   const nodes = graph.nodes.filter(
-    (node) => node.is_me || (inSpaces(node) && (!filters.familyOnly || onFamilyLines.has(node.id))),
+    (node) =>
+      node.is_me ||
+      keep.has(node.id) ||
+      (inSpaces(node) && (!filters.familyOnly || onFamilyLines.has(node.id))),
   )
   const shown = new Set(nodes.map((node) => node.id))
   edges = edges.filter((edge) => shown.has(edge.source) && shown.has(edge.target))
@@ -127,12 +143,54 @@ export function toCanvas(
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      label: edgeLabel(edge),
+      label: lineLabel(edge),
       ...(edge.former && { dashed: true }),
       ...(edge.kind === 'member' && { dashed: true, dashArray: DOTS }),
       fill: edge.kind === 'relationship' ? palette.edge : palette.sharedEdge,
     })),
   }
+}
+
+/** Me, then each step's person: who the route goes through. */
+export function routePeople(route: Route): string[] {
+  return route.hops.length === 0
+    ? []
+    : [route.hops[0].source.id, ...route.hops.map((step) => step.target.id)]
+}
+
+/**
+ * The route's first `steps` steps in ink: the line each step went along, or, where the
+ * canvas has none (a step through someone's space, or a line a filter hides), a line
+ * added for it. `route` is what to light up: its people so far, then its ink lines.
+ */
+export function withRoute(
+  canvas: ReturnType<typeof toCanvas>,
+  route: Route,
+  steps: number,
+  palette: Palette,
+) {
+  const reached = route.hops.slice(0, steps)
+  const used = new Set(reached.map((step) => step.id))
+  const edges = canvas.edges.map((edge) =>
+    used.has(edge.id) ? { ...edge, ink: true as const, size: INK_SIZE } : edge,
+  )
+  const onCanvas = new Set(edges.map((edge) => edge.id))
+  const lines = reached.map((step, index) => {
+    if (onCanvas.has(step.id)) return step.id
+    const id = `route:${index}`
+    edges.push({
+      id,
+      source: step.source.id,
+      target: step.target.id,
+      label: lineLabel(step),
+      fill: palette.edge,
+      ink: true,
+      size: INK_SIZE,
+    })
+    return id
+  })
+  const people = reached.length === 0 ? [] : routePeople({ hops: reached })
+  return { ...canvas, edges, route: [...people, ...lines] }
 }
 
 /** What the graph is about right now: a person or a line, hovered or picked. */
@@ -145,12 +203,14 @@ function linesOf(edges: CanvasEdge[], focus: Focus): CanvasEdge[] {
 }
 
 /**
- * Words only on the lines in focus (a person's, or the one line): written on every
- * line, they pile up on each other and on the names.
+ * Words only on the lines in focus (a person's, or the one line) and on a route's ink:
+ * written on every line, they pile up on each other and on the names.
  */
 export function labelLinesOf(edges: CanvasEdge[], focus: Focus): CanvasEdge[] {
   const labelled = new Set(linesOf(edges, focus).map((edge) => edge.id))
-  return edges.map((edge) => (labelled.has(edge.id) ? edge : { ...edge, label: undefined }))
+  return edges.map((edge) =>
+    labelled.has(edge.id) || edge.ink ? edge : { ...edge, label: undefined },
+  )
 }
 
 /** The lines in focus and the people at their ends, to light up. */

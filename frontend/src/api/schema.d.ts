@@ -2337,6 +2337,8 @@ export interface components {
         };
         /** HopOut */
         HopOut: {
+            /** Id */
+            id: string;
             source: components["schemas"]["PersonRef"];
             target: components["schemas"]["PersonRef"];
             kind: components["schemas"]["EdgeKind"];
@@ -2344,6 +2346,8 @@ export interface components {
             type: string | null;
             /** Label */
             label: string;
+            /** Former */
+            former: boolean;
             space: components["schemas"]["SpaceRef"] | null;
         };
         /** PathOut */

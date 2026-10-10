@@ -295,6 +295,15 @@ export function ConnectionsSection({ personId }: { personId: string }) {
           </Link>
         </div>
       )}
+      {person && !person.is_me && (
+        <Link
+          to="/graph"
+          search={{ how: personId }}
+          className="mt-3 inline-block px-2 text-md font-medium text-accent hover:underline"
+        >
+          How do I know {person.name.split(' ')[0]}?
+        </Link>
+      )}
       {endShown && person && (
         <EndConnectionDialog
           personId={personId}

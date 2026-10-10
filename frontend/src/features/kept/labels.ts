@@ -1,5 +1,6 @@
 import type { components } from '@/api/schema'
 import { countOf } from '@/features/person/labels'
+import { words } from '@/lib/names'
 
 export type AccessEnded = components['schemas']['AccessEndedOut']
 type Written = Pick<
@@ -7,11 +8,9 @@ type Written = Pick<
   'notes' | 'memory_aids' | 'interactions'
 >
 
-const list = new Intl.ListFormat(undefined, { type: 'conjunction' })
-
 /** "Tom, Ola and Jin": first names, for toasts. */
 export function firstNames(people: { name: string }[]): string {
-  return list.format(people.map((person) => person.name.split(' ')[0]))
+  return words(people.map((person) => person.name.split(' ')[0]))
 }
 
 /** What someone else did, as a sentence without its full stop. */

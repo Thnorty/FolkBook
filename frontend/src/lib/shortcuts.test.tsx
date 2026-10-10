@@ -24,12 +24,14 @@ function Harness({
   shortcut,
   action,
   whileTyping,
+  enabled,
 }: {
   shortcut: Shortcut
   action: () => void
   whileTyping?: boolean
+  enabled?: boolean
 }) {
-  useShortcut(shortcut, action, { whileTyping })
+  useShortcut(shortcut, action, { whileTyping, enabled })
   return (
     <>
       <input aria-label="Name" />
@@ -114,5 +116,25 @@ describe('useShortcut', () => {
 
     fireEvent.keyDown(window, { key: 'ArrowRight', ctrlKey: true })
     expect(action).toHaveBeenCalledOnce()
+  })
+
+  it('takes a symbol whether or not Shift was needed to type it', () => {
+    const action = vi.fn()
+    render(<Harness shortcut={{ key: '/' }} action={action} />)
+
+    fireEvent.keyDown(window, { key: '/' })
+    fireEvent.keyDown(window, { key: '/', shiftKey: true }) // e.g. Shift+7 on a Turkish keyboard
+
+    expect(action).toHaveBeenCalledTimes(2)
+  })
+
+  it('does nothing, and leaves the key to others, while switched off', () => {
+    const action = vi.fn()
+    render(<Harness shortcut={{ key: 'Escape' }} action={action} enabled={false} />)
+
+    const event = fireEvent.keyDown(window, { key: 'Escape' })
+
+    expect(action).not.toHaveBeenCalled()
+    expect(event).toBe(true) // not prevented
   })
 })

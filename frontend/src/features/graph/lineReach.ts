@@ -22,13 +22,18 @@ const FLAT = new Plane(new Vector3(0, 0, 1), 0)
  * under the pointer with `raycaster.intersectObjects` (nothing else here calls it:
  * three's own pointer events use `intersectObject`), so this swaps it for "the
  * nearest line within a few pixels". Returns a function that puts the exact one back.
+ *
+ * `pointing` says whether a pointer is over the graph at all: before one is, three.js aims
+ * at the middle of the canvas, and whatever line ran through it would light up.
  */
 export function widenLineReach(
   raycaster: Raycaster,
   view: () => { camera: Camera; heightPx: number },
+  pointing: () => boolean = () => true,
 ) {
   const exact = raycaster.intersectObjects
   raycaster.intersectObjects = <T extends Object3D>(objects: Object3D[]) => {
+    if (!pointing()) return []
     const point = raycaster.ray.intersectPlane(FLAT, new Vector3())
     if (!point) return []
     const { camera, heightPx } = view()
@@ -37,6 +42,33 @@ export function widenLineReach(
   }
   return () => {
     raycaster.intersectObjects = exact
+  }
+}
+
+/**
+ * Whether a pointer is over `element`: none until one moves or presses there. A mouse or
+ * pen that leaves is gone; a finger isn't, as browsers say it left as it lifts, before
+ * the graph handles its tap.
+ */
+export function trackPointer(element: HTMLElement) {
+  let pointing = false
+  const over = () => (pointing = true)
+  const left = (event: PointerEvent) => {
+    if (event.pointerType !== 'touch') pointing = false
+  }
+  const cancelled = () => (pointing = false)
+  element.addEventListener('pointermove', over)
+  element.addEventListener('pointerdown', over)
+  element.addEventListener('pointerleave', left)
+  element.addEventListener('pointercancel', cancelled)
+  return {
+    pointing: () => pointing,
+    stop() {
+      element.removeEventListener('pointermove', over)
+      element.removeEventListener('pointerdown', over)
+      element.removeEventListener('pointerleave', left)
+      element.removeEventListener('pointercancel', cancelled)
+    },
   }
 }
 

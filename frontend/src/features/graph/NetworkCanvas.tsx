@@ -22,7 +22,7 @@ import {
   type ClusterColors,
   type Focus,
 } from './graphModel'
-import { widenLineReach } from './lineReach'
+import { trackPointer, widenLineReach } from './lineReach'
 import type { CanvasColors } from './usePalette'
 
 // Before the first label is drawn: later calls are ignored.
@@ -36,6 +36,8 @@ type NetworkCanvasProps = {
   colors: CanvasColors
   selected: string | null
   onSelect: (personId: string | null) => void
+  /** The route being shown (its people and ink lines): lit up, everything else dimmed. */
+  route?: string[]
 }
 
 // Room between people, so names don't overlap (Reagraph's defaults: 50 and -250).
@@ -48,7 +50,7 @@ const SPACING = { linkDistance: 110, nodeStrength: -600 }
  * or tap it, or at one of its people.
  */
 export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(function NetworkCanvas(
-  { nodes, edges, clusters, colors, selected, onSelect },
+  { nodes, edges, clusters, colors, selected, onSelect, route },
   ref,
 ) {
   const theme = useMemo(() => canvasTheme(colors), [colors])
@@ -66,7 +68,11 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
   }, [hovered, pointed.line, pickedLine, selected])
   const shownEdges = useMemo(() => labelLinesOf(edges, inFocus), [edges, inFocus])
   // Lit up, so their words stay readable while everything else fades.
-  const actives = useMemo(() => linesAround(edges, inFocus), [edges, inFocus])
+  const inkLines = useMemo(() => edges.filter((edge) => edge.ink).map((edge) => edge.id), [edges])
+  const actives = useMemo(
+    () => [...(route ?? []), ...linesAround(edges, inFocus)],
+    [route, edges, inFocus],
+  )
   return (
     // Reagraph fills the nearest positioned box; without this one it would take the page.
     <div className="relative size-full">
@@ -86,7 +92,9 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         edgeArrowPosition="none"
         edgeLabelPosition="above"
         labelType="all" // every name; lines only have words for the person in focus
-        selections={selected ? [selected] : []}
+        // The route's ink lines count as selected: Reagraph dims everything else only
+        // while something is selected, and lines get no ring.
+        selections={[...(selected ? [selected] : []), ...inkLines]}
         actives={actives}
         onNodeClick={(node) => {
           setPickedLine(null)
@@ -113,14 +121,22 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
 function WideLineReach() {
   const raycaster = useThree((state) => state.raycaster)
   const get = useThree((state) => state.get)
-  useEffect(
-    () =>
-      widenLineReach(raycaster, () => {
+  const element = useThree((state) => state.gl.domElement)
+  useEffect(() => {
+    const pointer = trackPointer(element)
+    const putBack = widenLineReach(
+      raycaster,
+      () => {
         const { camera, size } = get()
         return { camera, heightPx: size.height }
-      }),
-    [raycaster, get],
-  )
+      },
+      pointer.pointing,
+    )
+    return () => {
+      putBack()
+      pointer.stop()
+    }
+  }, [raycaster, get, element])
   return null
 }
 

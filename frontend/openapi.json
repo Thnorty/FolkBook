@@ -6759,6 +6759,10 @@
       },
       "HopOut": {
         "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
           "source": {
             "$ref": "#/components/schemas/PersonRef"
           },
@@ -6783,6 +6787,10 @@
             "title": "Label",
             "type": "string"
           },
+          "former": {
+            "title": "Former",
+            "type": "boolean"
+          },
           "space": {
             "anyOf": [
               {
@@ -6795,11 +6803,13 @@
           }
         },
         "required": [
+          "id",
           "source",
           "target",
           "kind",
           "type",
           "label",
+          "former",
           "space"
         ],
         "title": "HopOut",

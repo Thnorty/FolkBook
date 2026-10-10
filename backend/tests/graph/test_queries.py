@@ -197,6 +197,19 @@ def test_no_path_to_yourself(world):
     assert paths_to(access(world, "ela"), world.ela.me) == []
 
 
+def test_a_route_never_uses_a_link_the_viewer_cannot_see(world):
+    # Deniz sees Oskar and Greta (both in Climbing club), not Ela's private link between them.
+    greta = PersonFactory(owner=world.ela, name="Greta")
+    world.climbing.people.add(greta)
+    hidden = RelationshipFactory(owner=world.ela, person_a=world.oskar, person_b=greta)
+
+    routes = paths_to(access(world, "deniz"), greta, alternatives=5)
+
+    assert routes
+    for route in routes:
+        assert hidden not in {hop.edge.relationship for hop in route}
+
+
 # ---------------------------------------------------------------- focus mode
 
 

@@ -13,4 +13,5 @@ export const SHORTCUTS = {
   quickCapture: { key: 'n', shift: true },
   palette: { key: 'k', mod: true },
   logInteraction: { key: 'l' }, // on someone's profile
+  howDoIKnow: { key: '/' }, // on the graph
 } satisfies Record<string, Shortcut>

@@ -33,11 +33,13 @@ class GraphOut(Schema):
 
 
 class HopOut(Schema):
+    id: str  # the graph's line this step goes along (GraphEdgeOut.id)
     source: PersonRef
     target: PersonRef
     kind: EdgeKind
     type: str | None
     label: str
+    former: bool  # an ended link ("former partner")
     space: SpaceRef | None
 
 

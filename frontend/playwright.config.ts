@@ -6,7 +6,7 @@ import { PASSWORD } from './e2e/accounts.ts'
 // The tests run the real app on ports and a database of their own, so they never touch
 // the dev servers or the dev book.
 const API = 'http://localhost:8010'
-const APP = 'http://localhost:4180'
+const APP = 'http://localhost:5180'
 // Locally the backend reads its settings from .env (CI sets them in the job). Variables
 // already in the environment win over the file, so POSTGRES_DB below always applies.
 // Looked up from this file, not the shell, so `-c frontend/playwright.config.ts` works too.
@@ -45,7 +45,7 @@ export default defineConfig({
       timeout: 180_000,
     },
     {
-      command: 'npx vite build && npx vite preview --port 4180 --strictPort',
+      command: 'npx vite build && npx vite preview --port 5180 --strictPort',
       env: { FOLKBOOK_API: API },
       url: APP,
       reuseExistingServer: false,

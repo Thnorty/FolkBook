@@ -29,6 +29,7 @@ import { InvitesSettings, UsersSettings } from './features/settings/AdminSetting
 import { ImportExportSettings } from './features/settings/ImportExportSettings'
 import { ProfileSettings } from './features/settings/ProfileSettings'
 import { SettingsLayout } from './features/settings/SettingsLayout'
+import { validateGraphSearch } from './features/graph/search'
 import { validatePeopleSearch } from './features/people/search'
 import { InvitePage } from './pages/InvitePage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -179,6 +180,7 @@ const appPages = [
   createRoute({
     getParentRoute: () => appRoute,
     path: 'graph',
+    validateSearch: validateGraphSearch,
     // Loaded when opened: the WebGL graph (Reagraph, three.js) is most of the app's size.
     component: lazyRouteComponent(() => import('./features/graph/GraphPage'), 'GraphPage'),
   }),

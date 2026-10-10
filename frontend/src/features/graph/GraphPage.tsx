@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { Info, Maximize, Minus, Plus, X } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GraphCanvasRef } from 'reagraph'
+import { currentUserQuery } from '@/api/session'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { PeekPanel } from '@/features/people/PeekPanel'
@@ -10,18 +11,49 @@ import { countOf } from '@/features/person/labels'
 import { memoryAidsQuery, personQuery } from '@/features/person/queries'
 import { useInteractionForm } from '@/features/person/useInteractionForm'
 import { usePersonForm } from '@/features/person/usePersonForm'
+import { useShortcut } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
-import { graphSpaces, graphSummary, NO_FILTERS, toCanvas, type Filters } from './graphModel'
+import {
+  graphSpaces,
+  graphSummary,
+  NO_FILTERS,
+  routePeople,
+  toCanvas,
+  withRoute,
+  type Filters,
+} from './graphModel'
+import { HowDoIKnow } from './HowDoIKnow'
 import { NetworkCanvas } from './NetworkCanvas'
-import { graphQuery, neighborhoodQuery } from './queries'
+import { graphQuery, neighborhoodQuery, pathsQuery } from './queries'
+import { RouteSummary } from './RouteSummary'
+import type { GraphSearch } from './search'
 import { useNodeFaces } from './faces'
 import { useCanvasColors } from './usePalette'
+import { useStepReveal } from './useStepReveal'
+
+const CLEAR_ROUTE = { key: 'Escape' }
 
 /** The network: you in the middle, everyone around, clustered by space (3b–3e, 3m, 3n). */
 export function GraphPage() {
   const graph = useQuery(graphQuery)
-  const [focus, setFocus] = useState<string | null>(null)
-  const focused = useQuery({ ...neighborhoodQuery(focus ?? ''), enabled: focus !== null })
+  // Typed by hand: this page is loaded lazily, so the router's own types can't reach it.
+  const { how: asked, focus }: GraphSearch = useSearch({ from: '/app/graph' })
+  const navigate = useNavigate({ from: '/graph' })
+
+  // A route to yourself (a typed or stale link) is no route.
+  const meId = useQuery(currentUserQuery).data?.me?.id
+  const how = asked !== meId ? asked : undefined
+  // Which of the routes is drawn: the shortest, again, for each new person.
+  const [alternative, setAlternative] = useState({ how, index: 0 })
+  // A route and a focus replace each other.
+  const showRoute = (personId?: string) => {
+    // A route, picked or cleared, starts again from the shortest.
+    setAlternative({ how: personId, index: 0 })
+    void navigate({ search: personId ? { how: personId } : {} })
+  }
+  const setFocus = (personId?: string) =>
+    void navigate({ search: personId ? { focus: personId } : {} })
+  const focused = useQuery({ ...neighborhoodQuery(focus ?? ''), enabled: Boolean(focus) })
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [selected, setSelected] = useState<string | null>(null)
   // How to read the graph: hidden until asked for.
@@ -30,12 +62,31 @@ export function GraphPage() {
   const canvas = useRef<GraphCanvasRef>(null)
   const closePreview = useCallback(() => setSelected(null), [])
 
+  const shownIndex = alternative.how === how ? alternative.index : 0
+  const paths = useQuery({ ...pathsQuery(how ?? ''), enabled: Boolean(how) })
+  const route = how ? paths.data?.paths[shownIndex] : undefined
+  const steps = useStepReveal(route?.hops.length ?? 0, `${how}:${shownIndex}`)
+  // Esc clears the route, once an open peek has closed (the peek takes Esc first).
+  useShortcut(CLEAR_ROUTE, () => showRoute(), { enabled: Boolean(how) && !selected })
+
   const shown = (focus && focused.data) || graph.data
   const faces = useNodeFaces(graph.data?.nodes, colors)
-  const drawn = useMemo(
-    () => shown && toCanvas(shown, filters, colors.palette, faces),
-    [shown, filters, colors.palette, faces],
-  )
+  const drawn = useMemo(() => {
+    if (!shown) return undefined
+    if (!route) return { ...toCanvas(shown, filters, colors.palette, faces), route: undefined }
+    const keep = new Set(routePeople(route))
+    return withRoute(
+      toCanvas(shown, filters, colors.palette, faces, keep),
+      route,
+      steps,
+      colors.palette,
+    )
+  }, [shown, filters, colors.palette, faces, route, steps])
+  // Once drawn, the view frames the route.
+  const routeDrawn = route !== undefined && steps === route.hops.length
+  useEffect(() => {
+    if (route && routeDrawn) canvas.current?.fitNodesInView(routePeople(route))
+  }, [route, routeDrawn])
   const summary = graph.data && graphSummary(graph.data)
   const focusName = focus && shown?.nodes.find((node) => node.id === focus)?.name
 
@@ -68,73 +119,111 @@ export function GraphPage() {
             `${countOf(summary.people, 'person', 'people')} · ${countOf(summary.connections, 'connection')}`
           }
         />
+        <div className="mt-4">
+          <HowDoIKnow personId={how} meId={meId} onPick={showRoute} onClear={() => showRoute()} />
+        </div>
         <FilterBar graph={graph.data} filters={filters} onChange={setFilters} />
         {focus && (
           <p className="mt-3 flex items-center gap-2 type-small text-ink-soft">
             Focused on {focusName ?? '…'} and the people one step away.
-            <Button variant="ghost" onClick={() => setFocus(null)}>
+            <Button variant="ghost" onClick={() => setFocus()}>
               Show everyone
             </Button>
           </p>
         )}
-        <div className="relative mt-4 min-h-64 flex-1 overflow-hidden rounded-card border border-line bg-paper">
-          {drawn && (
-            <NetworkCanvas
-              ref={canvas}
-              nodes={drawn.nodes}
-              edges={drawn.edges}
-              clusters={drawn.clusters}
-              colors={colors}
-              selected={selected}
-              onSelect={setSelected}
+        <div className="relative mt-4 flex min-h-64 flex-1 flex-col overflow-hidden rounded-card border border-line bg-paper">
+          {/* With a route on desktop, the graph keeps clear of its card, so the route fits in
+              view; on phones the card goes under the graph instead. */}
+          <div className={cn('relative min-h-0 flex-1', how && 'md:ml-84')}>
+            {drawn && (
+              <NetworkCanvas
+                ref={canvas}
+                nodes={drawn.nodes}
+                edges={drawn.edges}
+                clusters={drawn.clusters}
+                colors={colors}
+                selected={selected}
+                onSelect={setSelected}
+                route={drawn.route}
+              />
+            )}
+            {tip && (
+              <p
+                id="graph-tip"
+                className="absolute bottom-3 left-3 max-w-72 rounded-card border border-line bg-card px-3 py-2 type-small text-ink-soft shadow-paper"
+              >
+                Each circle is a person, in the color of their space (the dots on the buttons
+                above); grey ones aren&apos;t in a space.{' '}
+                <span className="hidden md:inline">
+                  Point at someone, or at a line, to see how they&apos;re connected; click someone
+                  to open them beside the graph.
+                </span>
+                <span className="md:hidden">
+                  Tap a line to see what it means; tap someone to open them or show only their
+                  links.
+                </span>
+              </p>
+            )}
+            <div className="absolute right-3 bottom-3 flex flex-col gap-1">
+              <Button
+                variant="secondary"
+                aria-label="How to read the graph"
+                aria-expanded={tip}
+                aria-controls="graph-tip"
+                onClick={() => setTip(!tip)}
+                className={cn('size-9 bg-card px-0', tip && 'bg-hover')}
+              >
+                <Info aria-hidden />
+              </Button>
+              <CanvasButton label="Zoom in" onClick={() => canvas.current?.zoomIn()}>
+                <Plus aria-hidden />
+              </CanvasButton>
+              <CanvasButton label="Zoom out" onClick={() => canvas.current?.zoomOut()}>
+                <Minus aria-hidden />
+              </CanvasButton>
+              <CanvasButton label="Fit" onClick={() => canvas.current?.fitNodesInView()}>
+                <Maximize aria-hidden />
+              </CanvasButton>
+            </div>
+          </div>
+          {how && (
+            <RouteSummary
+              key={how}
+              personId={how}
+              shown={shownIndex}
+              onShow={(index) => setAlternative({ how, index })}
+              onClear={() => showRoute()}
             />
           )}
-          {tip && (
-            <p
-              id="graph-tip"
-              className="absolute bottom-3 left-3 max-w-72 rounded-card border border-line bg-card px-3 py-2 type-small text-ink-soft shadow-paper"
-            >
-              Each circle is a person, in the color of their space (the dots on the buttons above);
-              grey ones aren&apos;t in a space.{' '}
-              <span className="hidden md:inline">
-                Point at someone, or at a line, to see how they&apos;re connected; click someone to
-                open them beside the graph.
-              </span>
-              <span className="md:hidden">
-                Tap a line to see what it means; tap someone to open them or show only their links.
-              </span>
-            </p>
-          )}
-          <div className="absolute right-3 bottom-3 flex flex-col gap-1">
-            <Button
-              variant="secondary"
-              aria-label="How to read the graph"
-              aria-expanded={tip}
-              aria-controls="graph-tip"
-              onClick={() => setTip(!tip)}
-              className={cn('size-9 bg-card px-0', tip && 'bg-hover')}
-            >
-              <Info aria-hidden />
-            </Button>
-            <CanvasButton label="Zoom in" onClick={() => canvas.current?.zoomIn()}>
-              <Plus aria-hidden />
-            </CanvasButton>
-            <CanvasButton label="Zoom out" onClick={() => canvas.current?.zoomOut()}>
-              <Minus aria-hidden />
-            </CanvasButton>
-            <CanvasButton label="Fit" onClick={() => canvas.current?.fitNodesInView()}>
-              <Maximize aria-hidden />
-            </CanvasButton>
-          </div>
         </div>
       </div>
       {selected && (
         <>
-          <PeekPanel personId={selected} onClose={closePreview} />
+          <PeekPanel
+            personId={selected}
+            onClose={closePreview}
+            actions={
+              selected !== meId && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    showRoute(selected)
+                    closePreview()
+                  }}
+                >
+                  How do I know them?
+                </Button>
+              )
+            }
+          />
           <NodeSheet
             personId={selected}
             onClose={closePreview}
             onFocus={() => setFocus(selected)}
+            onHow={() => {
+              showRoute(selected)
+              closePreview()
+            }}
           />
         </>
       )}
@@ -248,10 +337,13 @@ function NodeSheet({
   personId,
   onClose,
   onFocus,
+  onHow,
 }: {
   personId: string
   onClose: () => void
   onFocus: () => void
+  /** "How do I know them?" */
+  onHow: () => void
 }) {
   const person = useQuery(personQuery(personId)).data
   const aids = useQuery(memoryAidsQuery(personId)).data ?? []
@@ -283,9 +375,14 @@ function NodeSheet({
           Focus
         </Button>
         {!person.is_me && (
-          <Button variant="ghost" onClick={() => openLog(personId)}>
-            Log
-          </Button>
+          <>
+            <Button variant="secondary" onClick={onHow}>
+              How do I know them?
+            </Button>
+            <Button variant="ghost" onClick={() => openLog(personId)}>
+              Log
+            </Button>
+          </>
         )}
       </div>
     </section>

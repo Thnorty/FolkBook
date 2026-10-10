@@ -26,6 +26,7 @@ def _edge_details(edge: Edge) -> dict:
         "kind": edge.kind,
         "type": link.type if link else None,
         "label": link.label if link else "",
+        "former": edge.is_former,
         "space": edge.space,
     }
 
@@ -43,8 +44,7 @@ def _graph_out(graph: Graph, me_id: UUID) -> dict:
             for person in graph.people.values()
         ],
         "edges": [
-            {"id": e.id, "source": e.a, "target": e.b, "former": e.is_former, **_edge_details(e)}
-            for e in graph.edges
+            {"id": e.id, "source": e.a, "target": e.b, **_edge_details(e)} for e in graph.edges
         ],
     }
 
@@ -55,6 +55,7 @@ def _paths_out(paths: list[Path], people: dict) -> dict:
             {
                 "hops": [
                     {
+                        "id": hop.edge.id,
                         "source": people[hop.source],
                         "target": people[hop.target],
                         **_edge_details(hop.edge),
