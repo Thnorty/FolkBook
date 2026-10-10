@@ -15,7 +15,8 @@
 - "Steps", never "hops", in anything a person reads.
 - Copy, verbatim: "How do I know…?", "How do I know them?", "How do I know {first name}?", "How you know {first name} · {n} steps" ("1 step"), "Also via {name}: {label}, then {label}", "Show", "Back to the shortest", "Open {first name}'s profile", "Clear", "You haven't said how you know {first name} yet.", "Connect…", "Finding the way…", "This person isn't in your book anymore.", "{first name} came into your book with {spaces}, shared by {owner first name}."
 - A step reads like a line: a stored link → `linkLabel` ("former …" when ended); `member` → "shares {space}"; `space` → "in {space}".
-- Ink draws step by step within `DURATION.ink` (0.7 s); with reduced motion all steps show at once (the canvas can't fade a line; showing at once is the no-motion version).
+- Ink draws step by step within `DURATION.ink` (0.7 s); with reduced motion all steps show at once (the canvas can't fade a line; showing at once is the no-motion version). Confirmed with the user, 2026-10-10.
+- Focus moves into the URL (`?focus=`) in this PR, next to `?how=`: the two replace each other, so one place holds both (decided 2026-10-10).
 - No new endpoints, no new privacy rules; business rules (which route wins) stay in the backend.
 - AGENTS.md: generated API types (`npm run api:generate` after the backend change), queries in `features/graph/queries.ts` under `['people', 'graph', …]`, tokens only, `useShortcut` for keys, `<Kbd>` to show `/`, mobile + desktop, light + dark.
 
@@ -223,4 +224,24 @@ In `Graph.test.tsx` (a `describe('the route on the canvas')`, with a `ROUTE` bui
 - [ ] **Step 4: Run** `npm test && npm run typecheck && npm run lint` → PASS. Commit `feat(person): ask how you know someone from their profile`.
 - [ ] **Step 5: Docs.** UI_FLOWS §3.9: a "How do I know…?" bullet (the picker and `/`, the peek panel / sheet / profile entry points, the ink route and the summary with its states, other routes with Show, Clear and Esc); drop "How do I know…?" from the "Later" line. Commit `docs(graph): How do I know…? in the graph flows`.
 - [ ] **Step 6: In the real app** (throwaway `folkbook_preview` database: Ela with Emma (friend) and Emma–Tom (cousin) links; Defne sharing Hackathon 2026 with Ela, Tom in it; Anna with no links; backend :8000, Vite :5173, Chrome via Playwright): desktop light: pick Tom from the box (and with `/`), screenshot the ink route and summary, Show the alternative, Clear, Esc; Anna's "You haven't said…" and Connect…; from Emma's profile link. Phone dark (390×844): the sheet from the node sheet's button, screenshot. Reduced motion: the route appears whole. Console errors: only the 401s before logging in. Drop the database afterwards.
-- [ ] **Step 7: Final review, PR.** Whole-branch review (executing-plans), fix pass, push `feat/how-do-i-know`, open the PR with "Part of #34" (PR 2 closes it), merge when CI is green and delete the branch.
+
+---
+
+### Task 7: End-to-end test, final review, the PR
+
+**Files:**
+- Create: `frontend/e2e/how-do-i-know.spec.ts`
+
+**Interfaces:**
+- Consumes: the e2e setup on `main` (`frontend/e2e/fixtures.ts`: `test`, `expect`, `as`, `submitButton`; `frontend/e2e/accounts.ts`: `unique`). The canvas is WebGL, so the test reads the route from the summary, never the lines.
+
+- [ ] **Step 1: Write the test `Ela finds how she knows Tom, from the graph and from a profile`**:
+  - **Setup, as Ela, through the UI:** add `unique('Emma')` and `unique('Tom')` (Add person). On Emma's profile, connect Emma to Ela's Me as a friend. On Tom's profile, connect Tom to Emma as a cousin. Use the Connect dialog; look up its labels in `ConnectionForm.tsx`.
+  - **From the graph:** open `/graph`, press `/`, type Tom's name and pick him.
+    - The region "How you know Tom" shows "How you know Tom · 2 steps", "friend" and "cousin".
+    - Clear removes it.
+  - **From a profile:** on Emma's profile, follow "How do I know Emma?". It lands on the graph with "How you know Emma · 1 step".
+  - Runs at desktop and phone size like every e2e test. On phones the summary is a sheet, and the `/` shortcut doesn't apply, so tap the "How do I know…?" box instead.
+- [ ] **Step 2: Watch it fail once:** expect "3 steps", see FAIL in both projects, revert. Run `cd frontend && npx playwright test how-do-i-know` → setup + 2 passed.
+- [ ] **Step 3: Commit** `test(e2e): how do I know someone`.
+- [ ] **Step 4: Final review, PR.** Whole-branch review (executing-plans), fix pass, push `feat/how-do-i-know`, open the PR with "Part of #34" (PR 2 closes it), merge when CI is green and delete the branch.
