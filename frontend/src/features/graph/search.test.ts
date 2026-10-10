@@ -11,4 +11,12 @@ describe('validateGraphSearch', () => {
     expect(validateGraphSearch({ how: 3, focus: '' })).toEqual({})
     expect(validateGraphSearch({ how: '', focus: ['emma'] })).toEqual({})
   })
+
+  it('keeps 2 steps of focus, and only with a focus', () => {
+    expect(validateGraphSearch({ focus: 'emma', hops: 2 })).toEqual({ focus: 'emma', hops: 2 })
+    expect(validateGraphSearch({ focus: 'emma', hops: '2' })).toEqual({ focus: 'emma', hops: 2 })
+    expect(validateGraphSearch({ focus: 'emma', hops: 3 })).toEqual({ focus: 'emma' })
+    expect(validateGraphSearch({ hops: 2 })).toEqual({})
+    expect(validateGraphSearch({ how: 'tom', hops: 2 })).toEqual({ how: 'tom' })
+  })
 })

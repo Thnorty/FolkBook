@@ -37,7 +37,7 @@ const CLEAR_ROUTE = { key: 'Escape' }
 export function GraphPage() {
   const graph = useQuery(graphQuery)
   // Typed by hand: this page is loaded lazily, so the router's own types can't reach it.
-  const { how: asked, focus }: GraphSearch = useSearch({ from: '/app/graph' })
+  const { how: asked, focus, hops }: GraphSearch = useSearch({ from: '/app/graph' })
   const navigate = useNavigate({ from: '/graph' })
 
   // A route to yourself (a typed or stale link) is no route.
@@ -53,7 +53,11 @@ export function GraphPage() {
   }
   const setFocus = (personId?: string) =>
     void navigate({ search: personId ? { focus: personId } : {} })
-  const focused = useQuery({ ...neighborhoodQuery(focus ?? ''), enabled: Boolean(focus) })
+  const focusHops = hops ?? 1
+  const focused = useQuery({
+    ...neighborhoodQuery(focus ?? '', focusHops),
+    enabled: Boolean(focus),
+  })
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [selected, setSelected] = useState<string | null>(null)
   // How to read the graph: hidden until asked for.
