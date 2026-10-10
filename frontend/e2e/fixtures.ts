@@ -10,16 +10,11 @@ type Fixtures = {
 
 export const test = base.extend<Fixtures>({
   // Playwright calls the second argument `use`; named so it isn't mistaken for a React hook.
-  as: async ({ browser }, provide, testInfo) => {
+  as: async ({ browser }, provide) => {
     const contexts: BrowserContext[] = []
-    const { baseURL, viewport, isMobile, hasTouch, deviceScaleFactor } = testInfo.project.use
     await provide(async (who) => {
+      // Playwright adds the project's settings (base URL, screen size, touch) itself.
       const context = await browser.newContext({
-        baseURL,
-        viewport,
-        isMobile,
-        hasTouch,
-        deviceScaleFactor,
         storageState: who === 'newcomer' ? undefined : authFile(who),
       })
       contexts.push(context)
@@ -29,7 +24,7 @@ export const test = base.extend<Fixtures>({
   },
 })
 
-export const isPhone = (testInfo: TestInfo) => testInfo.project.name === 'phone'
+const isPhone = (testInfo: TestInfo) => testInfo.project.name === 'phone'
 
 /** A dialog's submit button: in the sheet's header on phones, in the footer on desktop. */
 export const submitButton = (

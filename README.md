@@ -96,7 +96,7 @@ cd frontend && npm test && npm run typecheck && npm run lint && npm run format:c
 
 ### End-to-end tests
 
-Browser tests click through the key flows (sign up via invite, add a person, share a space) against the real backend and the built frontend, at desktop and phone size. They use a database of their own, `folkbook_e2e`, which they empty and fill with two known accounts on every run, and ports 8010 (backend) and 4180 (frontend), so they never touch your dev book or dev servers.
+Browser tests click through the key flows (sign up via invite, add a person, share a space) against the real backend and the built frontend, at desktop and phone size. They use a database of their own, `folkbook_e2e`, which they empty and fill with two known accounts on every run, and ports 8010 (backend) and 4180 (frontend), so they never touch your dev book or dev servers. Like `npm run build`, they rebuild `frontend/dist`.
 
 ```bash
 docker compose up -d db
