@@ -66,7 +66,7 @@ const family = (id: string, name: string, relation: string, extra = {}) => ({
 
 type Write = { method: string; path: string; body: unknown }
 
-function server() {
+function server(more: Parameters<typeof fakeServer>[0] = {}) {
   const writes: Write[] = []
   const record = async (request: Request) => {
     const body = request.method === 'DELETE' ? null : await request.json().catch(() => null)
@@ -125,6 +125,7 @@ function server() {
       await record(request)
       return new Response(null, { status: 204 })
     },
+    ...more,
   })
   return writes
 }
@@ -283,6 +284,24 @@ describe('connecting people', () => {
         started_on: '2019-06-01',
       },
     })
+  })
+
+  it('links to how you know them', async () => {
+    server()
+    const section = await openConnections()
+
+    expect(
+      await within(section).findByRole('link', { name: 'How do I know Emma?' }),
+    ).toHaveAttribute('href', '/graph?how=emma')
+  })
+
+  it('has no such link on your own Me', async () => {
+    server({ 'GET /api/people/me': () => json(person('me', 'Ela', { is_me: true })) })
+    renderApp('/people/me')
+
+    const section = await screen.findByRole('region', { name: 'Connections' })
+    await within(section).findByText('No connections yet.')
+    expect(within(section).queryByRole('link', { name: /How do I know/ })).toBeNull()
   })
 
   it('offers no menu on derived family or on links someone else made', async () => {
