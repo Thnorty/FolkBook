@@ -11,6 +11,7 @@ import { sharedPerson } from '@/motion/sharedIds'
 import { PRONOUNS } from './labels'
 import type { PersonDetail } from './queries'
 import { usePersonForm } from './usePersonForm'
+import { firstNameOf } from '@/lib/names'
 
 const CONTACT_LINKS = { phone: 'tel:', email: 'mailto:' } as const
 
@@ -131,8 +132,8 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
 
 /** "Shared by Defne · Hackathon 2026 · Viewer": whose profile this is (screens 4l, 4m). */
 function SharedBy({ person, owner }: { person: PersonDetail; owner: string }) {
-  const ownerFirst = owner.split(' ')[0]
-  const first = person.name.split(' ')[0]
+  const ownerFirst = firstNameOf(owner)
+  const first = firstNameOf(person.name)
   return (
     <div className="flex flex-col gap-1">
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 type-small text-ink-soft">

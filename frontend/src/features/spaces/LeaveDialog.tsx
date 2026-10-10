@@ -7,6 +7,7 @@ import { useReviewKept } from '@/features/kept/useReviewKept'
 import { notify } from '@/lib/notify'
 import { peopleCount } from './labels'
 import { leavePreviewQuery, leaveSpace, refreshSpaces, type Space } from './queries'
+import { firstNameOf } from '@/lib/names'
 
 /** "Leave Climbing club?": who you'd keep a copy of, and who'd go (screens 5a, 5b). */
 export function LeaveDialog({ space, onClose }: { space: Space; onClose: () => void }) {
@@ -14,7 +15,7 @@ export function LeaveDialog({ space, onClose }: { space: Space; onClose: () => v
   const navigate = useNavigate()
   const review = useReviewKept()
   const preview = useQuery(leavePreviewQuery(space.id))
-  const owner = space.owner?.name.split(' ')[0] ?? 'The owner'
+  const owner = space.owner ? firstNameOf(space.owner.name) : 'The owner'
 
   const leave = useMutation({
     mutationFn: () => leaveSpace(space.id),

@@ -32,6 +32,7 @@ import {
 } from './queries'
 import { ShareDialog } from './ShareDialog'
 import { useSpaceForm } from './useSpaceForm'
+import { firstNameOf } from '@/lib/names'
 
 // The graph code (WebGL) loads only when a space has people to draw.
 const SpaceGraph = lazy(() => import('@/features/graph/SpaceGraph'))
@@ -172,7 +173,7 @@ function Members({ space }: { space: Space }) {
 function MemberRowMenu({ space, member }: { space: Space; member: Member }) {
   const queryClient = useQueryClient()
   const [confirming, setConfirming] = useState(false)
-  const first = member.name.split(' ')[0]
+  const first = firstNameOf(member.name)
   const other: Role = member.role === 'editor' ? 'viewer' : 'editor'
   const role = useMutation({
     mutationFn: () => changeRole(space.id, member.user_id, other),

@@ -14,6 +14,7 @@ import {
   type Relationship,
 } from './queries'
 import { ConnectionFormContext } from './useConnectionForm'
+import { firstNameOf } from '@/lib/names'
 
 const FORM_ID = 'connection-form'
 
@@ -48,7 +49,7 @@ function ConnectionDialog({
 }: Open & { open: boolean; onClose: () => void }) {
   const queryClient = useQueryClient()
   const person = useQuery(personQuery(personId)).data
-  const firstName = person?.name.split(' ')[0] ?? ''
+  const firstName = person ? firstNameOf(person.name) : ''
   // Someone created here stays created if linking then fails, so trying again reuses them.
   const created = useRef<{ name: string; id: string } | null>(null)
 

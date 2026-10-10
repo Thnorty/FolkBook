@@ -9,6 +9,7 @@ import { notify } from '@/lib/notify'
 import { cn } from '@/lib/utils'
 import { linkLabel, relationLabel } from './labels'
 import { endPreviewQuery, endRelationship, reopenRelationship, type Relationship } from './queries'
+import { firstNameOf } from '@/lib/names'
 
 const FORM_ID = 'end-connection'
 const NOUNS: Partial<Record<Relationship['type'], string>> = {
@@ -36,7 +37,7 @@ export function EndConnectionDialog({
 }: EndConnectionDialogProps) {
   const queryClient = useQueryClient()
   const other = link.person_a.id === personId ? link.person_b : link.person_a
-  const [first, otherFirst] = [personName, other.name].map((name) => name.split(' ')[0])
+  const [first, otherFirst] = [personName, other.name].map((name) => firstNameOf(name))
   const noun = NOUNS[link.type] ?? 'connection'
   const moving = useQuery(endPreviewQuery(personId, link.id)).data ?? []
   const [endedOn, setEndedOn] = useState('')

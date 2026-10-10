@@ -36,6 +36,7 @@ import { useNodeFaces } from './faces'
 import { Toggle } from './Toggle'
 import { useCanvasColors } from './usePalette'
 import { useStepReveal } from './useStepReveal'
+import { firstNameOf } from '@/lib/names'
 
 /** The network: you in the middle, everyone around, clustered by space (3b–3e, 3m, 3n). */
 export function GraphPage() {
@@ -56,8 +57,11 @@ export function GraphPage() {
     void navigate({ search: personId ? { how: personId } : {} })
   }
   // A new focus starts at 1 step.
-  const setFocus = (personId?: string) =>
-    void navigate({ search: personId ? { focus: personId } : {} })
+  const setFocus = (personId?: string) => {
+    // The person already focused keeps their steps.
+    const steps = personId === focus && hops ? { hops } : {}
+    void navigate({ search: personId ? { focus: personId, ...steps } : {} })
+  }
   const setHops = (steps: 1 | 2) =>
     void navigate({ search: { focus, ...(steps === 2 && { hops: 2 as const }) } })
   const focusHops = hops ?? 1
@@ -66,7 +70,7 @@ export function GraphPage() {
     enabled: Boolean(focus),
   })
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
-  const [selected, setSelected] = useState<string | null>(null)
+  const [picked, setSelected] = useState<string | null>(null)
   // How to read the graph: hidden until asked for.
   const [tip, setTip] = useState(false)
   const colors = useCanvasColors()
@@ -77,10 +81,6 @@ export function GraphPage() {
   const paths = useQuery({ ...pathsQuery(how ?? ''), enabled: Boolean(how) })
   const route = how ? paths.data?.paths[shownIndex] : undefined
   const steps = useStepReveal(route?.hops.length ?? 0, `${how}:${shownIndex}`)
-  // Esc leaves a route or focus, once an open peek has closed (the peek takes Esc first).
-  useShortcut(SHORTCUTS.back, () => showRoute(), {
-    enabled: Boolean(how || focus) && !selected,
-  })
 
   const shown = (focus && focused.data) || graph.data
   const faces = useNodeFaces(graph.data?.nodes, colors)
@@ -99,6 +99,12 @@ export function GraphPage() {
       colors.palette,
     )
   }, [shown, filters, colors.palette, faces, route, steps, focus])
+  // Someone no longer drawn (after 2 → 1 step, or a filter) isn't open beside the graph.
+  const selected = picked && drawn?.nodes.some((node) => node.id === picked) ? picked : null
+  // Esc leaves a route or focus, once an open peek has closed (the peek takes Esc first).
+  useShortcut(SHORTCUTS.back, () => showRoute(), {
+    enabled: Boolean(how || focus) && !selected,
+  })
   // Once drawn, the view frames the route.
   const routeDrawn = route !== undefined && steps === route.hops.length
   useEffect(() => {
@@ -114,7 +120,7 @@ export function GraphPage() {
     // stays, but its numbers would be wrong.
     if (!focused.data || focused.isPlaceholderData || !graph.data) return null
     if (focused.data.nodes.length <= 1) {
-      return `Nobody else is connected to ${focusName?.split(' ')[0] ?? 'them'} yet.`
+      return `Nobody else is connected to ${focusName ? firstNameOf(focusName) : 'them'} yet.`
     }
     return focusLine(focusCounts(focused.data, graph.data, focus), focusHops)
   })()

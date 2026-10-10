@@ -22,6 +22,7 @@ import { useShortcut } from '@/lib/shortcuts'
 import { DURATION, EASE, REDUCED_TRANSITION } from '@/motion/tokens'
 import { useReducedMotion } from '@/motion/useReducedMotion'
 import { swipeOf } from './swipe'
+import { firstNameOf } from '@/lib/names'
 
 const QUICK_SPACES = 4
 const SAVE = { key: 'Enter', mod: true }
@@ -39,7 +40,7 @@ export function FillInCard({ person, onSaved, onSkipped }: FillInCardProps) {
   const { openConnect } = useConnectionForm()
   const detail = useQuery(personQuery(person.id)).data
   const quick = useQuickSpaces()
-  const firstName = person.name.split(' ')[0]
+  const firstName = firstNameOf(person.name)
   const [howWeMet, setHowWeMet] = useState('')
   const [picked, setPicked] = useState<ReadonlySet<string> | null>(null)
   const [aid, setAid] = useState<string | null>(null)

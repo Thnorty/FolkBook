@@ -1,6 +1,6 @@
 import type { components } from '@/api/schema'
 import { countOf } from '@/features/person/labels'
-import { words } from '@/lib/names'
+import { firstNameOf, words } from '@/lib/names'
 
 export type AccessEnded = components['schemas']['AccessEndedOut']
 type Written = Pick<
@@ -10,7 +10,7 @@ type Written = Pick<
 
 /** "Tom, Ola and Jin": first names, for toasts. */
 export function firstNames(people: { name: string }[]): string {
-  return words(people.map((person) => person.name.split(' ')[0]))
+  return words(people.map((person) => firstNameOf(person.name)))
 }
 
 /** What someone else did, as a sentence without its full stop. */

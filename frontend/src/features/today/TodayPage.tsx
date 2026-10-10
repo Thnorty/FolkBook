@@ -32,6 +32,7 @@ import {
   type Nudge,
 } from './queries'
 import { useDismissed } from '@/lib/useDismissed'
+import { firstNameOf } from '@/lib/names'
 
 const SNOOZE_DAYS = 7
 const longDate = new Intl.DateTimeFormat(undefined, {
@@ -41,8 +42,6 @@ const longDate = new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
 })
 const weekday = new Intl.DateTimeFormat(undefined, { weekday: 'long', timeZone: 'UTC' })
-
-const firstName = (name: string) => name.split(' ')[0]
 
 /** Run a write; if it fails, say so in a toast. */
 function attempt(failed: string, write: () => Promise<unknown>) {
@@ -209,7 +208,7 @@ function Birthdays({ birthdays, today }: { birthdays: Birthday[]; today: string 
         occurred_at: isoTime(),
       })
       notify({
-        title: `Logged: birthday wishes to ${firstName(birthday.person.name)}`,
+        title: `Logged: birthday wishes to ${firstNameOf(birthday.person.name)}`,
         action: {
           label: 'Undo',
           onClick: () =>
@@ -277,7 +276,7 @@ function KeepInTouch({ nudges, today }: { nudges: Nudge[]; today: string }) {
         occurred_at: isoTime(),
       })
       notify({
-        title: `Logged: talked with ${firstName(nudge.person.name)} today`,
+        title: `Logged: talked with ${firstNameOf(nudge.person.name)} today`,
         action: {
           label: 'Undo',
           onClick: () =>
@@ -312,7 +311,7 @@ function KeepInTouch({ nudges, today }: { nudges: Nudge[]; today: string }) {
     >
       <ul className="flex flex-col gap-3">
         {nudges.map((nudge) => {
-          const first = firstName(nudge.person.name)
+          const first = firstNameOf(nudge.person.name)
           return (
             <li key={nudge.person.id} className="rounded-card border border-line bg-card p-4">
               <Link
@@ -370,7 +369,7 @@ function Blanks({ blanks }: { blanks: { count: number; items: { id: string; name
         {first && (
           <Button asChild variant="secondary">
             <Link to="/people/$personId" params={{ personId: first.id }}>
-              Start with {firstName(first.name)} →
+              Start with {firstNameOf(first.name)} →
             </Link>
           </Button>
         )}

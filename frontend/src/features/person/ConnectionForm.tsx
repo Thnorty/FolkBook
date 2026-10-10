@@ -19,6 +19,7 @@ import {
   type ConnectionKind,
 } from './connectionKinds'
 import type { PersonDetail, Relationship } from './queries'
+import { firstNameOf } from '@/lib/names'
 
 type ParentType = components['schemas']['ParentType']
 type SpaceRef = components['schemas']['SpaceRef']
@@ -65,7 +66,7 @@ export function ConnectionForm({
   onSubmit,
   onCancel,
 }: ConnectionFormProps) {
-  const firstName = person.name.split(' ')[0]
+  const firstName = firstNameOf(person.name)
   const linked = link && (link.person_a.id === person.id ? link.person_b : link.person_a)
   const [other, setOther] = useState<Other | null>(linked ? { ...linked, spaces: [] } : null)
   const [kind, setKind] = useState<ConnectionKind | null>(
