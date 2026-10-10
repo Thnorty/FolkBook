@@ -1,5 +1,5 @@
 import { ACCOUNTS, unique } from './accounts.ts'
-import { expect, submitButton, test } from './fixtures.ts'
+import { addPerson, expect, submitButton, test } from './fixtures.ts'
 
 const NOTE = 'Private: owes me 20 euros'
 
@@ -15,12 +15,7 @@ test("Deniz sees the space Ela shared, and Greta, but not Ela's note", async ({ 
   await submitButton(ela, testInfo, { desktop: 'Create space', phone: 'Create' }).click()
   await expect(ela.getByRole('heading', { name: space })).toBeVisible()
 
-  await ela.goto('/people')
-  await ela.getByRole('button', { name: /^Add person/ }).click()
-  await ela.getByLabel('Name').fill(greta)
-  await ela.getByRole('button', { name: space }).click()
-  await submitButton(ela, testInfo, { desktop: 'Save person', phone: 'Save' }).click()
-  await expect(ela.getByRole('heading', { name: greta })).toBeVisible()
+  await addPerson(ela, testInfo, greta, { space })
   await ela.getByRole('button', { name: 'Write a note' }).click()
   await ela.getByLabel(`Notes about ${greta.split(' ')[0]}`).fill(NOTE)
   await ela.getByRole('button', { name: 'Save', exact: true }).click()
