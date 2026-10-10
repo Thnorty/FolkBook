@@ -39,9 +39,12 @@ test("Deniz sees the space Ela shared, and Greta, but not Ela's note", async ({ 
   const deniz = await as('deniz')
   await deniz.goto('/spaces')
   await deniz.getByRole('main').getByRole('link', { name: space }).click()
+  // "Write a note" also shows while Deniz's notes load, so wait for them before checking.
+  const notesLoaded = deniz.waitForResponse(/\/api\/people\/[^/]+\/note$/)
   await deniz.getByRole('link', { name: greta }).click()
   await expect(deniz.getByRole('heading', { name: greta })).toBeVisible()
   // Deniz has notes of his own on Greta, empty so far; Ela's never show.
   await expect(deniz.getByRole('button', { name: 'Write a note' })).toBeVisible()
+  expect(await (await notesLoaded).text()).not.toContain(NOTE)
   await expect(deniz.getByText(NOTE)).toHaveCount(0)
 })
