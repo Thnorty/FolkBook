@@ -15,7 +15,7 @@ test('Ela adds a person and finds them again', async ({ as }, testInfo) => {
   await expect(page.getByRole('heading', { name: greta })).toBeVisible()
   await expect(page.getByText('Climbing gym, spring 2025')).toBeVisible()
 
-  await page.reload()
+  // A fresh page load: Greta comes from the server, not from what the app remembered.
   await page.goto('/people')
   await expect(page.getByRole('link', { name: greta })).toBeVisible()
 })

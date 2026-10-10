@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import path from 'node:path'
 import { defineConfig } from '@playwright/test'
 import { PASSWORD } from './e2e/accounts.ts'
 
@@ -8,7 +9,8 @@ const API = 'http://localhost:8010'
 const APP = 'http://localhost:4180'
 // Locally the backend reads its settings from .env (CI sets them in the job). Variables
 // already in the environment win over the file, so POSTGRES_DB below always applies.
-const envFile = existsSync('../.env') ? '--env-file ../.env' : ''
+// Looked up from this file, not the shell, so `-c frontend/playwright.config.ts` works too.
+const envFile = existsSync(path.join(import.meta.dirname, '../.env')) ? '--env-file ../.env' : ''
 
 export default defineConfig({
   testDir: 'e2e',
