@@ -43,9 +43,14 @@ export function GraphPage() {
   // A route to yourself (a typed or stale link) is no route.
   const meId = useQuery(currentUserQuery).data?.me?.id
   const how = asked !== meId ? asked : undefined
+  // Which of the routes is drawn: the shortest, again, for each new person.
+  const [alternative, setAlternative] = useState({ how, index: 0 })
   // A route and a focus replace each other.
-  const showRoute = (personId?: string) =>
+  const showRoute = (personId?: string) => {
+    // A route, picked or cleared, starts again from the shortest.
+    setAlternative({ how: personId, index: 0 })
     void navigate({ search: personId ? { how: personId } : {} })
+  }
   const setFocus = (personId?: string) =>
     void navigate({ search: personId ? { focus: personId } : {} })
   const focused = useQuery({ ...neighborhoodQuery(focus ?? ''), enabled: Boolean(focus) })
@@ -57,8 +62,6 @@ export function GraphPage() {
   const canvas = useRef<GraphCanvasRef>(null)
   const closePreview = useCallback(() => setSelected(null), [])
 
-  // Which of the routes is drawn: the shortest, again, for each new person.
-  const [alternative, setAlternative] = useState({ how, index: 0 })
   const shownIndex = alternative.how === how ? alternative.index : 0
   const paths = useQuery({ ...pathsQuery(how ?? ''), enabled: Boolean(how) })
   const route = how ? paths.data?.paths[shownIndex] : undefined

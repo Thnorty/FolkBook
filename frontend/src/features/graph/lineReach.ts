@@ -45,6 +45,33 @@ export function widenLineReach(
   }
 }
 
+/**
+ * Whether a pointer is over `element`: none until one moves or presses there. A mouse or
+ * pen that leaves is gone; a finger isn't, as browsers say it left as it lifts, before
+ * the graph handles its tap.
+ */
+export function trackPointer(element: HTMLElement) {
+  let pointing = false
+  const over = () => (pointing = true)
+  const left = (event: PointerEvent) => {
+    if (event.pointerType !== 'touch') pointing = false
+  }
+  const cancelled = () => (pointing = false)
+  element.addEventListener('pointermove', over)
+  element.addEventListener('pointerdown', over)
+  element.addEventListener('pointerleave', left)
+  element.addEventListener('pointercancel', cancelled)
+  return {
+    pointing: () => pointing,
+    stop() {
+      element.removeEventListener('pointermove', over)
+      element.removeEventListener('pointerdown', over)
+      element.removeEventListener('pointerleave', left)
+      element.removeEventListener('pointercancel', cancelled)
+    },
+  }
+}
+
 /** The line (a tube mesh) nearest to `point`, if one is within `reach`. */
 export function nearestLine(objects: Object3D[], point: Vector3, reach: number) {
   let best: { object: Object3D; distance: number } | null = null

@@ -12,7 +12,7 @@ import {
   Vector2,
   Vector3,
 } from 'three'
-import { nearestLine, widenLineReach } from './lineReach'
+import { nearestLine, trackPointer, widenLineReach } from './lineReach'
 import {
   NO_FILTERS,
   toCanvas,
@@ -429,6 +429,26 @@ describe('how do I know…?', () => {
     await waitFor(async () => expect(await inked()).toEqual(['me–kerem friend (ink)']))
   })
 
+  it('starts again from the shortest route after clearing', async () => {
+    routes()
+    renderApp('/graph?how=tom')
+    const card = await summary('Tom')
+    await userEvent.click(await within(card).findByRole('button', { name: 'Show' }))
+    await userEvent.click(within(card).getByRole('button', { name: 'Clear' }))
+    await waitFor(noSummary)
+
+    await userEvent.type(await screen.findByLabelText('How do I know…?'), 'Tom')
+    const matches = await screen.findByRole('list', { name: 'People' })
+    await userEvent.click(await within(matches).findByRole('button', { name: /Tom Bergqvist/ }))
+
+    const again = await summary('Tom')
+    expect(await within(again).findByText('How you know Tom · 2 steps')).toBeInTheDocument()
+    expect(within(again).queryByRole('button', { name: 'Back to the shortest' })).toBeNull()
+    await waitFor(async () =>
+      expect(await inked()).toEqual(['me–emma friend (ink)', 'emma–tom cousin (ink)']),
+    )
+  })
+
   it('switches between focus and a route', async () => {
     routes()
     renderApp('/graph')
@@ -600,6 +620,41 @@ describe('nearestLine', () => {
     expect(raycaster.intersectObjects([low, high])).toEqual([])
     pointing = true
     expect(raycaster.intersectObjects([low, high]).map((hit) => hit.object)).toEqual([low])
+  })
+})
+
+describe('trackPointer', () => {
+  const pointer = (type: string, pointerType: string) =>
+    new PointerEvent(type, { pointerType, bubbles: true })
+
+  it('knows of no pointer until one is used', () => {
+    const element = document.createElement('div')
+    expect(trackPointer(element).pointing()).toBe(false)
+  })
+
+  it('keeps a finger after it lifts, so the tap still lands on a line', () => {
+    const element = document.createElement('div')
+    const tracked = trackPointer(element)
+
+    element.dispatchEvent(pointer('pointerdown', 'touch'))
+    element.dispatchEvent(pointer('pointerup', 'touch'))
+    element.dispatchEvent(pointer('pointerleave', 'touch')) // browsers send it before the click
+
+    expect(tracked.pointing()).toBe(true)
+  })
+
+  it('lets go of a mouse that leaves the graph', () => {
+    const element = document.createElement('div')
+    const tracked = trackPointer(element)
+
+    element.dispatchEvent(pointer('pointermove', 'mouse'))
+    expect(tracked.pointing()).toBe(true)
+    element.dispatchEvent(pointer('pointerleave', 'mouse'))
+    expect(tracked.pointing()).toBe(false)
+
+    tracked.stop()
+    element.dispatchEvent(pointer('pointermove', 'mouse'))
+    expect(tracked.pointing()).toBe(false)
   })
 })
 

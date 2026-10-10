@@ -22,7 +22,7 @@ import {
   type ClusterColors,
   type Focus,
 } from './graphModel'
-import { widenLineReach } from './lineReach'
+import { trackPointer, widenLineReach } from './lineReach'
 import type { CanvasColors } from './usePalette'
 
 // Before the first label is drawn: later calls are ignored.
@@ -123,28 +123,18 @@ function WideLineReach() {
   const get = useThree((state) => state.get)
   const element = useThree((state) => state.gl.domElement)
   useEffect(() => {
-    // Only once a pointer (mouse, pen or finger) has come over the graph, until it leaves.
-    let pointing = false
-    const over = () => (pointing = true)
-    const gone = () => (pointing = false)
-    element.addEventListener('pointermove', over)
-    element.addEventListener('pointerdown', over)
-    element.addEventListener('pointerleave', gone)
-    element.addEventListener('pointercancel', gone)
+    const pointer = trackPointer(element)
     const putBack = widenLineReach(
       raycaster,
       () => {
         const { camera, size } = get()
         return { camera, heightPx: size.height }
       },
-      () => pointing,
+      pointer.pointing,
     )
     return () => {
       putBack()
-      element.removeEventListener('pointermove', over)
-      element.removeEventListener('pointerdown', over)
-      element.removeEventListener('pointerleave', gone)
-      element.removeEventListener('pointercancel', gone)
+      pointer.stop()
     }
   }, [raycaster, get, element])
   return null
