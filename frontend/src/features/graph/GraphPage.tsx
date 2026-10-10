@@ -36,6 +36,7 @@ import { useNodeFaces } from './faces'
 import { Toggle } from './Toggle'
 import { useCanvasColors } from './usePalette'
 import { useStepReveal } from './useStepReveal'
+import { firstNameOf } from '@/lib/names'
 
 /** The network: you in the middle, everyone around, clustered by space (3b–3e, 3m, 3n). */
 export function GraphPage() {
@@ -119,7 +120,7 @@ export function GraphPage() {
     // stays, but its numbers would be wrong.
     if (!focused.data || focused.isPlaceholderData || !graph.data) return null
     if (focused.data.nodes.length <= 1) {
-      return `Nobody else is connected to ${focusName?.split(' ')[0] ?? 'them'} yet.`
+      return `Nobody else is connected to ${focusName ? firstNameOf(focusName) : 'them'} yet.`
     }
     return focusLine(focusCounts(focused.data, graph.data, focus), focusHops)
   })()

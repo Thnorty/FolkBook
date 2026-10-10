@@ -28,6 +28,7 @@ import {
   type User,
 } from './queries'
 import { SettingsPage, SettingsPart } from './SettingsPage'
+import { firstNameOf } from '@/lib/names'
 
 const relative = (moment: string) => formatRelativeDay(isoDay(0, new Date(moment)))
 
@@ -88,7 +89,7 @@ export function UsersSettings() {
 function UserMenu({ user, onReset }: { user: User; onReset: () => void }) {
   const queryClient = useQueryClient()
   const [deactivating, setDeactivating] = useState(false)
-  const firstName = user.name.split(' ')[0]
+  const firstName = firstNameOf(user.name)
   const change = (changes: Parameters<typeof updateUser>[2], done: string) =>
     updateUser(queryClient, user.id, changes).then(
       () => notify({ title: done }),

@@ -8,6 +8,7 @@ import { useConnectionForm } from '@/features/person/useConnectionForm'
 import { PERSON_GONE } from './copy'
 import { pathsQuery } from './queries'
 import { alsoVia, routeTitle, stepLabel, whyLine } from './route'
+import { firstNameOf } from '@/lib/names'
 
 type RouteSummaryProps = {
   personId: string
@@ -28,7 +29,7 @@ export function RouteSummary({ personId, shown, onShow, onClear }: RouteSummaryP
   const person = useQuery(personQuery(personId))
   const paths = useQuery(pathsQuery(personId))
   const { openConnect } = useConnectionForm()
-  const first = person.data?.name.split(' ')[0]
+  const first = person.data && firstNameOf(person.data.name)
   const clear = (
     <Button variant="ghost" onClick={onClear}>
       Clear

@@ -16,6 +16,7 @@ import {
   type MemoryAid,
 } from './queries'
 import { InteractionFormContext } from './useInteractionForm'
+import { firstNameOf } from '@/lib/names'
 
 const FORM_ID = 'interaction-form'
 
@@ -50,7 +51,7 @@ function InteractionDialog({
 }: Open & { open: boolean; onClose: () => void }) {
   const queryClient = useQueryClient()
   const person = useQuery(personQuery(personId)).data
-  const firstName = person?.name.split(' ')[0] ?? ''
+  const firstName = person ? firstNameOf(person.name) : ''
 
   const save = useMutation({
     mutationFn: async ({ fields, memoryAids }: InteractionFormResult) => {

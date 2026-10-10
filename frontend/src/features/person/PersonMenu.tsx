@@ -9,7 +9,7 @@ import { MenuRoot } from '@/components/ui/menu-root'
 import { menuContentClass, menuItemClass } from '@/components/ui/menu'
 import { personCopyUrl } from '@/features/settings/queries'
 import { membersQuery, spacesQuery, type Space } from '@/features/spaces/queries'
-import { words } from '@/lib/names'
+import { firstNameOf, words } from '@/lib/names'
 import { notify, UNDO_FOR, type Notice } from '@/lib/notify'
 import { cn } from '@/lib/utils'
 import { tearOut } from '@/motion/tearOut'
@@ -43,7 +43,7 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
   const reduced = useReducedMotion()
   const [confirming, setConfirming] = useState<'tear' | 'remove' | null>(null)
   const gone = useWhatGoes(person, confirming === 'tear')
-  const firstName = person.name.split(' ')[0]
+  const firstName = firstNameOf(person.name)
   const ownerName = person.owner?.name ?? 'Someone'
 
   /** Tear the page out while `write` runs; then leave, and offer `undo` for a while. */
@@ -133,7 +133,7 @@ export function PersonMenu({ person, page, onGone }: PersonMenuProps) {
         open={confirming === 'remove'}
         onOpenChange={(open) => setConfirming(open ? 'remove' : null)}
         title={`${firstName} isn't yours to delete`}
-        description={`${ownerName} shared ${firstName} with you. You can take ${firstName} out of your book: ${firstName} is hidden everywhere for you, and ${ownerName.split(' ')[0]} keeps ${firstName}.`}
+        description={`${ownerName} shared ${firstName} with you. You can take ${firstName} out of your book: ${firstName} is hidden everywhere for you, and ${firstNameOf(ownerName)} keeps ${firstName}.`}
         cancelLabel="Keep"
         confirmLabel="Remove from my book"
         onConfirm={() =>

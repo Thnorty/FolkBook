@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import { words } from '@/lib/names'
+import { firstNameOf, words } from '@/lib/names'
 import type { Choice } from './ImportPage'
 import type { Contact, ContactMatch } from './queries'
 import { WizardBar } from './WizardBar'
@@ -40,7 +40,7 @@ export function DuplicateStep({
         adds.photo && 'their photo',
       ]
     : []
-  const owner = match.owner.split(' ')[0]
+  const owner = firstNameOf(match.owner)
   return (
     <div className="flex flex-col gap-4">
       <div>

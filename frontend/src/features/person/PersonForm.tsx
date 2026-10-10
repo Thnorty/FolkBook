@@ -18,6 +18,7 @@ import { PRONOUNS, type Pronouns } from './labels'
 import { cropToBlob } from './photo'
 import { PhotoCropper } from './PhotoCropper'
 import type { PersonDetail, PersonInput } from './queries'
+import { firstNameOf } from '@/lib/names'
 
 /** What the form hands back: the person's fields, and what to do with the photo. */
 export type PersonFormResult = {
@@ -137,7 +138,7 @@ export function PersonForm({
           setPicked(null)
           focusPhotoButton.current = true
           setRemoved(false)
-          if (!caption) setCaption(name.split(' ')[0])
+          if (!caption) setCaption(firstNameOf(name))
         }}
       />
     )

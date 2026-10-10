@@ -25,6 +25,7 @@ import {
   type Relationship,
 } from './queries'
 import { useConnectionForm } from './useConnectionForm'
+import { firstNameOf } from '@/lib/names'
 
 type Row = {
   key: string
@@ -131,7 +132,7 @@ function Rows({ rows, actions }: { rows: Row[]; actions: RowActions }) {
 
 /** Change, end, reopen or remove one of your links (screen 2m). */
 function RowMenu({ row, link, actions }: { row: Row; link: Relationship; actions: RowActions }) {
-  const firstName = row.name.split(' ')[0]
+  const firstName = firstNameOf(row.name)
   return (
     <MenuRoot>
       <DropdownMenu.Trigger asChild>
@@ -301,7 +302,7 @@ export function ConnectionsSection({ personId }: { personId: string }) {
           search={{ how: personId }}
           className="mt-3 inline-block px-2 text-md font-medium text-accent hover:underline"
         >
-          How do I know {person.name.split(' ')[0]}?
+          How do I know {firstNameOf(person.name)}?
         </Link>
       )}
       {endShown && person && (

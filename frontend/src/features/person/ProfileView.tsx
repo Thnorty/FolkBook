@@ -13,6 +13,7 @@ import { PersonMenu } from './PersonMenu'
 import { personQuery } from './queries'
 import { RememberSection } from './RememberSection'
 import { TimelineSection } from './TimelineSection'
+import { firstNameOf } from '@/lib/names'
 
 type ProfileViewProps = {
   personId: string
@@ -48,7 +49,7 @@ export function ProfileView({ personId, compact = false, flyFrom, onGone }: Prof
   }
 
   const data = person.data
-  const firstName = data.name.split(' ')[0]
+  const firstName = firstNameOf(data.name)
 
   return (
     <div

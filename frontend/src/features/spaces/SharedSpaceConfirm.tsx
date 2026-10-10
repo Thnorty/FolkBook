@@ -4,6 +4,7 @@ import { CheckboxField } from '@/components/ui/checkbox-field'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { peopleCount } from './labels'
 import { membersQuery, type Space } from './queries'
+import { firstNameOf } from '@/lib/names'
 
 type SharedSpaceConfirmProps = {
   space: Space
@@ -24,7 +25,7 @@ export function SharedSpaceConfirm({
 }: SharedSpaceConfirmProps) {
   const others = (useQuery(membersQuery(space.id)).data ?? []).filter((member) => !member.is_you)
   const [remember, setRemember] = useState(false)
-  const firstName = personName.split(' ')[0]
+  const firstName = firstNameOf(personName)
 
   return (
     <ConfirmDialog

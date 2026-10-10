@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fold, initials } from './names'
+import { firstNameOf, fold, initials } from './names'
 
 describe('initials', () => {
   it('takes the first and last names, in any script case', () => {
@@ -14,5 +14,12 @@ describe('fold', () => {
   it('ignores case and accents, Turkish letters included', () => {
     expect(fold('Ayşe YILMAZ')).toBe('ayse yilmaz')
     expect(fold('Şükrü Öztürk')).toBe(fold('sukru ozturk'))
+  })
+})
+
+describe('firstNameOf', () => {
+  it('takes the first word of a name', () => {
+    expect(firstNameOf('Emma Yılmaz')).toBe('Emma')
+    expect(firstNameOf('Ela')).toBe('Ela')
   })
 })
