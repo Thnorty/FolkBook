@@ -22,15 +22,19 @@ export const pathsQuery = (personId: string) =>
       ),
   })
 
-/** Focus mode: a person and everyone one step away. */
-export const neighborhoodQuery = (personId: string) =>
+/** Focus mode: a person and everyone one or two steps away. */
+export const neighborhoodQuery = (personId: string, hops: 1 | 2) =>
   queryOptions({
-    queryKey: ['people', 'graph', 'focus', personId],
+    queryKey: ['people', 'graph', 'focus', personId, hops],
     queryFn: ({ signal }) =>
       unwrap(
         api.GET('/api/graph/neighborhood/{person_id}', {
-          params: { path: { person_id: personId }, query: { hops: 1 } },
+          params: { path: { person_id: personId }, query: { hops } },
           signal,
         }),
       ),
+    // Going from 1 to 2 steps keeps the 1-step people drawn until the rest arrive,
+    // instead of everyone flashing in between; never someone else's people.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[3] === personId ? previous : undefined,
   })

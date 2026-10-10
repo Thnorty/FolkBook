@@ -5,6 +5,7 @@ import { ApiError } from '@/api/errors'
 import { Button } from '@/components/ui/button'
 import { personQuery } from '@/features/person/queries'
 import { useConnectionForm } from '@/features/person/useConnectionForm'
+import { PERSON_GONE } from './copy'
 import { pathsQuery } from './queries'
 import { alsoVia, routeTitle, stepLabel, whyLine } from './route'
 
@@ -38,7 +39,7 @@ export function RouteSummary({ personId, shown, onShow, onClear }: RouteSummaryP
   if (gone(person.error) || gone(paths.error)) {
     content = (
       <>
-        <p>This person isn&apos;t in your book anymore.</p>
+        <p>{PERSON_GONE}</p>
         <div className="mt-3">{clear}</div>
       </>
     )

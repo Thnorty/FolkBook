@@ -12,6 +12,7 @@ import {
   Vector2,
   Vector3,
 } from 'three'
+import { PERSON_GONE } from './copy'
 import { nearestLine, trackPointer, widenLineReach } from './lineReach'
 import {
   NO_FILTERS,
@@ -182,7 +183,7 @@ describe('graph', () => {
 
     await userEvent.click(within(sheet).getByRole('button', { name: 'Focus' }))
     expect(await screen.findByText(/Focused on Emma Yılmaz/)).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Show everyone' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Back to everyone' }))
     expect(await lines()).toHaveLength(3)
   })
 
@@ -469,6 +470,164 @@ describe('how do I know…?', () => {
     await userEvent.click(within(await openSheet()).getByRole('button', { name: 'Focus' }))
     expect(await screen.findByText(/Focused on Emma Yılmaz/)).toBeInTheDocument()
     noSummary()
+  })
+})
+
+describe('focus mode', () => {
+  // Everyone in GRAPH is one step from Emma; Anna isn't connected to anyone, and Ola is
+  // two steps away (through Tom), known only to the 2-step neighborhood.
+  const FOCUS_GRAPH: GraphData = {
+    ...GRAPH,
+    nodes: [...GRAPH.nodes, node('anna', 'Anna Berg', [])],
+  }
+  const TWO_STEPS: GraphData = {
+    nodes: [...GRAPH.nodes, node('ola', 'Ola Nordmann')],
+    edges: [...GRAPH.edges, edge('e6', 'tom', 'ola', 'friend')],
+  }
+  const twoSteps = (request: Request) => new URL(request.url).searchParams.get('hops') === '2'
+
+  function focusServer(more: Routes = {}) {
+    server(FOCUS_GRAPH, {
+      'GET /api/graph/neighborhood/emma': (request) => json(twoSteps(request) ? TWO_STEPS : GRAPH),
+      'GET /api/graph/neighborhood/anna': () =>
+        json({ nodes: [node('anna', 'Anna Berg', [])], edges: [] }),
+      'GET /api/people/kerem': () => json(detail('kerem', 'Kerem Yılmaz')),
+      'GET /api/people/tom': () => json(detail('tom', 'Tom Bergqvist')),
+      ...more,
+    })
+  }
+  const drawn = (name: string) => screen.queryByRole('button', { name })
+  const bar = () => screen.queryByRole('group', { name: 'Focus' })
+
+  it('focuses from the desktop peek, and goes back to everyone', async () => {
+    focusServer()
+    const router = renderApp('/graph')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Emma Yılmaz' }))
+    const peek = await screen.findByRole('complementary', { name: 'Peek' })
+    await userEvent.click(within(peek).getByRole('button', { name: 'Focus' }))
+
+    expect(await screen.findByText('Focused on Emma Yılmaz')).toBeInTheDocument()
+    expect(await screen.findByText('3 direct · 1 other hidden')).toBeInTheDocument()
+    await waitFor(() => expect(drawn('Anna Berg')).toBeNull())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Back to everyone' }))
+    await waitFor(() => expect(bar()).toBeNull())
+    expect(router.state.location.search).toEqual({})
+    expect(await screen.findByRole('button', { name: 'Anna Berg' })).toBeInTheDocument()
+  })
+
+  it('shows 2 steps', async () => {
+    focusServer()
+    const router = renderApp('/graph?focus=emma')
+    const steps = await screen.findByRole('group', { name: 'Steps' })
+
+    await userEvent.click(within(steps).getByRole('button', { name: '2 steps' }))
+    expect(await screen.findByRole('button', { name: 'Ola Nordmann' })).toBeInTheDocument()
+    expect(router.state.location.search).toEqual({ focus: 'emma', hops: 2 })
+    expect(screen.getByText(/· 1 more at 2 steps/)).toBeInTheDocument()
+
+    await userEvent.click(within(steps).getByRole('button', { name: '1 step' }))
+    await waitFor(() => expect(drawn('Ola Nordmann')).toBeNull())
+    expect(router.state.location.search).toEqual({ focus: 'emma' })
+  })
+
+  it('starts a new focus at 1 step', async () => {
+    focusServer()
+    const router = renderApp('/graph?focus=emma&hops=2')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Kerem Yılmaz' }))
+    const peek = await screen.findByRole('complementary', { name: 'Peek' })
+    await userEvent.click(within(peek).getByRole('button', { name: 'Focus' }))
+
+    await waitFor(() => expect(router.state.location.search).toEqual({ focus: 'kerem' }))
+  })
+
+  it('keeps the focused person when a filter would hide them', async () => {
+    focusServer()
+    renderApp('/graph?focus=emma')
+    await screen.findByText('Focused on Emma Yılmaz')
+
+    const filters = screen.getByRole('group', { name: 'Filters' })
+    await userEvent.click(within(filters).getByRole('button', { name: 'Family' }))
+
+    await waitFor(() => expect(drawn('Tom Bergqvist')).toBeNull()) // the filter applies…
+    expect(drawn('Emma Yılmaz')).toBeInTheDocument() // …but not to her
+  })
+
+  it('leaves focus on Esc, after closing the peek', async () => {
+    focusServer()
+    const router = renderApp('/graph?focus=emma')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Tom Bergqvist' }))
+    expect(await screen.findByRole('complementary', { name: 'Peek' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('complementary', { name: 'Peek' })).toBeNull())
+    expect(router.state.location.search).toEqual({ focus: 'emma' })
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(router.state.location.search).toEqual({}))
+  })
+
+  it('keeps the neighborhood drawn while 2 steps load', async () => {
+    let answer = () => {}
+    const held = new Promise<void>((resolve) => (answer = resolve))
+    focusServer({
+      'GET /api/graph/neighborhood/emma': async (request) => {
+        if (!twoSteps(request)) return json(GRAPH)
+        await held
+        return json(TWO_STEPS)
+      },
+    })
+    renderApp('/graph?focus=emma')
+    const steps = await screen.findByRole('group', { name: 'Steps' })
+    await screen.findByText('3 direct · 1 other hidden')
+
+    await userEvent.click(within(steps).getByRole('button', { name: '2 steps' }))
+    expect(drawn('Tom Bergqvist')).toBeInTheDocument()
+    expect(drawn('Anna Berg')).toBeNull() // not everyone, in between
+
+    answer()
+    expect(await screen.findByRole('button', { name: 'Ola Nordmann' })).toBeInTheDocument()
+  })
+
+  it('never draws one person’s neighborhood under another’s name', async () => {
+    let answer = () => {}
+    const held = new Promise<void>((resolve) => (answer = resolve))
+    focusServer({
+      'GET /api/graph/neighborhood/anna': async () => {
+        await held
+        return json({ nodes: [node('anna', 'Anna Berg', [])], edges: [] })
+      },
+    })
+    const router = renderApp('/graph?focus=emma')
+    await screen.findByText('3 direct · 1 other hidden')
+    await userEvent.click(screen.getByRole('button', { name: 'Back to everyone' }))
+    await screen.findByRole('button', { name: 'Anna Berg' })
+
+    await router.navigate({ to: '/graph', search: { focus: 'anna' } })
+    await screen.findByText('Focused on Anna Berg')
+    // While her answer loads, she is drawn (with everyone), never Emma's people alone.
+    expect(drawn('Anna Berg')).toBeInTheDocument()
+
+    answer()
+    expect(await screen.findByText('Nobody else is connected to Anna yet.')).toBeInTheDocument()
+  })
+
+  it('says when nobody else is connected', async () => {
+    focusServer()
+    renderApp('/graph?focus=anna')
+
+    expect(await screen.findByText('Nobody else is connected to Anna yet.')).toBeInTheDocument()
+    expect(screen.queryByText(/direct/)).toBeNull()
+  })
+
+  it('says when the focused person is gone', async () => {
+    focusServer()
+    renderApp('/graph?focus=gone')
+
+    expect(await screen.findByText(PERSON_GONE)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Back to everyone' })).toBeInTheDocument()
   })
 })
 
