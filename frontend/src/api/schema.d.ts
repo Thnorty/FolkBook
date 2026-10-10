@@ -2344,6 +2344,8 @@ export interface components {
             type: string | null;
             /** Label */
             label: string;
+            /** Former */
+            former: boolean;
             space: components["schemas"]["SpaceRef"] | null;
         };
         /** PathOut */

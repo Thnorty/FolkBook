@@ -6783,6 +6783,10 @@
             "title": "Label",
             "type": "string"
           },
+          "former": {
+            "title": "Former",
+            "type": "boolean"
+          },
           "space": {
             "anyOf": [
               {
@@ -6800,6 +6804,7 @@
           "kind",
           "type",
           "label",
+          "former",
           "space"
         ],
         "title": "HopOut",

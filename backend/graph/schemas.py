@@ -38,6 +38,7 @@ class HopOut(Schema):
     kind: EdgeKind
     type: str | None
     label: str
+    former: bool  # an ended link ("former partner")
     space: SpaceRef | None
 
 
