@@ -63,13 +63,17 @@ const DOTS: [number, number] = [1, 2]
 
 /**
  * What a line says: "friend", "met at Hackathon", "former partner"; between users who
- * share a space, which one ("shares Hackathon").
+ * share a space, which one ("shares Hackathon"). A route's steps read the same way, and a
+ * step through someone's space (which draws no line) says "in Hackathon".
  */
-function edgeLabel(edge: ApiEdge): string | undefined {
-  if (edge.kind === 'member') return edge.space ? `shares ${edge.space.name}` : undefined
-  if (!edge.type) return undefined
-  const label = linkLabel({ type: edge.type, label: edge.label })
-  return edge.former ? `former ${label}` : label
+export function lineLabel(
+  line: Pick<ApiEdge, 'kind' | 'type' | 'label' | 'former' | 'space'>,
+): string | undefined {
+  if (line.kind === 'member') return line.space ? `shares ${line.space.name}` : undefined
+  if (line.kind === 'space') return line.space ? `in ${line.space.name}` : undefined
+  if (!line.type) return undefined
+  const label = linkLabel({ type: line.type, label: line.label })
+  return line.former ? `former ${label}` : label
 }
 
 /** A person's color: their first space's, ink for you, faint without a space. */
@@ -127,7 +131,7 @@ export function toCanvas(
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      label: edgeLabel(edge),
+      label: lineLabel(edge),
       ...(edge.former && { dashed: true }),
       ...(edge.kind === 'member' && { dashed: true, dashArray: DOTS }),
       fill: edge.kind === 'relationship' ? palette.edge : palette.sharedEdge,
