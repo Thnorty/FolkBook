@@ -614,6 +614,30 @@ describe('focus mode', () => {
     expect(await screen.findByText('Nobody else is connected to Anna yet.')).toBeInTheDocument()
   })
 
+  it('keeps 2 steps when you focus the person already focused', async () => {
+    focusServer()
+    const router = renderApp('/graph?focus=emma&hops=2')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Emma Yılmaz' }))
+    const peek = await screen.findByRole('complementary', { name: 'Peek' })
+    await userEvent.click(within(peek).getByRole('button', { name: 'Focus' }))
+
+    expect(router.state.location.search).toEqual({ focus: 'emma', hops: 2 })
+  })
+
+  it('closes the peek of someone no longer drawn', async () => {
+    focusServer({ 'GET /api/people/ola': () => json(detail('ola', 'Ola Nordmann')) })
+    renderApp('/graph?focus=emma&hops=2')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Ola Nordmann' }))
+    expect(await screen.findByRole('complementary', { name: 'Peek' })).toBeInTheDocument()
+    const steps = screen.getByRole('group', { name: 'Steps' })
+    await userEvent.click(within(steps).getByRole('button', { name: '1 step' }))
+
+    await waitFor(() => expect(drawn('Ola Nordmann')).toBeNull())
+    expect(screen.queryByRole('complementary', { name: 'Peek' })).toBeNull()
+  })
+
   it('says when nobody else is connected', async () => {
     focusServer()
     renderApp('/graph?focus=anna')
