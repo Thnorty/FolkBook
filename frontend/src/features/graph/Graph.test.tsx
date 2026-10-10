@@ -591,6 +591,29 @@ describe('focus mode', () => {
     expect(await screen.findByRole('button', { name: 'Ola Nordmann' })).toBeInTheDocument()
   })
 
+  it('never draws one person’s neighborhood under another’s name', async () => {
+    let answer = () => {}
+    const held = new Promise<void>((resolve) => (answer = resolve))
+    focusServer({
+      'GET /api/graph/neighborhood/anna': async () => {
+        await held
+        return json({ nodes: [node('anna', 'Anna Berg', [])], edges: [] })
+      },
+    })
+    const router = renderApp('/graph?focus=emma')
+    await screen.findByText('3 direct · 1 other hidden')
+    await userEvent.click(screen.getByRole('button', { name: 'Back to everyone' }))
+    await screen.findByRole('button', { name: 'Anna Berg' })
+
+    await router.navigate({ to: '/graph', search: { focus: 'anna' } })
+    await screen.findByText('Focused on Anna Berg')
+    // While her answer loads, she is drawn (with everyone), never Emma's people alone.
+    expect(drawn('Anna Berg')).toBeInTheDocument()
+
+    answer()
+    expect(await screen.findByText('Nobody else is connected to Anna yet.')).toBeInTheDocument()
+  })
+
   it('says when nobody else is connected', async () => {
     focusServer()
     renderApp('/graph?focus=anna')

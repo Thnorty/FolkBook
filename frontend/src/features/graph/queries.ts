@@ -1,4 +1,4 @@
-import { keepPreviousData, queryOptions } from '@tanstack/react-query'
+import { queryOptions } from '@tanstack/react-query'
 import { api, unwrap } from '@/api/client'
 
 /* Under ['people'], so adding someone or a link redraws the graph. */
@@ -34,6 +34,7 @@ export const neighborhoodQuery = (personId: string, hops: 1 | 2) =>
         }),
       ),
     // Going from 1 to 2 steps keeps the 1-step people drawn until the rest arrive,
-    // instead of everyone flashing in between.
-    placeholderData: keepPreviousData,
+    // instead of everyone flashing in between; never someone else's people.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[3] === personId ? previous : undefined,
   })
