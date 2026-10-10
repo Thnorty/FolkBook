@@ -105,10 +105,8 @@ DATABASES = {
         "PASSWORD": env("POSTGRES_PASSWORD"),
         "HOST": env("POSTGRES_HOST", "localhost"),
         "PORT": env("POSTGRES_PORT", "5432"),
-        # No just-in-time compiling: it pays off for long reports, not for an app's short
-        # queries. On a small book Postgres has few statistics, overestimates a search and
-        # spent seconds compiling it to run it in milliseconds.
-        "OPTIONS": {"options": "-c jit=off"},
+        # No settings sent when connecting (e.g. jit=off): connection poolers such as
+        # PgBouncer refuse them. Database-wide settings are set by migrations instead.
     }
 }
 

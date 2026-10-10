@@ -132,6 +132,8 @@ Each key is read-only or read-write, sees all your spaces or only the ones you p
 
 **"ports are not available … access permissions" on Windows.** Windows reserves some port ranges (check with `netsh interface ipv4 show excludedportrange protocol=tcp`). Pick a port outside them for `FOLKBOOK_PORT` in `.env`, and update `DJANGO_CSRF_TRUSTED_ORIGINS` to match.
 
+**Searches take seconds, and migrating said "FolkBook could not turn off JIT".** FolkBook turns off Postgres's just-in-time compiling for its database (on a small book it makes every search slow), which only the database's owner may do. If FolkBook's database user isn't the owner (e.g. a hosted Postgres), run `ALTER DATABASE <name> SET jit = off;` once as the owner. The setting lives on the database, so it also works through a connection pooler such as PgBouncer.
+
 ## License
 
 FolkBook is free software under the [GNU Affero General Public License v3.0 or later](LICENSE). You can use, change and share it; if you run a changed version as a service for others, you have to offer them your changed source code too. The app links to its source code (Settings → About, and under the log-in page); if you run a changed FolkBook, set `FOLKBOOK_SOURCE_URL` in `.env` to where your changes are.
