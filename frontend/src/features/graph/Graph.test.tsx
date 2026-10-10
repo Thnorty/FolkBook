@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
 import { LineCurve3, Mesh, TubeGeometry, Vector3 } from 'three'
@@ -60,7 +60,29 @@ const GRAPH: GraphData = {
   ],
 }
 
-function server(graph: GraphData = GRAPH) {
+const detail = (id: string, name: string, extra = {}) => ({
+  ...node(id, name),
+  how_we_met: '',
+  work: '',
+  birthday: null,
+  tags: [],
+  photo: null,
+  is_mine: true,
+  owner: { id: 'me', name: 'Ela' },
+  needs_details: false,
+  last_talked_on: null,
+  added_at: '2026-01-01T00:00:00Z',
+  pronouns: null,
+  contact_methods: [],
+  can_edit: true,
+  can_delete: true,
+  can_hide: false,
+  ...extra,
+})
+
+type Routes = Parameters<typeof fakeServer>[0]
+
+function server(graph: GraphData = GRAPH, more: Routes = {}) {
   fakeServer({
     'GET /api/auth/me': () => json(ME),
     'GET /api/auth/csrf': () => new Response(null, { status: 204 }),
@@ -69,30 +91,16 @@ function server(graph: GraphData = GRAPH) {
     'GET /api/graph': () => json(graph),
     'GET /api/graph/neighborhood/tom': () =>
       json({ nodes: [GRAPH.nodes[1], GRAPH.nodes[3]], edges: [GRAPH.edges[2]] }),
+    'GET /api/graph/neighborhood/emma': () =>
+      json({ nodes: [GRAPH.nodes[0], GRAPH.nodes[1]], edges: [GRAPH.edges[0]] }),
     'GET /api/people/emma': () =>
-      json({
-        ...node('emma', 'Emma Yılmaz'),
-        how_we_met: 'Met at university',
-        work: '',
-        birthday: null,
-        tags: [],
-        photo: null,
-        is_mine: true,
-        owner: { id: 'me', name: 'Ela' },
-        needs_details: false,
-        last_talked_on: null,
-        added_at: '2026-01-01T00:00:00Z',
-        pronouns: null,
-        contact_methods: [],
-        can_edit: true,
-        can_delete: true,
-        can_hide: false,
-      }),
+      json(detail('emma', 'Emma Yılmaz', { how_we_met: 'Met at university' })),
     'GET /api/memory-aids': () =>
       json({
         items: [{ id: 'a1', person_id: 'emma', text: 'Kid: Arda, 6', pinned: false, position: 0 }],
         count: 1,
       }),
+    ...more,
   })
 }
 
@@ -102,6 +110,9 @@ const lines = async () =>
     .map((item) => item.textContent)
 
 afterEach(clearCookies)
+// The page is loaded lazily (Reagraph is big): load it once up front, so no test spends
+// its waiting time on that.
+beforeAll(() => import('./GraphPage'))
 
 describe('graph', () => {
   it('draws everyone with you in the middle, and words on the picked person’s lines', async () => {
@@ -187,6 +198,249 @@ describe('graph', () => {
     expect(
       await screen.findByRole('heading', { name: 'Your graph starts with you' }),
     ).toBeInTheDocument()
+  })
+})
+
+describe('how do I know…?', () => {
+  const HACKATHON = { id: 'h', name: 'Hackathon 2026', color: 'ochre' as const }
+  // Two ways to Tom: through Emma (the shortest), or through Kerem. Anna has no links.
+  const ROUTES_GRAPH: GraphData = {
+    nodes: [...GRAPH.nodes, node('anna', 'Anna Berg', [])],
+    edges: [
+      ...GRAPH.edges,
+      edge('e4', 'me', 'kerem', 'friend'),
+      edge('e5', 'kerem', 'tom', 'friend'),
+    ],
+  }
+  const ref = (id: string, name: string) => ({ id, name })
+  const step = (id: string, from: [string, string], to: [string, string], type: string) => ({
+    id,
+    source: ref(...from),
+    target: ref(...to),
+    kind: 'relationship' as const,
+    type,
+    label: '',
+    former: false,
+    space: null,
+  })
+  const ME_REF: [string, string] = ['me', 'Ela']
+  const EMMA: [string, string] = ['emma', 'Emma Yılmaz']
+  const KEREM: [string, string] = ['kerem', 'Kerem Yılmaz']
+  const TOM: [string, string] = ['tom', 'Tom Bergqvist']
+  const VIA_EMMA = { hops: [step('e1', ME_REF, EMMA, 'friend'), step('e3', EMMA, TOM, 'cousin')] }
+  const VIA_KEREM = {
+    hops: [step('e4', ME_REF, KEREM, 'friend'), step('e5', KEREM, TOM, 'friend')],
+  }
+
+  function routes() {
+    server(ROUTES_GRAPH, {
+      'GET /api/people': (request) =>
+        new URL(request.url).searchParams.get('search') === 'Tom'
+          ? json({ items: [detail('tom', 'Tom Bergqvist')], count: 1 })
+          : json({ items: [], count: 0 }),
+      'GET /api/people/me': () => json(detail('me', 'Ela', { is_me: true })),
+      'GET /api/people/tom': () =>
+        json(
+          detail('tom', 'Tom Bergqvist', {
+            is_mine: false,
+            owner: { id: 'defne', name: 'Defne Aydın' },
+            spaces: [HACKATHON],
+          }),
+        ),
+      'GET /api/people/kerem': () => json(detail('kerem', 'Kerem Yılmaz')),
+      'GET /api/people/anna': () => json(detail('anna', 'Anna Berg', { spaces: [] })),
+      'GET /api/graph/paths/tom': () => json({ paths: [VIA_EMMA, VIA_KEREM] }),
+      'GET /api/graph/paths/kerem': () =>
+        json({ paths: [{ hops: [step('e4', ME_REF, KEREM, 'friend')] }] }),
+      'GET /api/graph/paths/emma': () =>
+        json({ paths: [{ hops: [step('e1', ME_REF, EMMA, 'friend')] }] }),
+      'GET /api/graph/paths/anna': () => json({ paths: [] }),
+    })
+  }
+
+  const inked = async () => (await lines()).filter((line) => line?.endsWith('(ink)'))
+  const summary = (name: string) => screen.findByRole('region', { name: `How you know ${name}` })
+  const noSummary = () => expect(screen.queryByRole('region', { name: /How you know/ })).toBeNull()
+
+  it('shows how you know someone you pick', async () => {
+    routes()
+    const router = renderApp('/graph')
+
+    await userEvent.type(await screen.findByLabelText('How do I know…?'), 'Tom')
+    const matches = await screen.findByRole('list', { name: 'People' })
+    await userEvent.click(await within(matches).findByRole('button', { name: /Tom Bergqvist/ }))
+
+    const card = await summary('Tom')
+    expect(await within(card).findByText('How you know Tom · 2 steps')).toBeInTheDocument()
+    expect(within(card).getByRole('list', { name: 'Steps' })).toHaveTextContent(
+      /friend.*Emma Yılmaz.*cousin.*Tom Bergqvist/,
+    )
+    expect(
+      within(card).getByText('Tom came into your book with Hackathon 2026, shared by Defne.'),
+    ).toBeInTheDocument()
+    expect(within(card).getByText('Also via Kerem Yılmaz: friend, then friend')).toBeInTheDocument()
+    await waitFor(async () =>
+      expect(await inked()).toEqual(['me–emma friend (ink)', 'emma–tom cousin (ink)']),
+    )
+    expect(router.state.location.search).toEqual({ how: 'tom' })
+  })
+
+  it('shows another route, and back', async () => {
+    routes()
+    renderApp('/graph?how=tom')
+    const card = await summary('Tom')
+
+    await userEvent.click(await within(card).findByRole('button', { name: 'Show' }))
+    await waitFor(async () =>
+      expect(await inked()).toEqual(['me–kerem friend (ink)', 'kerem–tom friend (ink)']),
+    )
+
+    await userEvent.click(within(card).getByRole('button', { name: 'Back to the shortest' }))
+    await waitFor(async () =>
+      expect(await inked()).toEqual(['me–emma friend (ink)', 'emma–tom cousin (ink)']),
+    )
+  })
+
+  it('clears the route', async () => {
+    routes()
+    const router = renderApp('/graph?how=tom')
+
+    await userEvent.click(
+      await within(await summary('Tom')).findByRole('button', { name: 'Clear' }),
+    )
+    await waitFor(noSummary)
+    expect(await inked()).toEqual([])
+    expect(router.state.location.search).toEqual({})
+
+    await router.navigate({ to: '/graph', search: { how: 'tom' } })
+    await userEvent.click(await screen.findByRole('button', { name: 'Clear the route' }))
+    await waitFor(noSummary)
+
+    await router.navigate({ to: '/graph', search: { how: 'tom' } })
+    await summary('Tom')
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(router.state.location.search).toEqual({}))
+  })
+
+  it('closes the peek before the route on Esc', async () => {
+    routes()
+    const router = renderApp('/graph?how=tom')
+    await summary('Tom')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Emma Yılmaz' }))
+    expect(await screen.findByRole('complementary', { name: 'Peek' })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('complementary', { name: 'Peek' })).toBeNull())
+    expect(router.state.location.search).toEqual({ how: 'tom' })
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(router.state.location.search).toEqual({}))
+  })
+
+  it('starts from the keyboard', async () => {
+    routes()
+    renderApp('/graph')
+    const box = await screen.findByLabelText('How do I know…?')
+
+    await userEvent.keyboard('/')
+
+    expect(box).toHaveFocus()
+  })
+
+  it('says when there is no route', async () => {
+    routes()
+    renderApp('/graph?how=anna')
+
+    const card = await summary('Anna')
+    expect(
+      await within(card).findByText("You haven't said how you know Anna yet."),
+    ).toBeInTheDocument()
+    await userEvent.click(within(card).getByRole('button', { name: 'Connect…' }))
+    expect(await screen.findByRole('dialog')).toHaveTextContent('Anna')
+  })
+
+  it('says when the person is gone', async () => {
+    routes()
+    renderApp('/graph?how=gone')
+
+    expect(await screen.findByText("This person isn't in your book anymore.")).toBeInTheDocument()
+    expect(await inked()).toEqual([])
+  })
+
+  it('starts from a person’s peek panel and phone sheet', async () => {
+    routes()
+    const router = renderApp('/graph')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Emma Yılmaz' }))
+    const peek = await screen.findByRole('complementary', { name: 'Peek' })
+    await userEvent.click(within(peek).getByRole('button', { name: 'How do I know them?' }))
+    await waitFor(() => expect(router.state.location.search).toEqual({ how: 'emma' }))
+    expect(await summary('Emma')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Emma Yılmaz' }))
+    const sheet = await screen.findByRole('region', { name: 'Emma Yılmaz, preview' })
+    await userEvent.click(within(sheet).getByRole('button', { name: 'How do I know them?' }))
+    await waitFor(() =>
+      expect(screen.queryByRole('region', { name: 'Emma Yılmaz, preview' })).toBeNull(),
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Me' }))
+    await screen.findByRole('region', { name: 'Ela, preview' })
+    expect(screen.queryByRole('button', { name: 'How do I know them?' })).toBeNull()
+  })
+
+  it('ignores a route to yourself', async () => {
+    routes()
+    renderApp('/graph?how=me')
+
+    await screen.findByRole('button', { name: 'Me' })
+    noSummary()
+    expect(await inked()).toEqual([])
+  })
+
+  it('shows the route, not focus, when the URL asks for both', async () => {
+    routes()
+    renderApp('/graph?how=tom&focus=tom')
+
+    expect(await summary('Tom')).toBeInTheDocument()
+    expect(screen.queryByText(/Focused on/)).toBeNull()
+  })
+
+  it('shows the shortest route of the next person you pick', async () => {
+    routes()
+    renderApp('/graph?how=tom')
+    await userEvent.click(await within(await summary('Tom')).findByRole('button', { name: 'Show' }))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Kerem Yılmaz' }))
+    const peek = await screen.findByRole('complementary', { name: 'Peek' })
+    await userEvent.click(within(peek).getByRole('button', { name: 'How do I know them?' }))
+
+    const card = await summary('Kerem')
+    expect(await within(card).findByText('How you know Kerem · 1 step')).toBeInTheDocument()
+    expect(within(card).queryByRole('button', { name: 'Back to the shortest' })).toBeNull()
+    await waitFor(async () => expect(await inked()).toEqual(['me–kerem friend (ink)']))
+  })
+
+  it('switches between focus and a route', async () => {
+    routes()
+    renderApp('/graph')
+    const openSheet = async () => {
+      await userEvent.click(await screen.findByRole('button', { name: 'Emma Yılmaz' }))
+      return screen.findByRole('region', { name: 'Emma Yılmaz, preview' })
+    }
+
+    await userEvent.click(within(await openSheet()).getByRole('button', { name: 'Focus' }))
+    expect(await screen.findByText(/Focused on Emma Yılmaz/)).toBeInTheDocument()
+
+    await userEvent.click(
+      within(await openSheet()).getByRole('button', { name: 'How do I know them?' }),
+    )
+    expect(await summary('Emma')).toBeInTheDocument()
+    expect(screen.queryByText(/Focused on/)).toBeNull()
+
+    await userEvent.click(within(await openSheet()).getByRole('button', { name: 'Focus' }))
+    expect(await screen.findByText(/Focused on Emma Yılmaz/)).toBeInTheDocument()
+    noSummary()
   })
 })
 

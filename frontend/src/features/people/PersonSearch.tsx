@@ -9,6 +9,8 @@ import { peopleListQuery, type Person } from './queries'
 type PersonSearchProps = {
   id: string
   label: string
+  /** Shown beside the label, not part of it (e.g. the shortcut that focuses the box). */
+  hint?: ReactNode
   placeholder: string
   /** People never offered (e.g. the person being connected, or your Me). */
   exclude?: string[]
@@ -23,6 +25,7 @@ type PersonSearchProps = {
 export function PersonSearch({
   id,
   label,
+  hint,
   placeholder,
   exclude = [],
   autoFocus,
@@ -42,9 +45,12 @@ export function PersonSearch({
 
   return (
     <div>
-      <label htmlFor={id} className={labelClass}>
-        {label}
-      </label>
+      <div className="flex items-baseline justify-between gap-2">
+        <label htmlFor={id} className={labelClass}>
+          {label}
+        </label>
+        {hint}
+      </div>
       <Input
         ref={inputRef}
         id={id}

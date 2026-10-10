@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Maximize2, X } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { ProfileView } from '@/features/person/ProfileView'
 import { useShortcut } from '@/lib/shortcuts'
 import type { FlyOrigin } from '@/motion/FlyFrom'
@@ -11,10 +12,12 @@ type PeekPanelProps = {
   /** Where the clicked card's photo and name were, so they glide in from there. */
   flyFrom?: FlyOrigin | null
   onClose: () => void
+  /** More buttons in the top bar, before "Expand to page". */
+  actions?: ReactNode
 }
 
 /** A person's profile beside the People list, on desktop (screen 1c). */
-export function PeekPanel({ personId, flyFrom, onClose }: PeekPanelProps) {
+export function PeekPanel({ personId, flyFrom, onClose, actions }: PeekPanelProps) {
   // Not when a dialog or menu on top closes first, or while typing in the panel.
   useShortcut(CLOSE, onClose)
 
@@ -25,10 +28,12 @@ export function PeekPanel({ personId, flyFrom, onClose }: PeekPanelProps) {
     >
       <div className="sticky top-0 z-10 flex items-center gap-1 border-b border-line bg-paper px-3 py-2">
         <span className="px-2 type-meta text-ink-faint">Peek</span>
+        <span className="ml-auto" />
+        {actions}
         <Link
           to="/people/$personId"
           params={{ personId }}
-          className="ml-auto flex items-center gap-1.5 rounded-card px-2.5 py-2 text-md font-medium text-accent hover:bg-hover"
+          className="flex items-center gap-1.5 rounded-card px-2.5 py-2 text-md font-medium text-accent hover:bg-hover"
         >
           <Maximize2 aria-hidden className="size-3.5" />
           Expand to page

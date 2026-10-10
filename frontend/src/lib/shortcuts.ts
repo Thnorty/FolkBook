@@ -27,10 +27,13 @@ function isTyping(target: EventTarget | null): boolean {
 function matches(event: KeyboardEvent, { key, mod = false, shift = false }: Shortcut) {
   const modPressed = isApplePlatform() ? event.metaKey : event.ctrlKey
   const otherMod = isApplePlatform() ? event.ctrlKey : event.metaKey
+  // A symbol like "/" needs Shift on some keyboards (Shift+7 on Turkish and German ones),
+  // so for those Shift doesn't matter; it still tells letters apart (N and Shift+N).
+  const symbol = key.length === 1 && key.toLowerCase() === key.toUpperCase()
   return (
     event.key.toLowerCase() === key.toLowerCase() &&
     modPressed === mod &&
-    event.shiftKey === shift &&
+    (event.shiftKey === shift || (symbol && !shift)) &&
     !event.altKey &&
     !otherMod
   )
@@ -46,6 +49,8 @@ type ShortcutOptions = {
   /** Ctrl/⌘ shortcuts work while typing unless this is false (e.g. Ctrl+→, which moves
    * the cursor a word in a field). Plain keys never do. */
   whileTyping?: boolean
+  /** While false, the shortcut does nothing and the key is left to others. */
+  enabled?: boolean
 }
 
 /**
@@ -56,10 +61,11 @@ type ShortcutOptions = {
 export function useShortcut(
   shortcut: Shortcut,
   action: () => void,
-  { whileTyping = true }: ShortcutOptions = {},
+  { whileTyping = true, enabled = true }: ShortcutOptions = {},
 ) {
   const { key, mod, shift } = shortcut
   useEffect(() => {
+    if (!enabled) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing || event.repeat) return
       if (!matches(event, { key, mod, shift })) return
@@ -71,5 +77,5 @@ export function useShortcut(
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [key, mod, shift, action, whileTyping])
+  }, [key, mod, shift, action, whileTyping, enabled])
 }

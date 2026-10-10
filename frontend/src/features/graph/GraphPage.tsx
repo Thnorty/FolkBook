@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { Info, Maximize, Minus, Plus, X } from 'lucide-react'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GraphCanvasRef } from 'reagraph'
+import { currentUserQuery } from '@/api/session'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { PeekPanel } from '@/features/people/PeekPanel'
@@ -10,18 +11,44 @@ import { countOf } from '@/features/person/labels'
 import { memoryAidsQuery, personQuery } from '@/features/person/queries'
 import { useInteractionForm } from '@/features/person/useInteractionForm'
 import { usePersonForm } from '@/features/person/usePersonForm'
+import { useShortcut } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
-import { graphSpaces, graphSummary, NO_FILTERS, toCanvas, type Filters } from './graphModel'
+import {
+  graphSpaces,
+  graphSummary,
+  NO_FILTERS,
+  routePeople,
+  toCanvas,
+  withRoute,
+  type Filters,
+} from './graphModel'
+import { HowDoIKnow } from './HowDoIKnow'
 import { NetworkCanvas } from './NetworkCanvas'
-import { graphQuery, neighborhoodQuery } from './queries'
+import { graphQuery, neighborhoodQuery, pathsQuery } from './queries'
+import { RouteSummary } from './RouteSummary'
+import type { GraphSearch } from './search'
 import { useNodeFaces } from './faces'
 import { useCanvasColors } from './usePalette'
+import { useStepReveal } from './useStepReveal'
+
+const CLEAR_ROUTE = { key: 'Escape' }
 
 /** The network: you in the middle, everyone around, clustered by space (3b–3e, 3m, 3n). */
 export function GraphPage() {
   const graph = useQuery(graphQuery)
-  const [focus, setFocus] = useState<string | null>(null)
-  const focused = useQuery({ ...neighborhoodQuery(focus ?? ''), enabled: focus !== null })
+  // Typed by hand: this page is loaded lazily, so the router's own types can't reach it.
+  const { how: asked, focus }: GraphSearch = useSearch({ from: '/app/graph' })
+  const navigate = useNavigate({ from: '/graph' })
+
+  // A route to yourself (a typed or stale link) is no route.
+  const meId = useQuery(currentUserQuery).data?.me?.id
+  const how = asked !== meId ? asked : undefined
+  // A route and a focus replace each other.
+  const showRoute = (personId?: string) =>
+    void navigate({ search: personId ? { how: personId } : {} })
+  const setFocus = (personId?: string) =>
+    void navigate({ search: personId ? { focus: personId } : {} })
+  const focused = useQuery({ ...neighborhoodQuery(focus ?? ''), enabled: Boolean(focus) })
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [selected, setSelected] = useState<string | null>(null)
   // How to read the graph: hidden until asked for.
@@ -30,12 +57,33 @@ export function GraphPage() {
   const canvas = useRef<GraphCanvasRef>(null)
   const closePreview = useCallback(() => setSelected(null), [])
 
+  // Which of the routes is drawn: the shortest, again, for each new person.
+  const [alternative, setAlternative] = useState({ how, index: 0 })
+  const shownIndex = alternative.how === how ? alternative.index : 0
+  const paths = useQuery({ ...pathsQuery(how ?? ''), enabled: Boolean(how) })
+  const route = how ? paths.data?.paths[shownIndex] : undefined
+  const steps = useStepReveal(route?.hops.length ?? 0, `${how}:${shownIndex}`)
+  // Esc clears the route, once an open peek has closed (the peek takes Esc first).
+  useShortcut(CLEAR_ROUTE, () => showRoute(), { enabled: Boolean(how) && !selected })
+
   const shown = (focus && focused.data) || graph.data
   const faces = useNodeFaces(graph.data?.nodes, colors)
-  const drawn = useMemo(
-    () => shown && toCanvas(shown, filters, colors.palette, faces),
-    [shown, filters, colors.palette, faces],
-  )
+  const drawn = useMemo(() => {
+    if (!shown) return undefined
+    if (!route) return { ...toCanvas(shown, filters, colors.palette, faces), route: undefined }
+    const keep = new Set(routePeople(route))
+    return withRoute(
+      toCanvas(shown, filters, colors.palette, faces, keep),
+      route,
+      steps,
+      colors.palette,
+    )
+  }, [shown, filters, colors.palette, faces, route, steps])
+  // Once drawn, the view frames the route.
+  const routeDrawn = route !== undefined && steps === route.hops.length
+  useEffect(() => {
+    if (route && routeDrawn) canvas.current?.fitNodesInView(routePeople(route))
+  }, [route, routeDrawn])
   const summary = graph.data && graphSummary(graph.data)
   const focusName = focus && shown?.nodes.find((node) => node.id === focus)?.name
 
@@ -68,11 +116,14 @@ export function GraphPage() {
             `${countOf(summary.people, 'person', 'people')} · ${countOf(summary.connections, 'connection')}`
           }
         />
+        <div className="mt-4">
+          <HowDoIKnow personId={how} meId={meId} onPick={showRoute} onClear={() => showRoute()} />
+        </div>
         <FilterBar graph={graph.data} filters={filters} onChange={setFilters} />
         {focus && (
           <p className="mt-3 flex items-center gap-2 type-small text-ink-soft">
             Focused on {focusName ?? '…'} and the people one step away.
-            <Button variant="ghost" onClick={() => setFocus(null)}>
+            <Button variant="ghost" onClick={() => setFocus()}>
               Show everyone
             </Button>
           </p>
@@ -87,6 +138,16 @@ export function GraphPage() {
               colors={colors}
               selected={selected}
               onSelect={setSelected}
+              route={drawn.route}
+            />
+          )}
+          {how && (
+            <RouteSummary
+              key={how}
+              personId={how}
+              shown={shownIndex}
+              onShow={(index) => setAlternative({ how, index })}
+              onClear={() => showRoute()}
             />
           )}
           {tip && (
@@ -130,11 +191,31 @@ export function GraphPage() {
       </div>
       {selected && (
         <>
-          <PeekPanel personId={selected} onClose={closePreview} />
+          <PeekPanel
+            personId={selected}
+            onClose={closePreview}
+            actions={
+              selected !== meId && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    showRoute(selected)
+                    closePreview()
+                  }}
+                >
+                  How do I know them?
+                </Button>
+              )
+            }
+          />
           <NodeSheet
             personId={selected}
             onClose={closePreview}
             onFocus={() => setFocus(selected)}
+            onHow={() => {
+              showRoute(selected)
+              closePreview()
+            }}
           />
         </>
       )}
@@ -248,10 +329,13 @@ function NodeSheet({
   personId,
   onClose,
   onFocus,
+  onHow,
 }: {
   personId: string
   onClose: () => void
   onFocus: () => void
+  /** "How do I know them?" */
+  onHow: () => void
 }) {
   const person = useQuery(personQuery(personId)).data
   const aids = useQuery(memoryAidsQuery(personId)).data ?? []
@@ -283,9 +367,14 @@ function NodeSheet({
           Focus
         </Button>
         {!person.is_me && (
-          <Button variant="ghost" onClick={() => openLog(personId)}>
-            Log
-          </Button>
+          <>
+            <Button variant="secondary" onClick={onHow}>
+              How do I know them?
+            </Button>
+            <Button variant="ghost" onClick={() => openLog(personId)}>
+              Log
+            </Button>
+          </>
         )}
       </div>
     </section>
