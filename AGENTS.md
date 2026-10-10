@@ -123,7 +123,7 @@ Every change that adds or changes behavior comes with tests. A bug fix starts wi
 - **Privacy tests are mandatory** for anything that reads data: prove that another user, a non-member, a viewer vs. editor, and a scoped API key see exactly what they should, and nothing more.
 - **Derived relations** (cousins, in-laws, former in-laws after a divorce, step/adoptive parents) get table-driven tests.
 - **Frontend:** Vitest + Testing Library for components and hooks; test behavior the user sees, not implementation details.
-- **End-to-end:** Playwright for the key flows (sign up via invite, add person, quick capture review, share a space, "How do I know…?").
+- **End-to-end:** Playwright for the key flows (sign up via invite, add person, quick capture review, share a space, "How do I know…?"), in `frontend/e2e/`. They run against the real stack: the backend on `folkbook_e2e`, which `manage.py e2e_reset` empties and fills with two known accounts (Ela, an admin, and Deniz), and the built frontend. Every test runs at desktop and phone size and gives what it creates a unique name (`unique('Greta')`). Find things by role, label or text; no CSS selectors, test ids or fixed waits. A new key flow adds its test in the same PR.
 - Tests are fast, independent and deterministic: no real network calls (mock AI providers and SMTP), no reliance on test order or the current date.
 - All tests, linters and type checks must pass before committing. Never skip, delete or weaken a test to make it pass.
 
@@ -150,6 +150,7 @@ Postgres must be running for backend tests: `docker compose up -d db`.
 | Frontend dev server | `cd frontend && npm run dev` |
 | Frontend tests | `cd frontend && npm test` |
 | Frontend checks | `cd frontend && npm run typecheck && npm run lint && npm run format:check` |
+| End-to-end tests | `cd frontend && npm run e2e` (Postgres running; first time: `npx playwright install chromium`) |
 | Regenerate API types | `cd frontend && npm run api:generate` (after any API change) |
 | Rebuild the graph's fallback fonts | `cd frontend && npm run graph-fonts` (needs internet; commit the output) |
 
