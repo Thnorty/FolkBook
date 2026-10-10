@@ -13,7 +13,10 @@ import {
   labelLinesOf,
   linesAround,
   graphSummary,
+  routePeople,
+  withRoute,
 } from './graphModel'
+import type { Route } from './route'
 
 const ME = { id: 'u1', email: 'ela@example.com', is_admin: false, me: { id: 'me', name: 'Ela' } }
 const FRIENDS = { id: 's1', name: 'Friends', color: 'sage' as const }
@@ -187,23 +190,23 @@ describe('graph', () => {
   })
 })
 
-describe('toCanvas', () => {
-  const palette: Palette = {
-    me: 'ink',
-    noSpace: 'faint',
-    edge: 'line',
-    sharedEdge: 'faint line',
-    space: { sage: 'green', ochre: 'o', clay: 'red', plum: 'p', teal: 't', slate: 's' },
-    spaceInk: {
-      sage: 'dark green',
-      ochre: 'o',
-      clay: 'dark red',
-      plum: 'p',
-      teal: 't',
-      slate: 's',
-    },
-  }
+const palette: Palette = {
+  me: 'ink',
+  noSpace: 'faint',
+  edge: 'line',
+  sharedEdge: 'faint line',
+  space: { sage: 'green', ochre: 'o', clay: 'red', plum: 'p', teal: 't', slate: 's' },
+  spaceInk: {
+    sage: 'dark green',
+    ochre: 'o',
+    clay: 'dark red',
+    plum: 'p',
+    teal: 't',
+    slate: 's',
+  },
+}
 
+describe('toCanvas', () => {
   it('colors people by their first space and pins you in the middle', () => {
     const { nodes } = toCanvas(GRAPH, NO_FILTERS, palette)
 
@@ -315,5 +318,122 @@ describe('nearestLine', () => {
   it('finds nothing out of reach or past the ends', () => {
     expect(nearestLine([low, high], new Vector3(50, 5, 0), 4)).toBeNull()
     expect(nearestLine([low, high], new Vector3(110, 0, 0), 4)).toBeNull()
+  })
+})
+
+describe('the route on the canvas', () => {
+  const ME_REF = { id: 'me', name: 'Ela' }
+  const EMMA = { id: 'emma', name: 'Emma Yılmaz' }
+  const KEREM = { id: 'kerem', name: 'Kerem Yılmaz' }
+  const TOM = { id: 'tom', name: 'Tom Bergqvist' }
+  const DEFNE = { id: 'defne', name: 'Defne Aydın' }
+  const HACKATHON = { id: 'h', name: 'Hackathon 2026', color: 'ochre' as const }
+  type Step = Route['hops'][number]
+  const step = (id: string, source: Step['source'], target: Step['target'], extra = {}): Step => ({
+    id,
+    source,
+    target,
+    kind: 'relationship',
+    type: 'friend',
+    label: '',
+    former: false,
+    space: null,
+    ...extra,
+  })
+  // Me →friend→ Emma →cousin→ Tom
+  const ROUTE: Route = {
+    hops: [step('e1', ME_REF, EMMA), step('e3', EMMA, TOM, { type: 'cousin' })],
+  }
+
+  it('inks the lines the route takes and lights up its people', () => {
+    const drawn = withRoute(toCanvas(GRAPH, NO_FILTERS, palette), ROUTE, 2, palette)
+
+    const byId = Object.fromEntries(drawn.edges.map((e) => [e.id, e]))
+    expect(byId.e1).toMatchObject({ ink: true, size: 3, label: 'friend' })
+    expect(byId.e3).toMatchObject({ ink: true, size: 3, label: 'cousin' })
+    expect(byId.e2.ink).toBeUndefined()
+    expect(byId.e2.size).toBeUndefined()
+    expect(drawn.route).toEqual(['me', 'emma', 'tom', 'e1', 'e3'])
+  })
+
+  it('adds a line for a step through someone’s space', () => {
+    const graph: GraphData = {
+      nodes: [...GRAPH.nodes, node('defne', 'Defne Aydın', [HACKATHON])],
+      edges: [
+        edge('member:h:defne', 'me', 'defne', '', { kind: 'member', type: null, space: HACKATHON }),
+      ],
+    }
+    const route: Route = {
+      hops: [
+        step('member:h:defne', ME_REF, DEFNE, { kind: 'member', type: null, space: HACKATHON }),
+        step('space:h:tom', DEFNE, TOM, { kind: 'space', type: null, space: HACKATHON }),
+      ],
+    }
+
+    const { edges } = withRoute(toCanvas(graph, NO_FILTERS, palette), route, 2, palette)
+
+    expect(edges.find((e) => e.id === 'member:h:defne')).toMatchObject({ ink: true })
+    expect(edges.find((e) => e.id === 'route:1')).toMatchObject({
+      source: 'defne',
+      target: 'tom',
+      label: 'in Hackathon 2026',
+      ink: true,
+    })
+  })
+
+  it('inks the line the step used when two people have two', () => {
+    const graph: GraphData = {
+      nodes: [...GRAPH.nodes, node('defne', 'Defne Aydın', [HACKATHON])],
+      edges: [
+        edge('relationship:r1', 'me', 'defne', 'friend'),
+        edge('member:h:me', 'me', 'defne', '', { kind: 'member', type: null, space: HACKATHON }),
+      ],
+    }
+    const route: Route = { hops: [step('relationship:r1', ME_REF, DEFNE)] }
+
+    const { edges } = withRoute(toCanvas(graph, NO_FILTERS, palette), route, 1, palette)
+
+    expect(edges.filter((e) => e.ink).map((e) => e.id)).toEqual(['relationship:r1'])
+  })
+
+  it('draws only the steps reached so far', () => {
+    const drawn = withRoute(toCanvas(GRAPH, NO_FILTERS, palette), ROUTE, 1, palette)
+
+    expect(drawn.edges.filter((e) => e.ink).map((e) => e.id)).toEqual(['e1'])
+    expect(drawn.route).toEqual(['me', 'emma', 'e1'])
+  })
+
+  it('never hides the route behind a filter', () => {
+    const keep = new Set(routePeople(ROUTE))
+    const { nodes } = toCanvas(GRAPH, { ...NO_FILTERS, spaces: [FAMILY.id] }, palette, {}, keep)
+    expect(nodes.map((n) => n.id)).toEqual(expect.arrayContaining(['emma', 'tom']))
+
+    const former: Route = {
+      hops: [step('e1', ME_REF, EMMA), step('e2', EMMA, KEREM, { type: 'partner', former: true })],
+    }
+    const hidden = toCanvas(
+      GRAPH,
+      { ...NO_FILTERS, hideFormer: true },
+      palette,
+      {},
+      new Set(routePeople(former)),
+    )
+    const { edges } = withRoute(hidden, former, 2, palette)
+    expect(edges.find((e) => e.id === 'route:1')).toMatchObject({
+      source: 'emma',
+      target: 'kerem',
+      label: 'former partner',
+      ink: true,
+    })
+  })
+
+  it('keeps the words on ink lines', () => {
+    const { edges } = withRoute(toCanvas(GRAPH, NO_FILTERS, palette), ROUTE, 2, palette)
+
+    expect(
+      labelLinesOf(edges, null)
+        .filter((e) => e.label)
+        .map((e) => e.label),
+    ).toEqual(['friend', 'cousin'])
   })
 })

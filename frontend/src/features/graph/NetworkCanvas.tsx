@@ -36,6 +36,8 @@ type NetworkCanvasProps = {
   colors: CanvasColors
   selected: string | null
   onSelect: (personId: string | null) => void
+  /** The route being shown (its people and ink lines): lit up, everything else dimmed. */
+  route?: string[]
 }
 
 // Room between people, so names don't overlap (Reagraph's defaults: 50 and -250).
@@ -48,7 +50,7 @@ const SPACING = { linkDistance: 110, nodeStrength: -600 }
  * or tap it, or at one of its people.
  */
 export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(function NetworkCanvas(
-  { nodes, edges, clusters, colors, selected, onSelect },
+  { nodes, edges, clusters, colors, selected, onSelect, route },
   ref,
 ) {
   const theme = useMemo(() => canvasTheme(colors), [colors])
@@ -66,7 +68,10 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
   }, [hovered, pointed.line, pickedLine, selected])
   const shownEdges = useMemo(() => labelLinesOf(edges, inFocus), [edges, inFocus])
   // Lit up, so their words stay readable while everything else fades.
-  const actives = useMemo(() => linesAround(edges, inFocus), [edges, inFocus])
+  const actives = useMemo(
+    () => [...(route ?? []), ...linesAround(edges, inFocus)],
+    [route, edges, inFocus],
+  )
   return (
     // Reagraph fills the nearest positioned box; without this one it would take the page.
     <div className="relative size-full">

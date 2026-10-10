@@ -40,6 +40,7 @@ vi.mock('reagraph', async () => {
     label?: string
     dashed?: boolean
     dashArray?: number[]
+    size?: number
   }
   return {
     GraphCanvas: React.forwardRef(function FakeCanvas(
@@ -79,6 +80,7 @@ vi.mock('reagraph', async () => {
                   `${edge.source}–${edge.target}`,
                   edge.label,
                   edge.dashed && (edge.dashArray ? '(dotted)' : '(dashed)'),
+                  edge.size && '(ink)',
                 ]
                   .filter(Boolean)
                   .join(' '),
