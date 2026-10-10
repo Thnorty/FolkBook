@@ -80,6 +80,11 @@ def test_how_do_i_know_tom(api, world):
     assert path["hops"][1]["space"]["name"] == "Hackathon 2026"
     assert [h["former"] for h in path["hops"]] == [False, False]
 
+    # Each step names the graph's line it went along, so the app can ink that line.
+    lines = {e["id"] for e in api.login(world.ela).get("/graph").json()["edges"]}
+    assert [h["id"].split(":")[0] for h in path["hops"]] == ["member", "space"]
+    assert path["hops"][0]["id"] in lines
+
 
 def test_a_step_says_when_its_link_has_ended(api, world):
     RelationshipFactory(

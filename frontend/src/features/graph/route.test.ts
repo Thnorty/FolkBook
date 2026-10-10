@@ -10,6 +10,7 @@ const CLIMBING = { id: 'c', name: 'Climbing club', color: 'teal' } as const
 
 function step(kind: Step['kind'], extra: Partial<Step> = {}): Step {
   return {
+    id: `${kind}:1`,
     source: ME,
     target: TOM,
     kind,

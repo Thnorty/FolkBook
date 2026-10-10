@@ -55,6 +55,7 @@ def _paths_out(paths: list[Path], people: dict) -> dict:
             {
                 "hops": [
                     {
+                        "id": hop.edge.id,
                         "source": people[hop.source],
                         "target": people[hop.target],
                         **_edge_details(hop.edge),

@@ -2337,6 +2337,8 @@ export interface components {
         };
         /** HopOut */
         HopOut: {
+            /** Id */
+            id: string;
             source: components["schemas"]["PersonRef"];
             target: components["schemas"]["PersonRef"];
             kind: components["schemas"]["EdgeKind"];

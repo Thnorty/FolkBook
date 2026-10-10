@@ -6759,6 +6759,10 @@
       },
       "HopOut": {
         "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
           "source": {
             "$ref": "#/components/schemas/PersonRef"
           },
@@ -6799,6 +6803,7 @@
           }
         },
         "required": [
+          "id",
           "source",
           "target",
           "kind",
