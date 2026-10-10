@@ -11,6 +11,8 @@ import { countOf } from '@/features/person/labels'
 import { memoryAidsQuery, personQuery } from '@/features/person/queries'
 import { useInteractionForm } from '@/features/person/useInteractionForm'
 import { usePersonForm } from '@/features/person/usePersonForm'
+import { SHORTCUTS } from '@/app/nav'
+import { ApiError } from '@/api/errors'
 import { useShortcut } from '@/lib/shortcuts'
 import { cn } from '@/lib/utils'
 import {
@@ -22,16 +24,18 @@ import {
   withRoute,
   type Filters,
 } from './graphModel'
+import { PERSON_GONE } from './copy'
+import { focusCounts, focusLine } from './focus'
+import { FocusBar } from './FocusBar'
 import { HowDoIKnow } from './HowDoIKnow'
 import { NetworkCanvas } from './NetworkCanvas'
 import { graphQuery, neighborhoodQuery, pathsQuery } from './queries'
 import { RouteSummary } from './RouteSummary'
 import type { GraphSearch } from './search'
 import { useNodeFaces } from './faces'
+import { Toggle } from './Toggle'
 import { useCanvasColors } from './usePalette'
 import { useStepReveal } from './useStepReveal'
-
-const CLEAR_ROUTE = { key: 'Escape' }
 
 /** The network: you in the middle, everyone around, clustered by space (3b–3e, 3m, 3n). */
 export function GraphPage() {
@@ -51,8 +55,11 @@ export function GraphPage() {
     setAlternative({ how: personId, index: 0 })
     void navigate({ search: personId ? { how: personId } : {} })
   }
+  // A new focus starts at 1 step.
   const setFocus = (personId?: string) =>
     void navigate({ search: personId ? { focus: personId } : {} })
+  const setHops = (steps: 1 | 2) =>
+    void navigate({ search: { focus, ...(steps === 2 && { hops: 2 as const }) } })
   const focusHops = hops ?? 1
   const focused = useQuery({
     ...neighborhoodQuery(focus ?? '', focusHops),
@@ -70,14 +77,20 @@ export function GraphPage() {
   const paths = useQuery({ ...pathsQuery(how ?? ''), enabled: Boolean(how) })
   const route = how ? paths.data?.paths[shownIndex] : undefined
   const steps = useStepReveal(route?.hops.length ?? 0, `${how}:${shownIndex}`)
-  // Esc clears the route, once an open peek has closed (the peek takes Esc first).
-  useShortcut(CLEAR_ROUTE, () => showRoute(), { enabled: Boolean(how) && !selected })
+  // Esc leaves a route or focus, once an open peek has closed (the peek takes Esc first).
+  useShortcut(SHORTCUTS.back, () => showRoute(), {
+    enabled: Boolean(how || focus) && !selected,
+  })
 
   const shown = (focus && focused.data) || graph.data
   const faces = useNodeFaces(graph.data?.nodes, colors)
   const drawn = useMemo(() => {
     if (!shown) return undefined
-    if (!route) return { ...toCanvas(shown, filters, colors.palette, faces), route: undefined }
+    if (!route) {
+      // The focused person stays drawn whatever the filters say.
+      const keep = new Set(focus ? [focus] : [])
+      return { ...toCanvas(shown, filters, colors.palette, faces, keep), route: undefined }
+    }
     const keep = new Set(routePeople(route))
     return withRoute(
       toCanvas(shown, filters, colors.palette, faces, keep),
@@ -85,14 +98,26 @@ export function GraphPage() {
       steps,
       colors.palette,
     )
-  }, [shown, filters, colors.palette, faces, route, steps])
+  }, [shown, filters, colors.palette, faces, route, steps, focus])
   // Once drawn, the view frames the route.
   const routeDrawn = route !== undefined && steps === route.hops.length
   useEffect(() => {
     if (route && routeDrawn) canvas.current?.fitNodesInView(routePeople(route))
   }, [route, routeDrawn])
   const summary = graph.data && graphSummary(graph.data)
-  const focusName = focus && shown?.nodes.find((node) => node.id === focus)?.name
+  const focusName = focus && graph.data?.nodes.find((node) => node.id === focus)?.name
+  const focusNote = (() => {
+    if (!focus) return null
+    if (focused.error instanceof ApiError && focused.error.status === 404) return PERSON_GONE
+    if (focused.error) return focused.error.message
+    // While another person's or another number of steps' answer loads, the drawing
+    // stays, but its numbers would be wrong.
+    if (!focused.data || focused.isPlaceholderData || !graph.data) return null
+    if (focused.data.nodes.length <= 1) {
+      return `Nobody else is connected to ${focusName?.split(' ')[0] ?? 'them'} yet.`
+    }
+    return focusLine(focusCounts(focused.data, graph.data, focus), focusHops)
+  })()
 
   if (graph.isPending || graph.isError) {
     return (
@@ -128,12 +153,13 @@ export function GraphPage() {
         </div>
         <FilterBar graph={graph.data} filters={filters} onChange={setFilters} />
         {focus && (
-          <p className="mt-3 flex items-center gap-2 type-small text-ink-soft">
-            Focused on {focusName ?? '…'} and the people one step away.
-            <Button variant="ghost" onClick={() => setFocus()}>
-              Show everyone
-            </Button>
-          </p>
+          <FocusBar
+            name={focusName}
+            hops={focusHops}
+            onHops={setHops}
+            onBack={() => setFocus()}
+            note={focusNote}
+          />
         )}
         <div className="relative mt-4 flex min-h-64 flex-1 flex-col overflow-hidden rounded-card border border-line bg-paper">
           {/* With a route on desktop, the graph keeps clear of its card, so the route fits in
@@ -207,17 +233,22 @@ export function GraphPage() {
             personId={selected}
             onClose={closePreview}
             actions={
-              selected !== meId && (
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    showRoute(selected)
-                    closePreview()
-                  }}
-                >
-                  How do I know them?
+              <>
+                <Button variant="ghost" onClick={() => setFocus(selected)}>
+                  Focus
                 </Button>
-              )
+                {selected !== meId && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      showRoute(selected)
+                      closePreview()
+                    }}
+                  >
+                    How do I know them?
+                  </Button>
+                )}
+              </>
             }
           />
           <NodeSheet
@@ -302,37 +333,6 @@ function FilterBar({
         Hide former
       </Toggle>
     </div>
-  )
-}
-
-function Toggle({
-  pressed,
-  onClick,
-  space,
-  children,
-}: {
-  pressed: boolean
-  onClick: () => void
-  space?: string
-  children: string
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={pressed}
-      onClick={onClick}
-      data-space={space}
-      className={cn(
-        'flex h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line-input px-3.5 text-md font-medium text-ink-soft hover:border-line-strong md:h-8',
-        pressed &&
-          (space
-            ? 'border-space bg-space text-on-space'
-            : 'border-accent bg-accent text-on-accent'),
-      )}
-    >
-      {space && !pressed && <span aria-hidden className="size-2 rounded-full bg-space" />}
-      {children}
-    </button>
   )
 }
 

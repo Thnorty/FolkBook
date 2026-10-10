@@ -14,4 +14,5 @@ export const SHORTCUTS = {
   palette: { key: 'k', mod: true },
   logInteraction: { key: 'l' }, // on someone's profile
   howDoIKnow: { key: '/' }, // on the graph
+  back: { key: 'Escape' }, // on the graph: leave a route or focus
 } satisfies Record<string, Shortcut>

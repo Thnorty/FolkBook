@@ -17,6 +17,7 @@ describe('shortcut labels', () => {
     expect(shortcutLabel({ key: 'Enter', mod: true }, false)).toBe('Ctrl+Enter')
     expect(shortcutLabel({ key: 'Enter', mod: true }, true)).toBe('⌘Enter')
     expect(shortcutLabel({ key: 'ArrowRight', mod: true }, false)).toBe('Ctrl+→')
+    expect(shortcutLabel({ key: 'Escape' }, false)).toBe('Esc')
   })
 })
 
