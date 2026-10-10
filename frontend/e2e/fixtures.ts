@@ -30,3 +30,11 @@ export const test = base.extend<Fixtures>({
 })
 
 export const isPhone = (testInfo: TestInfo) => testInfo.project.name === 'phone'
+
+/** A dialog's submit button: in the sheet's header on phones, in the footer on desktop. */
+export const submitButton = (
+  page: Page,
+  testInfo: TestInfo,
+  names: { desktop: string; phone: string },
+) =>
+  page.getByRole('button', { name: isPhone(testInfo) ? names.phone : names.desktop, exact: true })
