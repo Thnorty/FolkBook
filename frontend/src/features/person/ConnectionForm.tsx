@@ -1,16 +1,14 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
-import { useDeferredValue, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import type { components } from '@/api/schema'
 import { Choice } from '@/components/ui/choice'
 import { FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { labelClass } from '@/components/ui/label'
-import { pickerListClass } from '@/components/ui/menu'
 import { Button } from '@/components/ui/button'
-import { peopleListQuery } from '@/features/people/queries'
+import { PersonSearch } from '@/features/people/PersonSearch'
 import { warnAt } from '@/lib/fieldWarnings'
-import { cn } from '@/lib/utils'
 import { canAddPeople, spacesQuery } from '@/features/spaces/queries'
 import {
   KIND_GROUPS,
@@ -280,57 +278,24 @@ function useSharedSpaces(person: PersonDetail, other: Other | null) {
 
 /** "Step 1 · who?": search your notebook, or name someone new (screen 2l). */
 function PersonPicker({ exclude, onPick }: { exclude: string; onPick: (other: Other) => void }) {
-  const [search, setSearch] = useState('')
-  const deferred = useDeferredValue(search.trim())
-  const results = useInfiniteQuery({
-    ...peopleListQuery({ search: deferred }),
-    enabled: deferred.length > 0,
-  })
-  const matches = (results.data?.pages[0]?.items ?? [])
-    .filter((match) => match.id !== exclude)
-    .slice(0, 6)
-
   return (
-    <div>
-      <label htmlFor="connect-who" className={labelClass}>
-        Who?
-      </label>
-      <Input
-        id="connect-who"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder="Search your notebook"
-        autoComplete="off"
-        autoFocus
-      />
-      {deferred && (
-        <ul aria-label="People" className={pickerListClass}>
-          {matches.map((match) => (
-            <li key={match.id}>
-              <button
-                type="button"
-                onClick={() => onPick(match)}
-                className="flex w-full cursor-pointer items-baseline gap-3 rounded-tab px-2 py-2 text-left hover:bg-hover focus-visible:ring-3 focus-visible:ring-focus-glow focus-visible:outline-none"
-              >
-                <span className="font-serif text-lg">{match.name}</span>
-                <span className="ml-auto truncate type-meta text-ink-faint">
-                  {match.spaces.map((space) => space.name).join(' · ')}
-                </span>
-              </button>
-            </li>
-          ))}
-          <li className={cn(matches.length > 0 && 'mt-1 border-t border-line pt-1')}>
-            <button
-              type="button"
-              onClick={() => onPick({ newName: search.trim() })}
-              className="flex w-full cursor-pointer items-center gap-2 rounded-tab px-2 py-2 text-left text-md font-medium text-accent hover:bg-hover focus-visible:ring-3 focus-visible:ring-focus-glow focus-visible:outline-none"
-            >
-              <UserPlus aria-hidden className="size-4" />
-              Create “{search.trim()}” as a new person
-            </button>
-          </li>
-        </ul>
+    <PersonSearch
+      id="connect-who"
+      label="Who?"
+      placeholder="Search your notebook"
+      exclude={[exclude]}
+      autoFocus
+      onPick={onPick}
+      extra={(search) => (
+        <button
+          type="button"
+          onClick={() => onPick({ newName: search })}
+          className="flex w-full cursor-pointer items-center gap-2 rounded-tab px-2 py-2 text-left text-md font-medium text-accent hover:bg-hover focus-visible:ring-3 focus-visible:ring-focus-glow focus-visible:outline-none"
+        >
+          <UserPlus aria-hidden className="size-4" />
+          Create “{search}” as a new person
+        </button>
       )}
-    </div>
+    />
   )
 }
