@@ -7,7 +7,7 @@ test("a newcomer signs up with Ela's invite link and gets a book of their own", 
   await ela.getByRole('button', { name: 'Create link' }).click()
   // The newest link comes first.
   const field = ela.getByRole('textbox', { name: 'Invite link' }).first()
-  await expect(field).toHaveValue(/^http:\/\/localhost:4180\//)
+  await expect(field).toHaveValue(/^http:\/\/localhost:5180\//)
   const link = await field.inputValue()
 
   const newcomer = await as('newcomer')
