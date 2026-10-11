@@ -71,6 +71,8 @@ These rules are the product. Breaking one is a critical bug.
 - **API behavior:**
   - Something the user can't see is **404**, never 403, so its existence isn't revealed. Visible but not allowed is **403**; a clash with existing data is **409** (`core.api.Conflict`); invalid input is **422**.
   - Errors always look like `{"detail": ...}`.
+  - When the AI a request depends on fails (key refused, no answer in time, an answer that makes no sense, unreachable), the answer is **424** with the reason in the app's words: a 5xx would only show the app's generic message.
+  - Account-level routers take the login cookie only (`auth=django_auth`): `/auth`, `/users`, `/invites`, `/api-keys`, `/ai`, `/capture`… An API key gets 401 there. `tests/api_keys/test_sign_in.py` says which side every router is on.
   - Lists are paginated: `{"items": [...], "count": N}`, 50 per page. Their query count must not grow with the number of rows (there's a test for each list).
   - Order names with `core.db.by_name()` (ICU collation), never plain `order_by("name")`.
   - A schema field that must hide data (e.g. contact details) gets an explicit resolver that returns the filtered value.
@@ -86,7 +88,7 @@ These rules are the product. Breaking one is a critical bug.
 
 - TypeScript `strict`. No `any` unless unavoidable, and then explain why.
 - Server state through TanStack Query hooks built on the generated API client. No ad-hoc `fetch` calls in components.
-- **Routing:** TanStack Router, routes defined in code in `src/router.tsx`; links and params are type-checked. Logged-in pages are children of `appRoute`, whose guard sends you to `/login` (and back afterwards). Pages only server admins may open (Settings → Users, Invite links) also run `adminOnly` in `beforeLoad`, which sends anyone else back to `/settings`; the API refuses them anyway. Screens not built yet use `placeholder()`; replace the placeholder when you build the screen.
+- **Routing:** TanStack Router, routes defined in code in `src/router.tsx`; links and params are type-checked. Logged-in pages are children of `appRoute`, whose guard sends you to `/login` (and back afterwards). Pages only server admins may open (Settings → Users, Invite links) also run `adminOnly` in `beforeLoad`, which sends anyone else back to `/settings`; the API refuses them anyway.
 - **Layout:** `src/app/` is the shell: `AppLayout` (sidebar from `md` up, bottom tabs below), `CommandPalette`, and `nav.ts` with the sections and `SHORTCUTS`. Register a shortcut with `useShortcut`; show it with `<Kbd>`, which writes it the way the user's keyboard labels it. Pages start with `<PageHeader>`, which also names the browser tab.
 - **Adding and editing people** goes through one dialog: call `openNew()` / `openEdit(id)` from `usePersonForm()` (never a separate page).
 - **Connecting people** goes through one dialog as well: `openConnect(personId)` / `openChange(personId, link)` from `useConnectionForm()`.

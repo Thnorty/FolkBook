@@ -88,14 +88,18 @@ def _check_can_edit(access: Access, link: Relationship) -> None:
         raise PermissionDenied("Only the person who made this link can change it.")
 
 
+def current_links(owner, type: RelationshipType | str, a: Person, b: Person):
+    """`owner`'s current links of this type between `a` and `b` (none or one)."""
+    person_a, person_b = stored_order(type, a, b)
+    return Relationship.objects.filter(
+        owner=owner, person_a=person_a, person_b=person_b, type=type, is_former=False
+    )
+
+
 def _save(link: Relationship) -> Relationship:
-    duplicate = Relationship.objects.filter(
-        owner=link.owner,
-        person_a=link.person_a,
-        person_b=link.person_b,
-        type=link.type,
-        is_former=False,
-    ).exclude(pk=link.pk)
+    duplicate = current_links(link.owner, link.type, link.person_a, link.person_b).exclude(
+        pk=link.pk
+    )
     if not link.is_former and duplicate.exists():
         raise Conflict("This link already exists.")
     link.full_clean()

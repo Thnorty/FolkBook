@@ -110,6 +110,8 @@ When a test fails, Playwright keeps a trace (screens, network, console): open th
 
 Quick capture turns "Met Tom at the hackathon, he's Emma's cousin" into people, links and notes for you to review. It needs an AI, set in **Settings → AI**: your own ("Only for you"), or, as an admin, one for everyone on the server who hasn't added their own. Only the text you write and today's date go to the AI, and only when you press Suggest.
 
+Once an AI is set, Quick capture is the **+** button (or Shift+N anywhere): write what happened, review every suggestion, save them all at once, and undo it all from the summary if it got something wrong.
+
 - **Gemini:** a key from [Google AI Studio](https://aistudio.google.com/apikey), model e.g. `gemini-2.5-flash`.
 - **OpenAI-compatible:** OpenAI, OpenRouter, vLLM… or a model on your own machine: the server's base URL (ending in `/v1`), a key if it needs one, and the model.
 - **A model on the same computer as FolkBook** (Ollama, LM Studio): FolkBook runs in Docker, where `localhost` is its own container. Use `http://host.docker.internal:11434/v1` (Ollama) or `http://host.docker.internal:1234/v1` (LM Studio), or the computer's network address.

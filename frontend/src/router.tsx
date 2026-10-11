@@ -13,6 +13,7 @@ import { AppLayout } from './app/AppLayout'
 import { safeRedirect } from './lib/redirect'
 import { LoginPage } from './pages/LoginPage'
 import { FillInPage } from './features/fillIn/FillInPage'
+import { CapturePage } from './features/capture/CapturePage'
 import { ImportPage } from './features/imports/ImportPage'
 import { PeoplePage } from './features/people/PeoplePage'
 import { ProfilePage } from './features/person/ProfilePage'
@@ -37,7 +38,6 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { SearchPage } from './pages/SearchPage'
 import { SetupPage } from './pages/SetupPage'
-import { PlaceholderPage } from './pages/PlaceholderPage'
 
 type RouterContext = { queryClient: QueryClient }
 
@@ -91,15 +91,6 @@ const appRoute = createRoute({
   },
   component: AppLayout,
 })
-
-/** A logged-in page that isn't built yet. `note` says what it will hold. */
-function placeholder<const Path extends string>(path: Path, title: string, note: string) {
-  return createRoute({
-    getParentRoute: () => appRoute,
-    path,
-    component: () => <PlaceholderPage title={title} note={note} />,
-  })
-}
 
 /** Server admin pages: anyone else goes back to their own settings. */
 async function adminOnly(queryClient: QueryClient) {
@@ -189,11 +180,7 @@ const appPages = [
   createRoute({ getParentRoute: () => appRoute, path: 'search', component: SearchPage }),
   createRoute({ getParentRoute: () => appRoute, path: 'spaces', component: SpacesPage }),
   createRoute({ getParentRoute: () => appRoute, path: 'spaces/$spaceId', component: SpacePage }),
-  placeholder(
-    'capture',
-    'Quick capture',
-    'Write what happened; AI suggests the people, notes and links to save.',
-  ),
+  createRoute({ getParentRoute: () => appRoute, path: 'capture', component: CapturePage }),
   settingsTree,
 ]
 

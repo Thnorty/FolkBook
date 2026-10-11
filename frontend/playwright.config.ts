@@ -45,6 +45,12 @@ export default defineConfig({
       timeout: 180_000,
     },
     {
+      // A stand-in AI for Quick capture: no real provider, no key.
+      command: 'node e2e/fake-ai.mjs',
+      url: 'http://localhost:8020/v1/models',
+      reuseExistingServer: false,
+    },
+    {
       command: 'npx vite build && npx vite preview --port 5180 --strictPort',
       env: { FOLKBOOK_API: API },
       url: APP,

@@ -73,6 +73,15 @@ export function linkLabel({ type, label }: { type: string; label: string }): str
   return relationLabel(type)
 }
 
+export type ParentType = components['schemas']['ParentType']
+
+/** The kinds of parent a parent link can be. */
+export const PARENT_TYPES: Record<ParentType, string> = {
+  biological: 'Biological',
+  adoptive: 'Adoptive',
+  step: 'Step',
+}
+
 type Kind = components['schemas']['InteractionOut']['kind']
 
 export const INTERACTION_KINDS: Record<Kind, string> = {

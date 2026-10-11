@@ -156,6 +156,13 @@ def hidden_people(access: Access) -> QuerySet[Person]:
     return _reachable_people(access).filter(_hidden_by(access))
 
 
+def people_in_space(access: Access, space: Space) -> QuerySet[Person]:
+    """The people you can see in `space`: those added to it, and the Me of its owner and
+    members. Nobody when you can't see the space."""
+    spaces = visible_spaces(access).filter(pk=space.pk)
+    return visible_people(access).filter(_people_in(spaces))
+
+
 def can_see_person(access: Access, person: Person) -> bool:
     return visible_people(access).filter(pk=person.pk).exists()
 

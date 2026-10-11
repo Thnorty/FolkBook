@@ -28,3 +28,13 @@ export function aiUsage(settings: AiSettings): { who: string; rest: string } | n
 /** "The server's AI: OpenAI-compatible · llama3.1:8b, set up by Ela." */
 export const serverLine = (server: AiProvider) =>
   `The server's AI: ${providerLine(server)}${server.set_by ? `, set up by ${firstNameOf(server.set_by)}` : ''}.`
+
+/** Under Quick capture: "Gemini · gemini-2.5-flash · your key", or "· the server's, set up by Ela". */
+export function captureAiLine(settings: AiSettings): string | null {
+  if (settings.using === 'mine' && settings.mine) return `${providerLine(settings.mine)} · your key`
+  if (settings.using === 'server' && settings.server) {
+    const by = settings.server.set_by ? `, set up by ${firstNameOf(settings.server.set_by)}` : ''
+    return `${providerLine(settings.server)} · the server's${by}`
+  }
+  return null
+}
