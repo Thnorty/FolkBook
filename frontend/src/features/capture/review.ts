@@ -1,7 +1,7 @@
 import { countOf } from '@/features/person/labels'
 import { formatBirthday, isoDay } from '@/lib/dates'
 import { firstNameOf, fold, words } from '@/lib/names'
-import type { Candidate, Draft, SaveBody, Saved } from './queries'
+import type { Candidate, Draft, SaveBody, Saved, Undone } from './queries'
 
 /*
  * What the review holds: one item per card, in the order the cards show (people, changes,
@@ -335,19 +335,47 @@ export function toSaveBody(review: Review, spaceId: string | null): SaveBody {
   }
 }
 
-/** "Added 1 person, 1 connection and 1 memory aid.", "Emma matched to someone you already had." */
-export function summary({ added, matched }: Saved): string[] {
-  const parts = words([
-    added.people > 0 && countOf(added.people, 'person', 'people'),
-    added.connections > 0 && countOf(added.connections, 'connection'),
-    added.memory_aids > 0 && countOf(added.memory_aids, 'memory aid'),
-    added.entries > 0 && countOf(added.entries, 'timeline entry', 'timeline entries'),
-    added.changes > 0 && countOf(added.changes, 'change'),
+type Counts = { people: number; connections: number; memory_aids: number; entries: number }
+
+/** "1 person, 1 connection and 2 timeline entries", leaving out what's 0. */
+function countWords(counts: Counts, changes: number): string {
+  return words([
+    counts.people > 0 && countOf(counts.people, 'person', 'people'),
+    counts.connections > 0 && countOf(counts.connections, 'connection'),
+    counts.memory_aids > 0 && countOf(counts.memory_aids, 'memory aid'),
+    counts.entries > 0 && countOf(counts.entries, 'timeline entry', 'timeline entries'),
+    changes > 0 && countOf(changes, 'change'),
   ])
+}
+
+/**
+ * "Added 1 person, 1 connection and 1 memory aid.", "Emma matched to someone you already
+ * had.", "Updated 1 detail."
+ */
+export function summary({ added, matched }: Saved): string[] {
+  const parts = countWords(added, 0)
   const lines = parts ? [`Added ${parts}.`] : []
   if (matched.length) {
     const who = words(matched.map(firstNameOf))
     lines.push(`${who} matched to ${matched.length === 1 ? 'someone' : 'people'} you already had.`)
   }
+  if (added.changes > 0) lines.push(`Updated ${countOf(added.changes, 'detail')}.`)
   return lines
+}
+
+/** The toast after Undo: "Undone: 1 person and 1 change". */
+export const undoneTitle = ({ removed, restored }: Undone) =>
+  `Undone: ${countWords(removed, restored) || 'nothing was left to take back'}`
+
+/**
+ * Whether a link goes into the chosen space: when both its people are in it (you are,
+ * and so is everyone new). The server decides the same way when saving.
+ */
+export function inChosenSpace(review: Review, link: ConnectionItem): boolean {
+  return [link.a, link.b].every((ref) => {
+    if (ref === ME) return true
+    const person = review.find((i): i is PersonItem => i.kind === 'person' && i.ref === ref)
+    if (person?.resolved?.as === 'new') return true
+    return person?.resolved?.as === 'existing' && Boolean(person.resolved.candidate?.in_space)
+  })
 }

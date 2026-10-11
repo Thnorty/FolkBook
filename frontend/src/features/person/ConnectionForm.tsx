@@ -18,10 +18,10 @@ import {
   needsParentType,
   type ConnectionKind,
 } from './connectionKinds'
+import { PARENT_TYPES, type ParentType } from './labels'
 import type { PersonDetail, Relationship } from './queries'
 import { firstNameOf } from '@/lib/names'
 
-type ParentType = components['schemas']['ParentType']
 type SpaceRef = components['schemas']['SpaceRef']
 type Other = { id: string; name: string; spaces: SpaceRef[] } | { newName: string }
 
@@ -47,12 +47,6 @@ type ConnectionFormProps = {
   error?: string
   onSubmit: (result: ConnectionFormResult) => void
   onCancel: () => void
-}
-
-const PARENT_TYPES: Record<ParentType, string> = {
-  biological: 'Biological',
-  adoptive: 'Adoptive',
-  step: 'Step',
 }
 
 /** Connect someone to this person, or change how they're connected (screens 2k, 2l). */

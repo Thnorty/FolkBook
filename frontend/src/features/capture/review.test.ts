@@ -12,6 +12,9 @@ import {
   toSaveBody,
   toggle,
   unresolved,
+  inChosenSpace,
+  undoneTitle,
+  type ConnectionItem,
   type PersonItem,
 } from './review'
 
@@ -296,11 +299,58 @@ describe('summary', () => {
 
   it('counts in plurals', () => {
     expect(summary(saved({ people: 2, memory_aids: 3, entries: 2, changes: 1 }))).toEqual([
-      'Added 2 people, 3 memory aids, 2 timeline entries and 1 change.',
+      'Added 2 people, 3 memory aids and 2 timeline entries.',
+      'Updated 1 detail.',
+    ])
+    expect(summary(saved({ changes: 2 }, ['Emma Yılmaz']))).toEqual([
+      'Emma matched to someone you already had.',
+      'Updated 2 details.',
     ])
     expect(summary(saved({ entries: 1 }, ['Emma Yılmaz', 'Oskar']))).toEqual([
       'Added 1 timeline entry.',
       'Emma and Oskar matched to people you already had.',
     ])
+  })
+})
+
+describe('inChosenSpace', () => {
+  it('puts a link in the space when both people are in it', () => {
+    let review = fromDraft(draft())
+    review = resolve(review, 'e', {
+      as: 'existing',
+      id: 'emma-id',
+      name: 'Emma',
+      candidate: candidate(),
+    })
+    const link = (id: string) => review.find((item) => item.id === id) as ConnectionItem
+
+    // Tom is new, so he goes into the space; Emma isn't in it; you always are.
+    expect(inChosenSpace(review, link('c1'))).toBe(false)
+    expect(inChosenSpace(review, link('c2'))).toBe(true)
+
+    review = resolve(review, 'e', {
+      as: 'existing',
+      id: 'emma-id',
+      name: 'Emma',
+      candidate: candidate({ in_space: true }),
+    })
+    expect(inChosenSpace(review, link('c1'))).toBe(true)
+  })
+})
+
+describe('undoneTitle', () => {
+  it('says what was taken back', () => {
+    expect(
+      undoneTitle({
+        removed: { people: 1, connections: 1, memory_aids: 1, entries: 0 },
+        restored: 1,
+      }),
+    ).toBe('Undone: 1 person, 1 connection, 1 memory aid and 1 change')
+    expect(
+      undoneTitle({
+        removed: { people: 0, connections: 0, memory_aids: 0, entries: 2 },
+        restored: 0,
+      }),
+    ).toBe('Undone: 2 timeline entries')
   })
 })
