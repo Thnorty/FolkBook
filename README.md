@@ -130,6 +130,8 @@ Each key is read-only or read-write, sees all your spaces or only the ones you p
 
 ## Troubleshooting
 
+**"Something went wrong. Try again in a moment."** The app never shows what went wrong inside the server; the server writes it, with the full traceback, to its log: `docker compose logs backend` (add `-f` to follow it, `--since 1h` for the last hour).
+
 **"ports are not available … access permissions" on Windows.** Windows reserves some port ranges (check with `netsh interface ipv4 show excludedportrange protocol=tcp`). Pick a port outside them for `FOLKBOOK_PORT` in `.env`, and update `DJANGO_CSRF_TRUSTED_ORIGINS` to match.
 
 **Searches take seconds, and migrating said "FolkBook could not turn off JIT".** FolkBook turns off Postgres's just-in-time compiling for its database (on a small book it makes every search slow), which only the database's owner may do. If FolkBook's database user isn't the owner (e.g. a hosted Postgres), run `ALTER DATABASE <name> SET jit = off;` once as the owner. The setting lives on the database, so it also works through a connection pooler such as PgBouncer.

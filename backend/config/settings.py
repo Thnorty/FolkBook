@@ -110,6 +110,16 @@ DATABASES = {
     }
 }
 
+# The server's log is its console output (docker compose logs): warnings and errors,
+# with their tracebacks, go there whether DEBUG is on or off. (Django's default sends
+# errors only by email to ADMINS when DEBUG is off, which FolkBook doesn't set up.)
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "WARNING"},
+}
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {

@@ -148,12 +148,12 @@ def list_people(
     return search_people(access, people, search)
 
 
-@router.get("/{person_id}", response=PersonDetailOut)
+@router.get("/{uuid:person_id}", response=PersonDetailOut)
 def get_person(request, person_id: UUID):
     return detail(access_for(request), person_id)
 
 
-@router.get("/{person_id}/photo", response={200: None}, url_name="person_photo")
+@router.get("/{uuid:person_id}/photo", response={200: None}, url_name="person_photo")
 def get_photo(request, person_id: UUID, size: Literal["full", "thumbnail"] = "full"):
     """The person's photo (WebP), for anyone who can see them."""
     person = get_object_or_404(visible_people(access_for(request)), pk=person_id)
@@ -166,7 +166,7 @@ def get_photo(request, person_id: UUID, size: Literal["full", "thumbnail"] = "fu
     return response
 
 
-@router.post("/{person_id}/photo", response=PersonDetailOut)
+@router.post("/{uuid:person_id}/photo", response=PersonDetailOut)
 def upload_photo(request, person_id: UUID, file: File[UploadedFile]):
     """Replace the photo. Any image the server can read; it's cropped to 4:5."""
     access = access_for(request)
@@ -175,7 +175,7 @@ def upload_photo(request, person_id: UUID, file: File[UploadedFile]):
     return detail(access, person.pk)
 
 
-@router.delete("/{person_id}/photo", response=PersonDetailOut)
+@router.delete("/{uuid:person_id}/photo", response=PersonDetailOut)
 def delete_photo(request, person_id: UUID):
     access = access_for(request)
     person = get_object_or_404(visible_people(access), pk=person_id)
@@ -183,7 +183,7 @@ def delete_photo(request, person_id: UUID):
     return detail(access, person.pk)
 
 
-@router.get("/{person_id}/family", response=list[FamilyRelationOut])
+@router.get("/{uuid:person_id}/family", response=list[FamilyRelationOut])
 def get_family(request, person_id: UUID):
     """Parents, siblings, cousins, in-laws, …, from the links the user can see."""
     access = access_for(request)
@@ -197,7 +197,7 @@ def create_person(request, payload: PersonIn):
     return Status(201, detail(access, person.pk))
 
 
-@router.patch("/{person_id}", response=PersonDetailOut)
+@router.patch("/{uuid:person_id}", response=PersonDetailOut)
 def update_person(request, person_id: UUID, payload: PersonPatch):
     access = access_for(request)
     person = get_object_or_404(visible_people(access), pk=person_id)
@@ -205,7 +205,7 @@ def update_person(request, person_id: UUID, payload: PersonPatch):
     return detail(access, person.pk)
 
 
-@router.delete("/{person_id}", response={204: None})
+@router.delete("/{uuid:person_id}", response={204: None})
 def delete_person(request, person_id: UUID):
     access = access_for(request)
     services.delete_person(access, get_object_or_404(visible_people(access), pk=person_id))
@@ -240,7 +240,7 @@ def restore_person(request, person_id: UUID):
 # ---------------------------------------------------------------- notes (private)
 
 
-@router.get("/{person_id}/note", response=NoteOut)
+@router.get("/{uuid:person_id}/note", response=NoteOut)
 def get_note(request, person_id: UUID):
     """The user's own notes on this person (empty if none)."""
     access = access_for(request)
@@ -249,7 +249,7 @@ def get_note(request, person_id: UUID):
     return note or {"body": "", "updated_at": None}
 
 
-@router.put("/{person_id}/note", response=NoteOut)
+@router.put("/{uuid:person_id}/note", response=NoteOut)
 def save_note(request, person_id: UUID, payload: NoteIn):
     """Replace the user's notes on this person. Empty text removes them."""
     access = access_for(request)
@@ -281,14 +281,14 @@ def create_memory_aid(request, payload: MemoryAidIn):
     return Status(201, services.create_memory_aid(access, person, data))
 
 
-@memory_aids_router.patch("/{aid_id}", response=MemoryAidOut)
+@memory_aids_router.patch("/{uuid:aid_id}", response=MemoryAidOut)
 def update_memory_aid(request, aid_id: UUID, payload: MemoryAidPatch):
     access = access_for(request)
     changes = payload.model_dump(exclude_unset=True)
     return services.update_memory_aid(access, visible_aid(access, aid_id), changes)
 
 
-@memory_aids_router.delete("/{aid_id}", response={204: None})
+@memory_aids_router.delete("/{uuid:aid_id}", response={204: None})
 def delete_memory_aid(request, aid_id: UUID):
     access = access_for(request)
     services.delete_memory_aid(access, visible_aid(access, aid_id))

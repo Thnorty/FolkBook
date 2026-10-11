@@ -123,6 +123,17 @@ describe('errors', () => {
     expect(error.message).toBe('Something went wrong. Try again in a moment.')
   })
 
+  it('never shows what the server says about its own failure', async () => {
+    fakeServer({
+      'GET /api/auth/me': () => json({ detail: 'KeyError: person_id in graph/queries.py' }, 500),
+    })
+
+    const error = await rejection(createApiClient().GET('/api/auth/me'))
+
+    expect(error.status).toBe(500)
+    expect(error.message).toBe('Something went wrong. Try again in a moment.')
+  })
+
   it('reports an unreachable server as status 0', async () => {
     fakeServer({
       'GET /api/auth/me': () => {

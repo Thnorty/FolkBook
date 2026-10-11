@@ -4,6 +4,8 @@ export type ValidationIssue = { loc: (string | number)[]; msg: string }
 /** The API's error body: a message, or the list of problems for invalid input. */
 type Detail = string | ValidationIssue[]
 
+const SERVER_TROUBLE = 'Something went wrong. Try again in a moment.'
+
 const FALLBACK_MESSAGES: Record<number, string> = {
   0: "Can't reach the server. Check your connection and try again.",
   401: 'Your session has ended. Log in again.',
@@ -35,7 +37,9 @@ export class ApiError extends Error {
 }
 
 function messageFor(status: number, detail: Detail | undefined): string {
+  // What the server says about its own failure is for its log, not for people.
+  if (status >= 500) return FALLBACK_MESSAGES[status] ?? SERVER_TROUBLE
   if (typeof detail === 'string' && detail) return detail
   if (Array.isArray(detail) && detail.length) return detail.map((issue) => issue.msg).join(' ')
-  return FALLBACK_MESSAGES[status] ?? 'Something went wrong. Try again in a moment.'
+  return FALLBACK_MESSAGES[status] ?? SERVER_TROUBLE
 }
