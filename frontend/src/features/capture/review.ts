@@ -344,7 +344,7 @@ function countWords(counts: Counts, changes: number): string {
     counts.connections > 0 && countOf(counts.connections, 'connection'),
     counts.memory_aids > 0 && countOf(counts.memory_aids, 'memory aid'),
     counts.entries > 0 && countOf(counts.entries, 'timeline entry', 'timeline entries'),
-    changes > 0 && countOf(changes, 'change'),
+    changes > 0 && countOf(changes, 'detail'),
   ])
 }
 
@@ -363,7 +363,7 @@ export function summary({ added, matched }: Saved): string[] {
   return lines
 }
 
-/** The toast after Undo: "Undone: 1 person and 1 change". */
+/** The toast after Undo: "Undone: 1 person and 1 detail". */
 export const undoneTitle = ({ removed, restored }: Undone) =>
   `Undone: ${countWords(removed, restored) || 'nothing was left to take back'}`
 

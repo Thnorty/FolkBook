@@ -6,6 +6,7 @@ import { CheckboxField } from '@/components/ui/checkbox-field'
 import { Kbd } from '@/components/ui/kbd'
 import { selectClass } from '@/components/ui/select'
 import { Tooltip } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { captureAiLine } from '@/features/ai/copy'
 import type { AiSettings } from '@/features/ai/queries'
 import { usePersonForm } from '@/features/person/usePersonForm'
@@ -85,7 +86,7 @@ export function WriteStep({ ai, text, onText, spaceId, onSpace, onSuggest }: Wri
                 aria-label="Space"
                 value={spaceId}
                 onChange={(event) => onSpace(event.target.value)}
-                className={`${selectClass} md:w-56`}
+                className={cn(selectClass, 'md:w-56')}
               >
                 {spaces.map((space) => (
                   <option key={space.id} value={space.id}>

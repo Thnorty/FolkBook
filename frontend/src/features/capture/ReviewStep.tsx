@@ -113,7 +113,8 @@ export function ReviewStep({
           {error}
         </p>
       )}
-      <div className="sticky bottom-0 flex items-center gap-2 border-t border-line bg-paper py-3">
+      {/* Stays in view while scrolling the cards; above the bottom tabs on phones. */}
+      <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] flex items-center gap-2 border-t border-line bg-paper py-3 md:bottom-0">
         <span className="type-small text-ink-soft">
           {selected} of {total} selected
         </span>

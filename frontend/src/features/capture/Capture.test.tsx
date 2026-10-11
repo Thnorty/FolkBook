@@ -310,7 +310,7 @@ describe('Quick capture', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Undo all of this' }))
 
     expect(
-      await screen.findByText('Undone: 1 person, 1 connection, 1 memory aid and 1 change'),
+      await screen.findByText('Undone: 1 person, 1 connection, 1 memory aid and 1 detail'),
     ).toBeVisible()
     expect(await screen.findByRole('textbox', { name: 'What happened?' })).toHaveValue(TEXT)
   })

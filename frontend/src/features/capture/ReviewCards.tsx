@@ -346,7 +346,7 @@ export function ConnectionCard({
           aria-label="Person"
           value={item.a}
           onChange={(event) => onEdit(item.id, { a: event.target.value })}
-          className={`${selectClass} w-auto font-serif`}
+          className={cn(selectClass, 'w-auto font-serif')}
         >
           <PeopleOptions review={review} me />
         </select>
@@ -357,7 +357,7 @@ export function ConnectionCard({
           aria-label="Other person"
           value={item.b}
           onChange={(event) => onEdit(item.id, { b: event.target.value })}
-          className={`${selectClass} w-auto font-serif`}
+          className={cn(selectClass, 'w-auto font-serif')}
         >
           <option value="" disabled>
             Pick someone
@@ -380,7 +380,7 @@ export function ConnectionCard({
           aria-label="Every kind of link"
           value={item.type}
           onChange={(event) => setType(event.target.value as LinkType)}
-          className={`${selectClass} w-auto`}
+          className={cn(selectClass, 'w-auto')}
         >
           {ALL_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -396,7 +396,7 @@ export function ConnectionCard({
             aria-label="Kind of parent"
             value={item.parent_type ?? 'biological'}
             onChange={(event) => onEdit(item.id, { parent_type: event.target.value as ParentType })}
-            className={`${selectClass} w-auto`}
+            className={cn(selectClass, 'w-auto')}
           >
             {(Object.keys(PARENT_TYPES) as ParentType[]).map((type) => (
               <option key={type} value={type}>
@@ -434,7 +434,7 @@ export function AidCard({ item, review, onToggle, onEdit }: CardProps<AidItem>) 
             aria-label="About"
             value={item.about}
             onChange={(event) => onEdit(item.id, { about: event.target.value })}
-            className={`${selectClass} w-auto self-start`}
+            className={cn(selectClass, 'w-auto self-start')}
           >
             <PeopleOptions review={review} />
           </select>

@@ -345,7 +345,7 @@ describe('undoneTitle', () => {
         removed: { people: 1, connections: 1, memory_aids: 1, entries: 0 },
         restored: 1,
       }),
-    ).toBe('Undone: 1 person, 1 connection, 1 memory aid and 1 change')
+    ).toBe('Undone: 1 person, 1 connection, 1 memory aid and 1 detail')
     expect(
       undoneTitle({
         removed: { people: 0, connections: 0, memory_aids: 0, entries: 2 },
