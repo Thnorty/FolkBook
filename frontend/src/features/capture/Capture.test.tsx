@@ -229,7 +229,9 @@ describe('Quick capture', () => {
           },
         ],
         existing_people: [{ ref: 'e', person_id: 'emma', changes: { work: 'Spotify' } }],
-        connections: [{ a: 't', b: 'e', type: 'cousin', label: '', parent_type: null }],
+        connections: [
+          { a: 't', b: 'e', type: 'cousin', label: '', parent_type: null, in_space: false },
+        ],
         memory_aids: [{ about: 't', text: 'Likes climbing' }],
         entries: [],
       },
@@ -334,5 +336,59 @@ describe('Quick capture', () => {
       { about: 't', text: 'Likes climbing' },
       { about: 't', text: 'Climbs on Tuesdays' },
     ])
+  })
+
+  it('lets you say a matched name is someone else, and edit them', async () => {
+    const oskar = { ...emma, id: 'oskar', name: 'Oskar', detail: 'Climbing club' }
+    const bodies = server({
+      suggest: () =>
+        json({
+          ...DRAFT,
+          people: [
+            {
+              ...DRAFT.people[0],
+              ref: 'o',
+              name: 'Oskar',
+              work: 'Spotify',
+              match: 'match',
+              candidates: [oskar],
+            },
+          ],
+          connections: [],
+          memory_aids: [],
+        }),
+    })
+    renderApp('/capture')
+    await write()
+    await userEvent.click(screen.getByRole('button', { name: 'Suggest' }))
+    const who = await screen.findByRole('radiogroup', { name: 'Who is “Oskar”?' })
+    expect(within(who).getByRole('radio', { name: /^Oskar/ })).toBeChecked()
+    expect(screen.getByRole('checkbox', { name: 'Oskar · Work: Google → Spotify' })).toBeChecked()
+
+    await userEvent.click(within(who).getByRole('radio', { name: /Someone else/ }))
+    expect(screen.queryByRole('checkbox', { name: /Work: Google/ })).not.toBeInTheDocument()
+    const name = screen.getByRole('textbox', { name: 'Name' })
+    await userEvent.clear(name)
+    await userEvent.type(name, 'Oskar Lind')
+    await userEvent.click(screen.getByRole('button', { name: 'Save 1 item' }))
+
+    await waitFor(() => expect(bodies.save).toHaveLength(1))
+    expect((bodies.save[0] as { new_people: { name: string }[] }).new_people[0].name).toBe(
+      'Oskar Lind',
+    )
+  })
+
+  it('saves only from Save, not from Enter in a card', async () => {
+    const bodies = server()
+    renderApp('/capture')
+    await write()
+    await userEvent.click(screen.getByRole('button', { name: 'Suggest' }))
+    await screen.findByRole('heading', { name: "Here's what I read" })
+    await userEvent.click(screen.getByRole('radio', { name: /Someone else: create a new “Emma”/ }))
+
+    await userEvent.type(screen.getAllByRole('textbox', { name: 'Name' })[0], ' Berg{Enter}')
+
+    expect(screen.getByRole('heading', { name: "Here's what I read" })).toBeInTheDocument()
+    expect(bodies.save).toEqual([])
   })
 })

@@ -160,21 +160,8 @@ function Chip({
 }
 
 export function PersonCard(props: CardProps<PersonItem>) {
-  const { item } = props
-  if (item.match === 'choose' || item.resolved === null) return <WhoIsCard {...props} />
-  if (item.resolved?.as === 'existing') {
-    const { candidate } = item.resolved
-    return (
-      <Card
-        item={item}
-        title={`Already in your book · ${item.resolved.name}`}
-        onToggle={props.onToggle}
-      >
-        {candidate?.detail && <p className="type-small text-ink-soft">{candidate.detail}</p>}
-      </Card>
-    )
-  }
-  return <NewPersonCard {...props} />
+  // Anyone the AI's name may already be (even an exact match) can be someone else instead.
+  return props.item.match === 'new' ? <NewPersonCard {...props} /> : <WhoIsCard {...props} />
 }
 
 function NewPersonCard({ item, spaceName, onToggle, onEdit }: CardProps<PersonItem>) {
@@ -185,6 +172,19 @@ function NewPersonCard({ item, spaceName, onToggle, onEdit }: CardProps<PersonIt
       meta="Not in your book yet"
       onToggle={onToggle}
     >
+      <NewPersonFields item={item} spaceName={spaceName} onEdit={onEdit} />
+    </Card>
+  )
+}
+
+/** What a new person gets: name, how you met and work to edit; birthday, space and tags. */
+function NewPersonFields({
+  item,
+  spaceName,
+  onEdit,
+}: Pick<CardProps<PersonItem>, 'item' | 'spaceName' | 'onEdit'>) {
+  return (
+    <>
       <Input
         aria-label="Name"
         value={item.name}
@@ -231,12 +231,12 @@ function NewPersonCard({ item, spaceName, onToggle, onEdit }: CardProps<PersonIt
           ))}
         </div>
       )}
-    </Card>
+    </>
   )
 }
 
 /** "Who is “Emma”?": the people it could be, someone new, or anyone else in your book. */
-function WhoIsCard({ item, onToggle, onResolve }: CardProps<PersonItem>) {
+function WhoIsCard({ item, spaceName, onToggle, onEdit, onResolve }: CardProps<PersonItem>) {
   const title = `Who is “${item.name}”?`
   const chosen = item.resolved?.as === 'existing' ? item.resolved : null
   const picked = chosen && !item.candidates.some((c) => c.id === chosen.id) ? chosen : null
@@ -301,6 +301,9 @@ function WhoIsCard({ item, onToggle, onResolve }: CardProps<PersonItem>) {
           onResolve(item.ref, { as: 'existing', id: person.id, name: person.name, candidate: null })
         }
       />
+      {item.resolved?.as === 'new' && (
+        <NewPersonFields item={item} spaceName={spaceName} onEdit={onEdit} />
+      )}
     </Card>
   )
 }

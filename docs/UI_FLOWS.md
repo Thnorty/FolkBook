@@ -86,9 +86,9 @@ For a **shared person you don't own**: basic profile is read-only (or editable w
 2. **Suggest** (Ctrl/⌘+Enter): "Reading it back…" with Cancel; after 10 s, "Local models can take a minute." Only the text and today's date go to the AI. A failure says why (key refused, no answer in 90 s, an answer that made no sense, can't reach the address) with *Try again* and *Edit text*
 3. **Here's what I read**: one card per suggestion, each with a checkbox, everything editable:
    - **New person:** name, how you met, work; birthday, space and tags as chips
-   - **Who is "Emma"?** when only a first name matches: the people it could be (with a detail line), *Someone else: create a new "Emma"*, or search your book. Save waits until each is answered. An exact full name is matched straight away ("Already in your book")
+   - **Who is "Emma"?** when only a first name matches: the people it could be (with a detail line), *Someone else: create a new "Emma"*, or search your book. Save waits until each is answered. An exact full name comes already chosen, and can still be someone else
    - **Field changes** on someone you already have: "Emma Yılmaz · Work: Google → Spotify"; greyed out with the reason when you can't make them. Never their spaces
-   - **Connection:** the two people, the kind as chips (plus every kind in a list), the kind of parent for parents, the "other family" note for siblings, cousins and the like, and whether it goes in the space (only when both people are in it) or stays yours
+   - **Connection:** the two people, the kind as chips (plus every kind in a list), the kind of parent for parents, the "other family" note for siblings, cousins and the like, and whether it goes in the space (only when both people are in it; the server checks) or stays yours. A link you already have is left as it is
    - **Memory aid** ("Memory aids stay private, even in shared spaces.") and **timeline entry** (kind, day, title, note)
    - Unticking a person unticks everything about them; *+ Add something the AI missed* adds a person, connection, memory aid or entry
    - "4 of 4 selected", *Discard*, **Save 4 items**; Esc or *Edit text* goes back to the text

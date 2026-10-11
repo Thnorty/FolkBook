@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { warnAt } from '@/lib/fieldWarnings'
 import {
@@ -32,6 +32,11 @@ type ReviewStepProps = {
   onSave: () => void
 }
 
+/** Enter in a card's field finishes that field; it doesn't save the whole review. */
+function keepEnter(event: KeyboardEvent<HTMLFormElement>) {
+  if (event.key === 'Enter' && event.target instanceof HTMLInputElement) event.preventDefault()
+}
+
 /** Screens 2g, 2h: every suggestion as a card to edit or untick, then Save. */
 export function ReviewStep({
   text,
@@ -59,7 +64,7 @@ export function ReviewStep({
 
   const props = { review, spaceName, onToggle, onEdit, onResolve }
   return (
-    <form onSubmit={submit} className="flex flex-col gap-4">
+    <form onSubmit={submit} onKeyDown={keepEnter} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <button
           type="button"
