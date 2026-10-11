@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils'
 
 /* The "More details" fields of the person form: birthday, contact details, tags. */
 
+// As long as a tag the server keeps (people.schemas.TagName).
+const TAG_LENGTH = 50
+
 export type ContactValue = components['schemas']['ContactMethodIn']
 
 const SELECT =
@@ -176,6 +179,7 @@ export function TagInput({
         <input
           id="person-tags"
           value={draft}
+          maxLength={TAG_LENGTH}
           placeholder={value.length ? '' : 'designer, climbing…'}
           onChange={(event) => setDraft(event.target.value)}
           onBlur={add}

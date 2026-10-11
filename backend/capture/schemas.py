@@ -1,16 +1,15 @@
 import datetime
-from typing import Annotated, Literal
+from typing import Literal
 from uuid import UUID
 
 from ninja import Field, Schema
-from pydantic import StringConstraints, field_validator
+from pydantic import field_validator
 
 from interactions.models import Interaction
-from people.schemas import Birthday, PersonRef
+from people.schemas import Birthday, PersonRef, TagName
 from relationships.models import ParentType, RelationshipType
 
 MAX_TEXT = 4000
-TagName = Annotated[str, StringConstraints(max_length=50)]
 
 
 class SuggestIn(Schema):

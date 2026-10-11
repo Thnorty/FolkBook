@@ -1,14 +1,18 @@
 import datetime
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID
 
 from ninja import Field, Schema
+from pydantic import StringConstraints
 
-from people.models import ContactMethod, Pronouns
+from people.models import ContactMethod, Pronouns, Tag
 from spaces.models import Space
 
 # The years a birthday can have.
 FIRST_YEAR, LAST_YEAR = 1800, 2200
+# A tag as typed: no longer than the database keeps.
+TagName = Annotated[str, StringConstraints(max_length=Tag._meta.get_field("name").max_length)]
 
 
 class Birthday(Schema):
@@ -150,7 +154,7 @@ class PersonIn(Schema):
     how_we_met: str = Field("", max_length=300)
     work: str = Field("", max_length=200)
     birthday: Birthday | None = None
-    tags: list[str] = []
+    tags: list[TagName] = []
     contact_methods: list[ContactMethodIn] = []
     space_ids: list[UUID] = []
     photo_caption: str = Field("", max_length=40)
@@ -164,7 +168,7 @@ class PersonPatch(Schema):
     how_we_met: str | None = Field(None, max_length=300)
     work: str | None = Field(None, max_length=200)
     birthday: Birthday | None = None
-    tags: list[str] | None = None
+    tags: list[TagName] | None = None
     contact_methods: list[ContactMethodIn] | None = None
     space_ids: list[UUID] | None = None  # the spaces you can see; others are left alone
     photo_caption: str | None = Field(None, max_length=40)
