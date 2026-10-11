@@ -35,7 +35,7 @@ def log_interaction(request, payload: InteractionIn):
     return Status(201, services.log_interaction(access, person, data))
 
 
-@router.patch("/{interaction_id}", response=InteractionOut)
+@router.patch("/{uuid:interaction_id}", response=InteractionOut)
 def update_interaction(request, interaction_id: UUID, payload: InteractionPatch):
     access = access_for(request)
     return services.update_interaction(
@@ -43,7 +43,7 @@ def update_interaction(request, interaction_id: UUID, payload: InteractionPatch)
     )
 
 
-@router.delete("/{interaction_id}", response={204: None})
+@router.delete("/{uuid:interaction_id}", response={204: None})
 def delete_interaction(request, interaction_id: UUID):
     access = access_for(request)
     services.delete_interaction(access, visible_interaction(access, interaction_id))

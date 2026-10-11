@@ -75,7 +75,7 @@ def get_graph(request):
     return _graph_out(visible_graph(access), access.user.me.pk)
 
 
-@router.get("/neighborhood/{person_id}", response=GraphOut)
+@router.get("/neighborhood/{uuid:person_id}", response=GraphOut)
 def get_neighborhood(request, person_id: UUID, params: Query[NeighborhoodParams]):
     """Focus mode: a person and everyone within 1 or 2 steps."""
     access = access_for(request)
@@ -83,7 +83,7 @@ def get_neighborhood(request, person_id: UUID, params: Query[NeighborhoodParams]
     return _graph_out(neighborhood(access, person, params.hops), access.user.me.pk)
 
 
-@router.get("/paths/{person_id}", response=PathsOut)
+@router.get("/paths/{uuid:person_id}", response=PathsOut)
 def get_paths(request, person_id: UUID, params: Query[PathParams]):
     """How do I know …? Routes from the user's Me to this person."""
     access = access_for(request)

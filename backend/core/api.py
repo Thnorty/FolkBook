@@ -5,7 +5,7 @@ Every error response has the shape {"detail": ...}: a message string, or for
 """
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
 from ninja import Schema
 from ninja.utils import check_csrf
 
@@ -43,3 +43,9 @@ def validation_detail(error: ValidationError) -> list[dict]:
 
 class ErrorOut(Schema):
     detail: str
+
+
+def not_found(request: HttpRequest, *args, **kwargs) -> JsonResponse:
+    """Anything under /api/ that matches no endpoint (including an id that isn't one):
+    a 404 in the API's own shape, never Django's HTML page."""
+    return JsonResponse({"detail": "Not Found"}, status=404)

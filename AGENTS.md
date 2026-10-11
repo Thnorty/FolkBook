@@ -74,7 +74,8 @@ These rules are the product. Breaking one is a critical bug.
   - Lists are paginated: `{"items": [...], "count": N}`, 50 per page. Their query count must not grow with the number of rows (there's a test for each list).
   - Order names with `core.db.by_name()` (ICU collation), never plain `order_by("name")`.
   - A schema field that must hide data (e.g. contact details) gets an explicit resolver that returns the filtered value.
-  - When a static path segment sits next to a parameter (`/devices/sign-out-others` next to `/devices/{id}`), type the parameter (`{uuid:id}`) so the static path isn't swallowed.
+  - Every id in a path is typed: `{uuid:person_id}`, never `{person_id}`. A malformed id then matches no route and is simply not found (404), like a stale one, instead of failing validation (422); it also keeps a static path next to it (`/devices/sign-out-others` next to `/devices/{uuid:id}`) from being swallowed. `tests/test_routing.py` checks every route. Anything else under `/api/` that matches nothing answers `{"detail": "Not Found"}` (`core.api.not_found`).
+  - An unexpected error answers 500 `{"detail": "Internal Server Error"}`, never the exception's text, and its traceback goes to the server's log (the console: `docker compose logs`), whether `DEBUG` is on or off. The app shows its own words for any 5xx.
 - **Auth for the app:** session cookies. The frontend calls `GET /api/auth/csrf` once, then sends the `csrftoken` cookie's value as the `X-CSRFToken` header on every write (also on login). The token changes on login, so read it again afterwards.
 - Timestamps in UTC; format dates for the user on the frontend.
 - **Ending access:** any change that can make users lose sight of people (leaving or unsharing a space, taking someone out of one, deleting someone) runs inside `people.kept.keeping_copies`, so users keep copies of the people they wrote about.

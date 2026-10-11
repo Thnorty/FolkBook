@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DatabaseError, connection
@@ -26,6 +28,8 @@ from today.api import router as today_router
 
 # Every endpoint needs an API key or the login cookie unless it says `auth=None`.
 # Account-level routers take only the login cookie (`auth=django_auth`).
+logger = logging.getLogger("folkbook")
+
 api = NinjaAPI(title="FolkBook API", version="0.1.0", auth=KEY_OR_LOGIN)
 api.add_router("/setup", setup_router, auth=django_auth)
 api.add_router("/auth", auth_router, auth=django_auth)
@@ -44,6 +48,14 @@ api.add_router("/search", search_router)
 api.add_router("/export", export_router)
 api.add_router("/imports", imports_router)
 api.add_router("/api-keys", api_keys_router, auth=django_auth)
+
+
+@api.exception_handler(Exception)
+def server_error(request, exc):
+    # Anything unexpected: the whole story goes to the server's log, for the admin; the
+    # answer never carries it (its text can hold names, paths or data).
+    logger.exception("%s %s failed", request.method, request.path)
+    return api.create_response(request, {"detail": "Internal Server Error"}, status=500)
 
 
 @api.exception_handler(PermissionDenied)

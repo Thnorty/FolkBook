@@ -46,7 +46,7 @@ def list_relationships(request, person: UUID | None = None, family: bool | None 
     return links
 
 
-@router.get("/{link_id}", response=RelationshipOut)
+@router.get("/{uuid:link_id}", response=RelationshipOut)
 def get_relationship(request, link_id: UUID):
     return visible_link(access_for(request), link_id)
 
@@ -66,7 +66,7 @@ def create_relationship(request, payload: RelationshipIn):
     return Status(201, visible_link(access, link.pk))
 
 
-@router.patch("/{link_id}", response=RelationshipOut)
+@router.patch("/{uuid:link_id}", response=RelationshipOut)
 def update_relationship(request, link_id: UUID, payload: RelationshipPatch):
     access = access_for(request)
     changes = payload.model_dump(exclude_unset=True)
@@ -76,7 +76,7 @@ def update_relationship(request, link_id: UUID, payload: RelationshipPatch):
     return visible_link(access, link_id)
 
 
-@router.post("/{link_id}/end", response=RelationshipOut)
+@router.post("/{uuid:link_id}/end", response=RelationshipOut)
 def end_relationship(request, link_id: UUID, payload: EndIn):
     """Mark a link as former (e.g. a divorce). Parent links never end."""
     access = access_for(request)
@@ -84,7 +84,7 @@ def end_relationship(request, link_id: UUID, payload: EndIn):
     return visible_link(access, link_id)
 
 
-@router.get("/{link_id}/end-preview", response=list[FamilyRelationOut])
+@router.get("/{uuid:link_id}/end-preview", response=list[FamilyRelationOut])
 def end_preview(request, link_id: UUID, person: UUID):
     """Who on `person`'s page would move to Former if this link ended."""
     access = access_for(request)
@@ -92,14 +92,14 @@ def end_preview(request, link_id: UUID, person: UUID):
     return moving_to_former(access, focus, visible_link(access, link_id))
 
 
-@router.post("/{link_id}/reopen", response=RelationshipOut)
+@router.post("/{uuid:link_id}/reopen", response=RelationshipOut)
 def reopen_relationship(request, link_id: UUID):
     access = access_for(request)
     services.reopen_relationship(access, visible_link(access, link_id))
     return visible_link(access, link_id)
 
 
-@router.delete("/{link_id}", response={204: None})
+@router.delete("/{uuid:link_id}", response={204: None})
 def delete_relationship(request, link_id: UUID):
     access = access_for(request)
     services.delete_relationship(access, visible_link(access, link_id))

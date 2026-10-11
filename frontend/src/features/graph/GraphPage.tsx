@@ -115,7 +115,7 @@ export function GraphPage() {
   const focusNote = (() => {
     if (!focus) return null
     if (focused.error instanceof ApiError && focused.error.status === 404) return PERSON_GONE
-    if (focused.error) return focused.error.message
+    if (focused.error) return <span className="text-danger">{focused.error.message}</span>
     // While another person's or another number of steps' answer loads, the drawing
     // stays, but its numbers would be wrong.
     if (!focused.data || focused.isPlaceholderData || !graph.data) return null
