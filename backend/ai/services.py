@@ -55,17 +55,20 @@ def remove_provider(user: User, *, server: bool) -> None:
 
 
 def target_for_check(user: User, data: AiCheckIn) -> Target:
-    """Where Fetch models and Test connection send their request.
+    """Where Fetch models and Test connection send their request: what's in the form.
 
-    With `saved`, the stored row as it is (its address and key; only the model may come from
-    the form), so a stored key can't be sent anywhere else. The server's needs an admin.
+    With `saved` and no key typed, the stored key. Your own goes to the address in the form
+    (so a changed address can be tested before saving). The server's (admins only) stays at
+    its stored address, so it can't be sent anywhere else.
     """
+    base = GEMINI_BASE_URL if data.provider == AiProvider.Kind.GEMINI else data.base_url.strip()
     if data.key is None and data.saved is not None:
         _check_may_change(user, data.saved == "server")
         row = _server() if data.saved == "server" else _own(user)
-        if row is not None:
+        if row is not None and data.saved == "server":
             return Target.of(row, model=data.model.strip() or None)
-    base = GEMINI_BASE_URL if data.provider == AiProvider.Kind.GEMINI else data.base_url.strip()
+        if row is not None:
+            return Target(base, key_of(row) or "", data.model.strip() or row.model)
     return Target(base, (data.key or "").strip(), data.model.strip())
 
 

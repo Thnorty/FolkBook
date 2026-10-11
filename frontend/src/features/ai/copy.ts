@@ -1,3 +1,4 @@
+import { firstNameOf } from '@/lib/names'
 import type { AiProvider, AiSettings } from './queries'
 
 export const PROVIDER_NAMES: Record<AiProvider['provider'], string> = {
@@ -18,8 +19,12 @@ export function aiUsage(settings: AiSettings): { who: string; rest: string } | n
     return { who: 'your own key', rest: ` · ${providerLine(settings.mine)}` }
   }
   if (settings.using === 'server' && settings.server) {
-    const by = settings.server.set_by ? `, set up by ${settings.server.set_by}` : ''
+    const by = settings.server.set_by ? `, set up by ${firstNameOf(settings.server.set_by)}` : ''
     return { who: "the server's AI", rest: `${by} · ${providerLine(settings.server)}` }
   }
   return null
 }
+
+/** "The server's AI: OpenAI-compatible · llama3.1:8b, set up by Ela." */
+export const serverLine = (server: AiProvider) =>
+  `The server's AI: ${providerLine(server)}${server.set_by ? `, set up by ${firstNameOf(server.set_by)}` : ''}.`

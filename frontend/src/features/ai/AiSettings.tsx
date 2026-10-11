@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { SettingsPage, SettingsPart } from '@/features/settings/SettingsPage'
 import { AiProviderForm } from './AiProviderForm'
-import { aiUsage, providerLine } from './copy'
+import { aiUsage, serverLine } from './copy'
 import { aiSettingsQuery } from './queries'
 
 /** Settings → AI (screens 5n, 5y): your own AI, and the server's for everyone. */
@@ -67,7 +67,7 @@ export function AiSettings() {
         ) : (
           <p className="text-ink-soft">
             {server
-              ? `The server's AI: ${providerLine(server)}${server.set_by ? `, set up by ${server.set_by}` : ''}.`
+              ? serverLine(server)
               : 'No server AI. Your admin can add one, or add your own key above.'}
           </p>
         )}

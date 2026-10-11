@@ -54,6 +54,18 @@ def test_fetch_models_with_the_saved_key(api, world, stub_ai):
     assert stub_ai.requests[0]["headers"]["Authorization"] == "Bearer sk-saved"
 
 
+def test_your_saved_key_goes_to_the_address_in_the_form(api, world, stub_ai):
+    # Changing your own server's address and testing it tests the new address.
+    client = api.login(world.deniz)
+    client.put("/ai/mine", {**local(stub_ai, key="sk-saved"), "base_url": "http://old.invalid/v1"})
+    stub_ai.chat_reply("ok")
+
+    body = client.post("/ai/test", {**local(stub_ai), "saved": "mine"}).json()
+
+    assert body["ok"] is True
+    assert stub_ai.requests[0]["headers"]["Authorization"] == "Bearer sk-saved"
+
+
 def test_fetch_models_says_why_not(api, world, stub_ai):
     stub_ai.answer(401, {"error": "bad key"})
 
