@@ -79,17 +79,22 @@ Actions: edit · add relationship · log interaction · add to space · open in 
 For a **shared person you don't own**: basic profile is read-only (or editable with editor role); your notes and memory aids are still yours and private. A small "Shared by Defne · Hackathon 2026" label. **⋯ → Remove from my book…** hides them just for you (Undo for 10 seconds); the space page lists them under "Taken out of your book" with **Add back**.
 
 ### 3.5 Quick capture with AI
-1. "+" → **Quick capture** → a notebook-page textarea
+1. "+" or **Shift+N** → **Quick capture** (`/capture`): a ruled notebook page
    *"Met Tom at the hackathon, designer at Spotify, he's Emma's cousin, likes climbing"*
-2. Optional: pick a default space for everything captured (e.g. "Hackathon 2026")
-3. **Suggest**: AI returns a draft:
-   - New people (with fields filled in)
-   - Matches to existing people ("Emma → Emma Yılmaz?", pick or create new)
-   - Relationships (Tom ↔ Emma: cousin)
-   - Memory aids (likes climbing), spaces, tags
-4. **Review screen**: every suggestion is an editable card with a checkbox. Edit, uncheck or add
-5. **Confirm** → everything saved at once → summary: "Added 1 person, 1 relationship, 1 memory aid"
-6. No AI key set → the button explains how to add one; manual form still available
+   - Under it: which AI reads it ("Gemini · gemini-2.5-flash · your key", or "· the server's, set up by Ela"), the phrasing chips ("Coffee with …", "… is …'s sister", "Met … at …") and *Use the form instead*
+   - Optional: **Put everyone in a space** (spaces you can add people to)
+2. **Suggest** (Ctrl/⌘+Enter): "Reading it back…" with Cancel; after 10 s, "Local models can take a minute." Only the text and today's date go to the AI. A failure says why (key refused, no answer in 90 s, an answer that made no sense, can't reach the address) with *Try again* and *Edit text*
+3. **Here's what I read**: one card per suggestion, each with a checkbox, everything editable:
+   - **New person:** name, how you met, work; birthday, space and tags as chips
+   - **Who is "Emma"?** when only a first name matches: the people it could be (with a detail line), *Someone else: create a new "Emma"*, or search your book. Save waits until each is answered. An exact full name is matched straight away ("Already in your book")
+   - **Field changes** on someone you already have: "Emma Yılmaz · Work: Google → Spotify"; greyed out with the reason when you can't make them. Never their spaces
+   - **Connection:** the two people, the kind as chips (plus every kind in a list), the kind of parent for parents, the "other family" note for siblings, cousins and the like, and whether it goes in the space (only when both people are in it) or stays yours
+   - **Memory aid** ("Memory aids stay private, even in shared spaces.") and **timeline entry** (kind, day, title, note)
+   - Unticking a person unticks everything about them; *+ Add something the AI missed* adds a person, connection, memory aid or entry
+   - "4 of 4 selected", *Discard*, **Save 4 items**; Esc or *Edit text* goes back to the text
+4. **Save**: everything at once, checked like typed input (one part you can't make, and nothing is saved). Putting new people in a shared space asks first, as Add person does
+5. **Saved**: "Added 1 person, 1 connection and 1 memory aid. Emma matched to someone you already had.", who was saved (NEW tags), *Open Tom's page*, *Capture something else*, and **Undo all of this** (only here, right after saving; fields changed again since keep their newer value)
+6. **AI is off** (no key of your own, none from the server): what Quick capture needs, *Add a key in Settings →* and *Fill in the form myself*; admins are told they can add one for everyone
 
 ### 3.6 Import contacts (.vcf)
 A wizard at `/people/import` (Upload · Choose · Duplicates · Space · Done). Nothing is added until the last step.
