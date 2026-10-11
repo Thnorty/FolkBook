@@ -1,15 +1,16 @@
 import datetime
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from ninja import Field, Schema
-from pydantic import field_validator
+from pydantic import StringConstraints, field_validator
 
 from interactions.models import Interaction
 from people.schemas import Birthday, PersonRef
 from relationships.models import ParentType, RelationshipType
 
 MAX_TEXT = 4000
+TagName = Annotated[str, StringConstraints(max_length=50)]
 
 
 class SuggestIn(Schema):
@@ -101,7 +102,7 @@ class NewPersonIn(Schema):
     how_we_met: str = Field("", max_length=300)
     work: str = Field("", max_length=200)
     birthday: Birthday | None = None
-    tags: list[str] = []
+    tags: list[TagName] = []
 
 
 class ChangesIn(Schema):
@@ -110,7 +111,7 @@ class ChangesIn(Schema):
     how_we_met: str | None = Field(None, max_length=300)
     work: str | None = Field(None, max_length=200)
     birthday: Birthday | None = None
-    add_tags: list[str] = []
+    add_tags: list[TagName] = []
 
 
 class ExistingPersonIn(Schema):
@@ -127,6 +128,7 @@ class ConnectionIn(Schema):
     type: RelationshipType
     label: str = Field("", max_length=200)
     parent_type: ParentType | None = None
+    in_space: bool = False  # in the capture's space (both people must be in it)
 
 
 class AidIn(Schema):

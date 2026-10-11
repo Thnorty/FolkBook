@@ -9479,6 +9479,7 @@
           "add_tags": {
             "default": [],
             "items": {
+              "maxLength": 50,
               "type": "string"
             },
             "title": "Add Tags",
@@ -9517,6 +9518,11 @@
                 "type": "null"
               }
             ]
+          },
+          "in_space": {
+            "default": false,
+            "title": "In Space",
+            "type": "boolean"
           }
         },
         "required": [
@@ -9631,6 +9637,7 @@
           "tags": {
             "default": [],
             "items": {
+              "maxLength": 50,
               "type": "string"
             },
             "title": "Tags",

@@ -246,7 +246,9 @@ describe('toSaveBody', () => {
         { ref: 'e', person_id: 'emma-id', changes: { work: 'Spotify', add_tags: ['climbing'] } },
         { ref: 'o', person_id: 'oskar-id', changes: {} },
       ],
-      connections: [{ a: 't', b: 'e', type: 'cousin', label: '', parent_type: null }],
+      connections: [
+        { a: 't', b: 'e', type: 'cousin', label: '', parent_type: null, in_space: false },
+      ],
       memory_aids: [{ about: 't', text: 'Climbs on Tuesdays' }],
       entries: [{ about: 'e', kind: 'met', date: '2026-10-10', label: 'Coffee', note: '' }],
     })
@@ -261,6 +263,36 @@ describe('toSaveBody', () => {
     expect(body.connections).toEqual([])
     expect(body.memory_aids).toEqual([])
     expect(body.space_id).toBeNull()
+  })
+})
+
+describe('toSaveBody and the space', () => {
+  it('puts a link in the space only as its card shows', () => {
+    const inSpace = candidate({ in_space: true })
+    let review = resolve(fromDraft(draft()), 'e', {
+      as: 'existing',
+      id: 'emma-id',
+      name: 'Emma',
+      candidate: inSpace,
+    })
+
+    expect(toSaveBody(review, 'climbing-id').connections?.map((c) => c.in_space)).toEqual([
+      true,
+      true,
+    ])
+    expect(toSaveBody(review, null).connections?.map((c) => c.in_space)).toEqual([false, false])
+
+    // Someone picked with search: the card can't tell, so the link stays yours.
+    review = resolve(review, 'e', {
+      as: 'existing',
+      id: 'other',
+      name: 'Emma Other',
+      candidate: null,
+    })
+    expect(toSaveBody(review, 'climbing-id').connections?.map((c) => c.in_space)).toEqual([
+      false,
+      true,
+    ])
   })
 })
 

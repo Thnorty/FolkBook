@@ -317,12 +317,14 @@ export function toSaveBody(review: Review, spaceId: string | null): SaveBody {
     existing_people: people.flatMap(({ ref, resolved }) =>
       resolved?.as === 'existing' ? [{ ref, person_id: resolved.id, changes: changesOf(ref) }] : [],
     ),
-    connections: ticked('connection').map(({ a, b, type, label, parent_type }) => ({
-      a,
-      b,
-      type,
-      label,
-      parent_type,
+    connections: ticked('connection').map((link) => ({
+      a: link.a,
+      b: link.b,
+      type: link.type,
+      label: link.label,
+      parent_type: link.parent_type,
+      // What its card says: the server refuses it unless both people are in the space.
+      in_space: spaceId !== null && inChosenSpace(review, link),
     })),
     memory_aids: ticked('aid').map(({ about, text }) => ({ about, text })),
     entries: ticked('entry').map(({ about, entryKind, date, label, note }) => ({

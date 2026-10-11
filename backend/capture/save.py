@@ -11,7 +11,7 @@ from django.db import transaction
 from django.http import Http404
 from django.utils import timezone
 
-from access.policy import Access, can_edit_person, people_in_space, visible_people
+from access.policy import Access, can_edit_person, visible_people
 from capture.draft import space_for
 from capture.models import Capture
 from capture.prompt import ME
@@ -22,7 +22,7 @@ from interactions.services import log_interaction
 from people.models import MemoryAid, Person
 from people.services import create_memory_aid, create_person, delete_person, update_person
 from relationships.models import Relationship
-from relationships.services import create_relationship
+from relationships.services import create_relationship, current_links
 
 FIELDS = ("how_we_met", "work", "birthday")
 KEPT_FOR = datetime.timedelta(days=1)
@@ -54,16 +54,16 @@ def save_capture(access: Access, data: SaveIn) -> tuple[Capture, list[Person], l
         matched.append(person)
         capture.changes += _change(access, person, existing.changes)
 
-    in_space = set()
-    if space and data.connections:
-        in_space = set(people_in_space(access, space).values_list("pk", flat=True))
     for connection in data.connections:
         a, b = _person(access, people, connection.a), _person(access, people, connection.b)
+        if current_links(access.user, connection.type, a, b).exists():
+            continue  # a capture often restates what you know: keep the link you have
         link = create_relationship(
             access,
             a,
             b,
-            space if {a.pk, b.pk} <= in_space else None,
+            # As the card said; the policy refuses it unless both people are in the space.
+            space if connection.in_space else None,
             {
                 "type": connection.type,
                 "label": connection.label,

@@ -3387,6 +3387,11 @@ export interface components {
              */
             label?: string;
             parent_type?: components["schemas"]["ParentType"] | null;
+            /**
+             * In Space
+             * @default false
+             */
+            in_space?: boolean;
         };
         /** EntryIn */
         EntryIn: {

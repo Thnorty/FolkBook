@@ -71,19 +71,65 @@ def test_saves_everything_at_once(api, world, tom_and_emma):
     }
 
 
-def test_a_link_is_in_the_space_only_when_both_are(api, world, tom_and_emma):
-    oskar = {"ref": "o", "person_id": str(world.oskar.pk)}
-    tom_and_emma["existing_people"].append(oskar)
-    tom_and_emma["connections"].append({"a": "t", "b": "o", "type": "friend"})
+def test_a_link_goes_in_the_space_only_when_the_card_says_so(api, world, tom_and_emma):
+    # What the review card shows is what's saved: Tom–Oskar in Climbing club, Tom–Emma
+    # private (as is a link between two people in the space left unasked).
+    tom_and_emma["existing_people"] += [
+        {"ref": "o", "person_id": str(world.oskar.pk)},
+        {"ref": "i", "person_id": str(world.ines.pk)},
+    ]
+    tom_and_emma["connections"] += [
+        {"a": "t", "b": "o", "type": "friend", "in_space": True},
+        {"a": "t", "b": "i", "type": "colleague"},
+    ]
 
-    api.login(world.ela).post("/capture/save", tom_and_emma)
+    assert api.login(world.ela).post("/capture/save", tom_and_emma).status_code == 201
 
     tom = Person.objects.get(name="Tom Berg")
     links = {link.type: link.space for link in Relationship.objects.filter(person_a=tom)} | {
         link.type: link.space for link in Relationship.objects.filter(person_b=tom)
     }
-    # Emma isn't in Climbing club, so their link stays private; Oskar is.
-    assert links == {"cousin": None, "friend": world.climbing}
+    assert links == {"cousin": None, "friend": world.climbing, "colleague": None}
+
+
+def test_a_link_in_the_space_needs_both_people_there(api, world, tom_and_emma):
+    # Emma isn't in Climbing club: putting her link there would show her to its members.
+    tom_and_emma["connections"][0]["in_space"] = True
+    before = counts()
+
+    response = api.login(world.ela).post("/capture/save", tom_and_emma)
+
+    assert response.status_code == 403
+    assert counts() == before
+
+
+def test_links_you_already_have_are_left_alone(api, world):
+    # Ela already has Emma–Oskar as friends; the AI may also say a link twice.
+    body = {
+        "new_people": [{"ref": "t", "name": "Tom Berg"}],
+        "existing_people": [
+            {"ref": "e", "person_id": str(world.emma.pk)},
+            {"ref": "o", "person_id": str(world.oskar.pk)},
+        ],
+        "connections": [
+            {"a": "o", "b": "e", "type": "friend"},
+            {"a": "t", "b": "e", "type": "cousin"},
+            {"a": "e", "b": "t", "type": "cousin"},
+        ],
+    }
+    before = Relationship.objects.count()
+
+    response = api.login(world.ela).post("/capture/save", body)
+
+    assert response.status_code == 201
+    assert response.json()["added"]["connections"] == 1
+    assert Relationship.objects.count() == before + 1
+
+
+def test_tags_must_fit(api, world):
+    body = {"new_people": [{"ref": "t", "name": "Tom", "tags": ["x" * 51]}]}
+
+    assert api.login(world.ela).post("/capture/save", body).status_code == 422
 
 
 def test_a_link_to_me(api, world):
