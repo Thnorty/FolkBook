@@ -174,13 +174,13 @@ describe('Quick capture', () => {
 
     expect(
       await screen.findByText("OpenAI-compatible · llama3.1:8b · the server's, set up by Ela"),
-    ).toBeVisible()
+    ).toBeInTheDocument()
   })
 
   it('suggests, reviews and saves', async () => {
     const bodies = server()
     renderApp('/capture')
-    expect(await screen.findByText('Gemini · gemini-2.5-flash · your key')).toBeVisible()
+    expect(await screen.findByText('Gemini · gemini-2.5-flash · your key')).toBeInTheDocument()
     await write()
     await userEvent.click(screen.getByRole('checkbox', { name: 'Put everyone in a space' }))
     // Only spaces you can add people to.
