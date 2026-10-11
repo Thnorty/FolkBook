@@ -4725,6 +4725,83 @@
           }
         ]
       }
+    },
+    "/api/capture/save": {
+      "post": {
+        "operationId": "capture_api_save_capture",
+        "summary": "Save Capture",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Save the reviewed capture at once, checked like anything typed in a form: if one\npart isn't allowed, nothing is saved.",
+        "tags": [
+          "capture"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/capture/{capture_id}/undo": {
+      "post": {
+        "operationId": "capture_api_undo_capture",
+        "summary": "Undo Capture",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "capture_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Capture Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UndoneOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Undo all of this: only yours (anyone else's is not found), and only once (409).",
+        "tags": [
+          "capture"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -9249,6 +9326,426 @@
           "today"
         ],
         "title": "SuggestIn",
+        "type": "object"
+      },
+      "AddedOut": {
+        "properties": {
+          "people": {
+            "title": "People",
+            "type": "integer"
+          },
+          "connections": {
+            "title": "Connections",
+            "type": "integer"
+          },
+          "memory_aids": {
+            "title": "Memory Aids",
+            "type": "integer"
+          },
+          "entries": {
+            "title": "Entries",
+            "type": "integer"
+          },
+          "changes": {
+            "title": "Changes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "people",
+          "connections",
+          "memory_aids",
+          "entries",
+          "changes"
+        ],
+        "title": "AddedOut",
+        "type": "object"
+      },
+      "SavedOut": {
+        "properties": {
+          "capture_id": {
+            "format": "uuid",
+            "title": "Capture Id",
+            "type": "string"
+          },
+          "added": {
+            "$ref": "#/components/schemas/AddedOut"
+          },
+          "matched": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched",
+            "type": "array"
+          },
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/SavedPersonOut"
+            },
+            "title": "People",
+            "type": "array"
+          }
+        },
+        "required": [
+          "capture_id",
+          "added",
+          "matched",
+          "people"
+        ],
+        "title": "SavedOut",
+        "type": "object"
+      },
+      "SavedPersonOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "new": {
+            "title": "New",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "new"
+        ],
+        "title": "SavedPersonOut",
+        "type": "object"
+      },
+      "AidIn": {
+        "properties": {
+          "about": {
+            "title": "About",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "about",
+          "text"
+        ],
+        "title": "AidIn",
+        "type": "object"
+      },
+      "ChangesIn": {
+        "description": "Only the fields sent are changed. Tags are added to the ones they have.",
+        "properties": {
+          "how_we_met": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "How We Met"
+          },
+          "work": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "add_tags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Add Tags",
+            "type": "array"
+          }
+        },
+        "title": "ChangesIn",
+        "type": "object"
+      },
+      "ConnectionIn": {
+        "description": "`a` and `b` are refs or \"me\". For parent links, `a` is the parent of `b`.",
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RelationshipType"
+          },
+          "label": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Label",
+            "type": "string"
+          },
+          "parent_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "type"
+        ],
+        "title": "ConnectionIn",
+        "type": "object"
+      },
+      "EntryIn": {
+        "properties": {
+          "about": {
+            "title": "About",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/InteractionKind"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "label": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 5000,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "about",
+          "kind",
+          "date"
+        ],
+        "title": "EntryIn",
+        "type": "object"
+      },
+      "ExistingPersonIn": {
+        "properties": {
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "person_id": {
+            "format": "uuid",
+            "title": "Person Id",
+            "type": "string"
+          },
+          "changes": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChangesIn"
+              }
+            ],
+            "default": {
+              "how_we_met": null,
+              "work": null,
+              "birthday": null,
+              "add_tags": []
+            }
+          }
+        },
+        "required": [
+          "ref",
+          "person_id"
+        ],
+        "title": "ExistingPersonIn",
+        "type": "object"
+      },
+      "NewPersonIn": {
+        "properties": {
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "how_we_met": {
+            "default": "",
+            "maxLength": 300,
+            "title": "How We Met",
+            "type": "string"
+          },
+          "work": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Work",
+            "type": "string"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ref",
+          "name"
+        ],
+        "title": "NewPersonIn",
+        "type": "object"
+      },
+      "SaveIn": {
+        "description": "The reviewed capture. Refs tie the parts to `new_people` and `existing_people`.\n\nNew people go into `space_id`; a link goes there too when both its people are in it.",
+        "properties": {
+          "space_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space Id"
+          },
+          "new_people": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/NewPersonIn"
+            },
+            "title": "New People",
+            "type": "array"
+          },
+          "existing_people": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ExistingPersonIn"
+            },
+            "title": "Existing People",
+            "type": "array"
+          },
+          "connections": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ConnectionIn"
+            },
+            "title": "Connections",
+            "type": "array"
+          },
+          "memory_aids": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AidIn"
+            },
+            "title": "Memory Aids",
+            "type": "array"
+          },
+          "entries": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/EntryIn"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "title": "SaveIn",
+        "type": "object"
+      },
+      "CountsOut": {
+        "properties": {
+          "people": {
+            "title": "People",
+            "type": "integer"
+          },
+          "connections": {
+            "title": "Connections",
+            "type": "integer"
+          },
+          "memory_aids": {
+            "title": "Memory Aids",
+            "type": "integer"
+          },
+          "entries": {
+            "title": "Entries",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "people",
+          "connections",
+          "memory_aids",
+          "entries"
+        ],
+        "title": "CountsOut",
+        "type": "object"
+      },
+      "UndoneOut": {
+        "properties": {
+          "removed": {
+            "$ref": "#/components/schemas/CountsOut"
+          },
+          "restored": {
+            "title": "Restored",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "removed",
+          "restored"
+        ],
+        "title": "UndoneOut",
         "type": "object"
       }
     },

@@ -1611,6 +1611,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/capture/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Save Capture
+         * @description Save the reviewed capture at once, checked like anything typed in a form: if one
+         *     part isn't allowed, nothing is saved.
+         */
+        post: operations["capture_api_save_capture"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/capture/{capture_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Undo Capture
+         * @description Undo all of this: only yours (anyone else's is not found), and only once (409).
+         */
+        post: operations["capture_api_undo_capture"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3268,6 +3309,199 @@ export interface components {
             today: string;
             /** Space Id */
             space_id?: string | null;
+        };
+        /** AddedOut */
+        AddedOut: {
+            /** People */
+            people: number;
+            /** Connections */
+            connections: number;
+            /** Memory Aids */
+            memory_aids: number;
+            /** Entries */
+            entries: number;
+            /** Changes */
+            changes: number;
+        };
+        /** SavedOut */
+        SavedOut: {
+            /**
+             * Capture Id
+             * Format: uuid
+             */
+            capture_id: string;
+            added: components["schemas"]["AddedOut"];
+            /** Matched */
+            matched: string[];
+            /** People */
+            people: components["schemas"]["SavedPersonOut"][];
+        };
+        /** SavedPersonOut */
+        SavedPersonOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** New */
+            new: boolean;
+        };
+        /** AidIn */
+        AidIn: {
+            /** About */
+            about: string;
+            /** Text */
+            text: string;
+        };
+        /**
+         * ChangesIn
+         * @description Only the fields sent are changed. Tags are added to the ones they have.
+         */
+        ChangesIn: {
+            /** How We Met */
+            how_we_met?: string | null;
+            /** Work */
+            work?: string | null;
+            birthday?: components["schemas"]["Birthday"] | null;
+            /**
+             * Add Tags
+             * @default []
+             */
+            add_tags?: string[];
+        };
+        /**
+         * ConnectionIn
+         * @description `a` and `b` are refs or "me". For parent links, `a` is the parent of `b`.
+         */
+        ConnectionIn: {
+            /** A */
+            a: string;
+            /** B */
+            b: string;
+            type: components["schemas"]["RelationshipType"];
+            /**
+             * Label
+             * @default
+             */
+            label?: string;
+            parent_type?: components["schemas"]["ParentType"] | null;
+        };
+        /** EntryIn */
+        EntryIn: {
+            /** About */
+            about: string;
+            kind: components["schemas"]["InteractionKind"];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Label
+             * @default
+             */
+            label?: string;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** ExistingPersonIn */
+        ExistingPersonIn: {
+            /** Ref */
+            ref: string;
+            /**
+             * Person Id
+             * Format: uuid
+             */
+            person_id: string;
+            /**
+             * @default {
+             *       "how_we_met": null,
+             *       "work": null,
+             *       "birthday": null,
+             *       "add_tags": []
+             *     }
+             */
+            changes?: components["schemas"]["ChangesIn"];
+        };
+        /** NewPersonIn */
+        NewPersonIn: {
+            /** Ref */
+            ref: string;
+            /** Name */
+            name: string;
+            /**
+             * How We Met
+             * @default
+             */
+            how_we_met?: string;
+            /**
+             * Work
+             * @default
+             */
+            work?: string;
+            birthday?: components["schemas"]["Birthday"] | null;
+            /**
+             * Tags
+             * @default []
+             */
+            tags?: string[];
+        };
+        /**
+         * SaveIn
+         * @description The reviewed capture. Refs tie the parts to `new_people` and `existing_people`.
+         *
+         *     New people go into `space_id`; a link goes there too when both its people are in it.
+         */
+        SaveIn: {
+            /** Space Id */
+            space_id?: string | null;
+            /**
+             * New People
+             * @default []
+             */
+            new_people?: components["schemas"]["NewPersonIn"][];
+            /**
+             * Existing People
+             * @default []
+             */
+            existing_people?: components["schemas"]["ExistingPersonIn"][];
+            /**
+             * Connections
+             * @default []
+             */
+            connections?: components["schemas"]["ConnectionIn"][];
+            /**
+             * Memory Aids
+             * @default []
+             */
+            memory_aids?: components["schemas"]["AidIn"][];
+            /**
+             * Entries
+             * @default []
+             */
+            entries?: components["schemas"]["EntryIn"][];
+        };
+        /** CountsOut */
+        CountsOut: {
+            /** People */
+            people: number;
+            /** Connections */
+            connections: number;
+            /** Memory Aids */
+            memory_aids: number;
+            /** Entries */
+            entries: number;
+        };
+        /** UndoneOut */
+        UndoneOut: {
+            removed: components["schemas"]["CountsOut"];
+            /** Restored */
+            restored: number;
         };
     };
     responses: never;
@@ -5819,6 +6053,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    capture_api_save_capture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedOut"];
+                };
+            };
+        };
+    };
+    capture_api_undo_capture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                capture_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UndoneOut"];
                 };
             };
         };

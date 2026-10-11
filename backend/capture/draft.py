@@ -36,7 +36,7 @@ MAX_CANDIDATES = 3
 
 def suggest(access: Access, data: SuggestIn) -> dict:
     """The draft for `data.text`. Raises AiError, in words for the person, when the AI fails."""
-    space = _space(access, data.space_id)
+    space = space_for(access, data.space_id)
     row = provider_for(access.user)
     if row is None:
         raise Conflict(AI_OFF)
@@ -81,7 +81,8 @@ def build_draft(access: Access, ai: AiDraft, space: Space | None) -> dict:
     }
 
 
-def _space(access: Access, space_id) -> Space | None:
+def space_for(access: Access, space_id) -> Space | None:
+    """The space a capture puts everyone new in: one you can add people to, or none."""
     if space_id is None:
         return None
     space = editable_spaces(access).filter(pk=space_id).first()

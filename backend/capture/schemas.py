@@ -90,3 +90,96 @@ class DraftOut(Schema):
     connections: list[DraftConnectionOut]
     memory_aids: list[DraftAidOut]
     entries: list[DraftEntryOut]
+
+
+# ---------------------------------------------------------------- save and undo
+
+
+class NewPersonIn(Schema):
+    ref: str
+    name: str = Field(min_length=1, max_length=200)
+    how_we_met: str = Field("", max_length=300)
+    work: str = Field("", max_length=200)
+    birthday: Birthday | None = None
+    tags: list[str] = []
+
+
+class ChangesIn(Schema):
+    """Only the fields sent are changed. Tags are added to the ones they have."""
+
+    how_we_met: str | None = Field(None, max_length=300)
+    work: str | None = Field(None, max_length=200)
+    birthday: Birthday | None = None
+    add_tags: list[str] = []
+
+
+class ExistingPersonIn(Schema):
+    ref: str
+    person_id: UUID
+    changes: ChangesIn = ChangesIn()
+
+
+class ConnectionIn(Schema):
+    """`a` and `b` are refs or "me". For parent links, `a` is the parent of `b`."""
+
+    a: str
+    b: str
+    type: RelationshipType
+    label: str = Field("", max_length=200)
+    parent_type: ParentType | None = None
+
+
+class AidIn(Schema):
+    about: str
+    text: str = Field(min_length=1, max_length=300)
+
+
+class EntryIn(Schema):
+    about: str
+    kind: Interaction.InteractionKind
+    date: datetime.date
+    label: str = Field("", max_length=100)
+    note: str = Field("", max_length=5000)
+
+
+class SaveIn(Schema):
+    """The reviewed capture. Refs tie the parts to `new_people` and `existing_people`.
+
+    New people go into `space_id`; a link goes there too when both its people are in it.
+    """
+
+    space_id: UUID | None = None
+    new_people: list[NewPersonIn] = []
+    existing_people: list[ExistingPersonIn] = []
+    connections: list[ConnectionIn] = []
+    memory_aids: list[AidIn] = []
+    entries: list[EntryIn] = []
+
+
+class CountsOut(Schema):
+    people: int
+    connections: int
+    memory_aids: int
+    entries: int
+
+
+class AddedOut(CountsOut):
+    changes: int
+
+
+class SavedPersonOut(Schema):
+    id: UUID
+    name: str
+    new: bool
+
+
+class SavedOut(Schema):
+    capture_id: UUID
+    added: AddedOut
+    matched: list[str]  # the names of people you already had, in order
+    people: list[SavedPersonOut]
+
+
+class UndoneOut(Schema):
+    removed: CountsOut
+    restored: int  # changed fields put back (not those changed again since)
