@@ -41,10 +41,10 @@ def remove_server(request):
 @router.post("/models", response=AiModelsOut)
 def fetch_models(request, payload: AiCheckIn):
     """The models the AI offers. Only their ids: never what the server sent back."""
-    return services.fetch_models(services.target_for_check(request.auth, payload))
+    return services.fetch_models(request.auth, payload)
 
 
 @router.post("/test", response=AiTestOut)
 def test_connection(request, payload: AiCheckIn):
     """Ask the AI one word. A plain result, never what the server sent back."""
-    return services.test_connection(services.target_for_check(request.auth, payload))
+    return services.test_connection(request.auth, payload)

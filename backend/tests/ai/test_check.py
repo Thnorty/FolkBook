@@ -54,16 +54,60 @@ def test_fetch_models_with_the_saved_key(api, world, stub_ai):
     assert stub_ai.requests[0]["headers"]["Authorization"] == "Bearer sk-saved"
 
 
-def test_your_saved_key_goes_to_the_address_in_the_form(api, world, stub_ai):
-    # Changing your own server's address and testing it tests the new address.
+def test_a_saved_key_only_goes_to_its_own_address(api, world, stub_ai):
+    # Changing the address asks for the key again, so a stored key can't be sent elsewhere.
     client = api.login(world.deniz)
-    client.put("/ai/mine", {**local(stub_ai, key="sk-saved"), "base_url": "http://old.invalid/v1"})
+    client.put("/ai/mine", local(stub_ai, key="sk-saved"))
+
+    moved = {**local(stub_ai), "base_url": "http://elsewhere.invalid/v1", "saved": "mine"}
+    body = client.post("/ai/test", moved).json()
+
+    assert body == {
+        "ok": False,
+        "message": "Enter the key again to test a new address.",
+        "millis": None,
+    }
+    models = client.post("/ai/models", moved).json()
+    assert models == {"models": [], "message": "Enter the key again to test a new address."}
+    assert stub_ai.requests == []
+
+
+def test_without_a_saved_key_the_form_is_tested_as_typed(api, world, stub_ai):
+    client = api.login(world.deniz)
+    client.put("/ai/mine", {**local(stub_ai), "base_url": "http://old.invalid/v1"})
     stub_ai.chat_reply("ok")
 
     body = client.post("/ai/test", {**local(stub_ai), "saved": "mine"}).json()
 
     assert body["ok"] is True
-    assert stub_ai.requests[0]["headers"]["Authorization"] == "Bearer sk-saved"
+    assert "Authorization" not in stub_ai.requests[0]["headers"]
+
+
+@pytest.mark.parametrize(
+    "base_url",
+    ["file:///etc/passwd#", "ftp://files.example/v1", "", "http://ollama:abc/v1"],
+)
+def test_checks_only_take_http_addresses(api, world, stub_ai, base_url):
+    client = api.login(world.deniz)
+    for path in ("/ai/test", "/ai/models"):
+        response = client.post(path, {**local(stub_ai), "base_url": base_url})
+        assert response.status_code == 422
+
+
+@pytest.mark.parametrize("base_url", ["http://ollama:11434/v1?x=1", "http://ollama:11434/v1#x"])
+def test_addresses_have_no_query_or_fragment(api, world, stub_ai, base_url):
+    client = api.login(world.deniz)
+    assert client.put("/ai/mine", {**local(stub_ai), "base_url": base_url}).status_code == 422
+    assert client.post("/ai/test", {**local(stub_ai), "base_url": base_url}).status_code == 422
+
+
+def test_a_key_with_line_breaks_is_refused(api, world, stub_ai):
+    client = api.login(world.deniz)
+    bad = local(stub_ai, key="sk-ab\ncd")
+
+    assert client.put("/ai/mine", bad).status_code == 422
+    assert client.post("/ai/test", bad).status_code == 422
+    assert stub_ai.requests == []
 
 
 def test_fetch_models_says_why_not(api, world, stub_ai):
@@ -89,12 +133,16 @@ def test_only_admins_use_the_server_key(api, world, admin, stub_ai):
     assert member.post("/ai/models", asking).status_code == 403
     assert stub_ai.requests == []
 
-    # An admin can't send the stored key somewhere else: the stored address is used.
+    # An admin testing the stored key reaches the stored address with it, and nowhere else.
     stub_ai.chat_reply("ok")
-    elsewhere = {**asking, "base_url": "http://elsewhere.invalid/v1", "model": "llama3.1:8b"}
-    body = api.login(admin).post("/ai/test", elsewhere).json()
+    admin_client = api.login(admin)
+    body = admin_client.post("/ai/test", {**asking, "model": "llama3.1:8b"}).json()
     assert body["ok"] is True
     assert stub_ai.requests[0]["headers"]["Authorization"] == "Bearer sk-server"
+    elsewhere = {**asking, "base_url": "http://elsewhere.invalid/v1"}
+    assert admin_client.post("/ai/test", elsewhere).json()["message"] == (
+        "Enter the key again to test a new address."
+    )
 
 
 def test_check_never_returns_the_reply(api, world, stub_ai):

@@ -13,11 +13,11 @@ import pytest
 class StubAi:
     url: str = ""
     requests: list[dict] = field(default_factory=list)
-    replies: list[tuple[int, object]] = field(default_factory=list)
+    replies: list[tuple[int, object, dict]] = field(default_factory=list)
     delay: float = 0
 
-    def answer(self, status: int, body: object) -> None:
-        self.replies.append((status, body))
+    def answer(self, status: int, body: object, headers: dict | None = None) -> None:
+        self.replies.append((status, body, headers or {}))
 
     def chat_reply(self, content: str) -> None:
         self.answer(200, {"choices": [{"message": {"role": "assistant", "content": content}}]})
@@ -41,11 +41,15 @@ def stub_ai():
             )
             if stub.delay:
                 time.sleep(stub.delay)
-            status, body = stub.replies.pop(0) if stub.replies else (500, {"error": "no reply"})
+            status, body, headers = (
+                stub.replies.pop(0) if stub.replies else (500, {"error": "no reply"}, {})
+            )
             payload = body if isinstance(body, bytes) else json.dumps(body).encode()
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(payload)))
+            for name, value in headers.items():
+                self.send_header(name, value)
             self.end_headers()
             self.wfile.write(payload)
 

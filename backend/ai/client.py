@@ -4,6 +4,7 @@ Python's standard library only. Keys, prompts and replies are never logged; erro
 a short message in FolkBook's own words, never what the provider sent back.
 """
 
+import http.client
 import json
 import logging
 import socket
@@ -23,6 +24,19 @@ LOCALHOST_HINT = (
 )
 
 logger = logging.getLogger("folkbook.ai")
+
+# Only http(s), and never a redirect: a redirect would carry the key to wherever it points,
+# so it's answered like any other error. (urllib's default opener also opens file:// and
+# ftp:// addresses, and follows redirects with the Authorization header.)
+_opener = urllib.request.OpenerDirector()
+for _handler in (
+    urllib.request.HTTPHandler(),
+    urllib.request.HTTPSHandler(),
+    urllib.request.HTTPDefaultErrorHandler(),
+    urllib.request.HTTPErrorProcessor(),
+    urllib.request.UnknownHandler(),  # any other scheme: an error, not a silent None
+):
+    _opener.add_handler(_handler)
 
 
 @dataclass(frozen=True)
@@ -106,10 +120,10 @@ def _request(target: Target, method: str, path: str, body: dict | None, timeout:
     if target.key:
         headers["Authorization"] = f"Bearer {target.key}"
     data = json.dumps(body).encode() if body is not None else None
-    request = urllib.request.Request(url, data=data, headers=headers, method=method)
     host = urlsplit(target.base_url).hostname
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
+        request = urllib.request.Request(url, data=data, headers=headers, method=method)
+        with _opener.open(request, timeout=timeout) as response:
             raw = response.read()
     except urllib.error.HTTPError as error:
         logger.info("AI %s %s answered %s", method, host, error.code)
@@ -126,6 +140,14 @@ def _request(target: Target, method: str, path: str, body: dict | None, timeout:
     except OSError:
         logger.info("AI %s %s unreachable", method, host)
         raise AiError("unreachable", _unreachable(target.base_url)) from None
+    except http.client.HTTPException:
+        # Something answered, but not in HTTP (a database, a mail server…).
+        logger.info("AI %s %s answered without HTTP", method, host)
+        raise AiError("bad_answer", "The answer didn't make sense.") from None
+    except ValueError:
+        # The address or the key can't go into a request; their text stays out of messages.
+        logger.info("AI %s %s couldn't be asked", method, host)
+        raise AiError("failed", "That address or key can't be used.") from None
     try:
         return json.loads(raw)
     except ValueError:

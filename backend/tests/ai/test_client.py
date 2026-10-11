@@ -120,3 +120,31 @@ def test_models_are_listed_by_their_short_names(stub_ai):
 
     assert list_models(Target(stub_ai.url, "k")) == ["gemini-2.5-flash", "gemini-2.5-pro"]
     assert stub_ai.requests[0]["path"] == "/v1/models"
+
+
+def test_redirects_are_not_followed(stub_ai):
+    # A redirect would carry the key to wherever it points.
+    stub_ai.answer(302, {"moved": True}, {"Location": "http://elsewhere.invalid/v1/models"})
+
+    with pytest.raises(AiError) as caught:
+        list_models(Target(stub_ai.url, "sk-1"))
+
+    assert caught.value.kind == "failed"
+    assert len(stub_ai.requests) == 1
+
+
+def test_other_schemes_are_never_opened(tmp_path):
+    secret = tmp_path / "models"
+    secret.write_text('{"data": [{"id": "inside-a-file"}]}')
+
+    with pytest.raises(AiError):
+        list_models(Target(tmp_path.as_uri(), ""))
+
+
+def test_a_key_that_cannot_be_sent_fails_without_showing_it(stub_ai, caplog):
+    with pytest.raises(AiError) as caught:
+        chat(Target(stub_ai.url, "sk-ab\ncd", "m"), HELLO)
+
+    assert caught.value.kind == "failed"
+    assert "sk-ab" not in caught.value.message
+    assert "sk-ab" not in caplog.text

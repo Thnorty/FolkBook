@@ -228,6 +228,14 @@ describe('Settings → AI', () => {
     )
   })
 
+  it('keeps the browser from filling in your login password as the key', async () => {
+    server({ mine: null, server: null })
+    renderApp('/settings/ai')
+    const mine = await card('Only for you')
+
+    expect(within(mine).getByLabelText('API key')).toHaveAttribute('autocomplete', 'new-password')
+  })
+
   it('asks again for a key it cannot read', async () => {
     server({ mine: provider({ key_hint: null, key_unreadable: true }), server: null })
     renderApp('/settings/ai')

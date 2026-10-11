@@ -31,11 +31,11 @@ def ai_settings(user: User) -> dict:
 def save_provider(user: User, data: AiProviderIn, *, server: bool) -> AiProvider:
     _check_may_change(user, server)
     model = data.model.strip()
-    base_url = data.base_url.strip() if data.provider == AiProvider.Kind.OPENAI_COMPATIBLE else ""
+    base_url = _address(data)
     if not model:
         raise ValidationError({"model": "Pick a model."})
-    if data.provider == AiProvider.Kind.OPENAI_COMPATIBLE and not _is_http(base_url):
-        raise ValidationError({"base_url": "Use the server's address, starting with http://"})
+    if data.key is not None:
+        _check_key(data.key.strip())
 
     row = _server() if server else _own(user)
     row = row or AiProvider(user=None if server else user, for_server=server)
@@ -57,25 +57,29 @@ def remove_provider(user: User, *, server: bool) -> None:
 def target_for_check(user: User, data: AiCheckIn) -> Target:
     """Where Fetch models and Test connection send their request: what's in the form.
 
-    With `saved` and no key typed, the stored key. Your own goes to the address in the form
-    (so a changed address can be tested before saving). The server's (admins only) stays at
-    its stored address, so it can't be sent anywhere else.
+    With `saved` and no key typed, the stored key, but only to the stored provider and
+    address: a stored key never goes anywhere else (a changed address asks for the key again).
+    The server's needs an admin.
     """
-    base = GEMINI_BASE_URL if data.provider == AiProvider.Kind.GEMINI else data.base_url.strip()
+    base = _address(data)
+    key = (data.key or "").strip()
+    _check_key(key)
     if data.key is None and data.saved is not None:
         _check_may_change(user, data.saved == "server")
         row = _server() if data.saved == "server" else _own(user)
-        if row is not None and data.saved == "server":
+        if row is not None and row.key:
+            if (row.provider, row.base_url.rstrip("/")) != (data.provider, base.rstrip("/")):
+                raise AiError("changed", "Enter the key again to test a new address.")
             return Target.of(row, model=data.model.strip() or None)
-        if row is not None:
-            return Target(base, key_of(row) or "", data.model.strip() or row.model)
-    return Target(base, (data.key or "").strip(), data.model.strip())
+    target_base = GEMINI_BASE_URL if data.provider == AiProvider.Kind.GEMINI else base
+    return Target(target_base, key, data.model.strip())
 
 
-def test_connection(target: Target) -> dict:
+def test_connection(user: User, data: AiCheckIn) -> dict:
     """A one-word question: did the AI answer, and how fast?"""
-    started = time.monotonic()
     try:
+        target = target_for_check(user, data)
+        started = time.monotonic()
         chat(target, [{"role": "user", "content": "Reply with the single word: ok"}], timeout=30)
     except AiError as error:
         return {"ok": False, "message": error.message, "millis": None}
@@ -88,9 +92,9 @@ def test_connection(target: Target) -> dict:
     }
 
 
-def fetch_models(target: Target) -> dict:
+def fetch_models(user: User, data: AiCheckIn) -> dict:
     try:
-        return {"models": list_models(target), "message": None}
+        return {"models": list_models(target_for_check(user, data)), "message": None}
     except AiError as error:
         return {"models": [], "message": error.message}
 
@@ -113,9 +117,34 @@ def _check_may_change(user: User, server: bool) -> None:
         raise PermissionDenied("Only admins can set the server's AI.")
 
 
-def _is_http(url: str) -> bool:
-    parts = urlsplit(url)
-    return parts.scheme in {"http", "https"} and bool(parts.hostname)
+def _address(data: AiProviderIn | AiCheckIn) -> str:
+    """The form's address, checked: "" for Gemini (it has its own), otherwise http(s) with a
+    host and a valid port, and no query or fragment (they'd change what's asked for)."""
+    if data.provider != AiProvider.Kind.OPENAI_COMPATIBLE:
+        return ""
+    url = data.base_url.strip()
+    try:
+        parts = urlsplit(url)
+        valid = (
+            parts.scheme in {"http", "https"}
+            and bool(parts.hostname)
+            and not parts.query
+            and not parts.fragment
+            and "#" not in url
+            and "?" not in url
+        )
+        parts.port  # noqa: B018 — raises ValueError for a port that isn't a number
+    except ValueError:
+        valid = False
+    if not valid:
+        raise ValidationError({"base_url": "Use the server's address, starting with http://"})
+    return url
+
+
+def _check_key(key: str) -> None:
+    # A key goes into a request header: printable ASCII only (no line breaks, no spaces).
+    if any(not 32 < ord(char) < 127 for char in key):
+        raise ValidationError({"key": "A key is letters, digits and symbols, with no spaces."})
 
 
 def _out(row: AiProvider | None) -> dict | None:

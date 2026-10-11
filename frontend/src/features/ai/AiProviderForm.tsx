@@ -155,7 +155,8 @@ export function AiProviderForm({
             type="password"
             value={key}
             onChange={(event) => setKey(event.target.value)}
-            autoComplete="off"
+            // Not "off", which browsers ignore: this keeps the FolkBook login password out.
+            autoComplete="new-password"
           />
         ) : (
           <div className="flex items-center gap-3">
