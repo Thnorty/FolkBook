@@ -1487,6 +1487,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ai
+         * @description Your own AI, the server's, and which one Quick capture uses. Never a key.
+         */
+        get: operations["ai_api_get_ai"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Mine
+         * @description Your own AI. Leave `key` out to keep the stored one; "" removes it.
+         */
+        put: operations["ai_api_save_mine"];
+        post?: never;
+        /** Remove Mine */
+        delete: operations["ai_api_remove_mine"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/server": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Server
+         * @description The server's AI, for everyone without their own (admins only).
+         */
+        put: operations["ai_api_save_server"];
+        post?: never;
+        /** Remove Server */
+        delete: operations["ai_api_remove_server"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fetch Models
+         * @description The models the AI offers. Only their ids: never what the server sent back.
+         */
+        post: operations["ai_api_fetch_models"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Connection
+         * @description Ask the AI one word. A plain result, never what the server sent back.
+         */
+        post: operations["ai_api_test_connection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2932,6 +3034,96 @@ export interface components {
              * @enum {string}
              */
             expires_in?: "30d" | "90d" | "1y" | "never";
+        };
+        /** AiProviderOut */
+        AiProviderOut: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "gemini" | "openai_compatible";
+            /** Base Url */
+            base_url: string;
+            /** Model */
+            model: string;
+            /** Key Hint */
+            key_hint: string | null;
+            /** Key Unreadable */
+            key_unreadable: boolean;
+            /** Set By */
+            set_by: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** AiSettingsOut */
+        AiSettingsOut: {
+            mine: components["schemas"]["AiProviderOut"] | null;
+            server: components["schemas"]["AiProviderOut"] | null;
+            /** Using */
+            using: ("mine" | "server") | null;
+            /** Can Manage Server */
+            can_manage_server: boolean;
+        };
+        /** AiProviderIn */
+        AiProviderIn: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "gemini" | "openai_compatible";
+            /**
+             * Base Url
+             * @default
+             */
+            base_url?: string;
+            /** Model */
+            model: string;
+            /** Key */
+            key?: string | null;
+        };
+        /** AiModelsOut */
+        AiModelsOut: {
+            /** Models */
+            models: string[];
+            /** Message */
+            message: string | null;
+        };
+        /**
+         * AiCheckIn
+         * @description What the form holds, for Fetch models and Test connection (saved or not).
+         */
+        AiCheckIn: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "gemini" | "openai_compatible";
+            /**
+             * Base Url
+             * @default
+             */
+            base_url?: string;
+            /**
+             * Model
+             * @default
+             */
+            model?: string;
+            /** Key */
+            key?: string | null;
+            /** Saved */
+            saved?: ("mine" | "server") | null;
+        };
+        /** AiTestOut */
+        AiTestOut: {
+            /** Ok */
+            ok: boolean;
+            /** Message */
+            message: string;
+            /** Millis */
+            millis: number | null;
         };
     };
     responses: never;
@@ -5286,6 +5478,162 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ai_api_get_ai: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsOut"];
+                };
+            };
+        };
+    };
+    ai_api_save_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiProviderIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsOut"];
+                };
+            };
+        };
+    };
+    ai_api_remove_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsOut"];
+                };
+            };
+        };
+    };
+    ai_api_save_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiProviderIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsOut"];
+                };
+            };
+        };
+    };
+    ai_api_remove_server: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiSettingsOut"];
+                };
+            };
+        };
+    };
+    ai_api_fetch_models: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiCheckIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiModelsOut"];
+                };
+            };
+        };
+    };
+    ai_api_test_connection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiCheckIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiTestOut"];
+                };
             };
         };
     };

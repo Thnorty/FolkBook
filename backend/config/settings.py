@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "exports",
     "imports",
     "api_keys",
+    "ai",
     "invites",
     "jobs",
     "django_tasks_db",

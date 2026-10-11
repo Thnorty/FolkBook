@@ -169,7 +169,7 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 
 ### 3.15 Settings
 - **Profile & account:** Me profile, password, sessions
-- **AI:** provider (Gemini / OpenAI-compatible base URL), API key, model, "Test connection"
+- **AI:** a line saying what Quick capture uses ("your own key · Gemini · gemini-2.5-flash", "the server's AI, set up by Ela · …", or "AI is off"). **Only for you:** provider (Gemini / OpenAI-compatible with its base URL), API key (saved ones show as "•••• 3f9a" with Replace; one the server can't read anymore asks to be entered again), model with *Fetch models*, *Test connection* ("Connected · gemini-2.5-flash answered in 640 ms", or why not: refused key, missing model, can't reach it, with a hint about `localhost` inside Docker), Save, Remove (asks first). **For everyone on this server:** the same form for admins; everyone else sees what the server uses, or "No server AI. Your admin can add one, or add your own key above."
 - **API keys** (right after Profile & account): a table on desktop, cards on phones: the name with `fb_…14k42`, read-only / read-write (+ private notes), "All spaces" or the space names ("No spaces left" once they're gone), last used ("2 hours ago" / "Never used"), expires ("Never", a date, "Expired")
   - **+ Create key:** name, Read-only ("Look up people and links") or Read-write ("Also add and edit people"), spaces or All spaces, private notes off by default, expires in 30 days / 90 days / 1 year / Never
   - **Key created:** shown once with Copy ("Copied ✓"; without a clipboard it selects the key), its scope in one line, when it expires and "Use it as `Authorization: Bearer …`"; **I've saved it** closes it and the key is gone

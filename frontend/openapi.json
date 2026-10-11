@@ -4437,6 +4437,236 @@
           }
         ]
       }
+    },
+    "/api/ai": {
+      "get": {
+        "operationId": "ai_api_get_ai",
+        "summary": "Get Ai",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Your own AI, the server's, and which one Quick capture uses. Never a key.",
+        "tags": [
+          "ai"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ai/mine": {
+      "put": {
+        "operationId": "ai_api_save_mine",
+        "summary": "Save Mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Your own AI. Leave `key` out to keep the stored one; \"\" removes it.",
+        "tags": [
+          "ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiProviderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ai_api_remove_mine",
+        "summary": "Remove Mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ai"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ai/server": {
+      "put": {
+        "operationId": "ai_api_save_server",
+        "summary": "Save Server",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The server's AI, for everyone without their own (admins only).",
+        "tags": [
+          "ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiProviderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ai_api_remove_server",
+        "summary": "Remove Server",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ai"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ai/models": {
+      "post": {
+        "operationId": "ai_api_fetch_models",
+        "summary": "Fetch Models",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiModelsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The models the AI offers. Only their ids: never what the server sent back.",
+        "tags": [
+          "ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiCheckIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ai/test": {
+      "post": {
+        "operationId": "ai_api_test_connection",
+        "summary": "Test Connection",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiTestOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Ask the AI one word. A plain result, never what the server sent back.",
+        "tags": [
+          "ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiCheckIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -8349,6 +8579,269 @@
           "name"
         ],
         "title": "ApiKeyIn",
+        "type": "object"
+      },
+      "AiProviderOut": {
+        "properties": {
+          "provider": {
+            "enum": [
+              "gemini",
+              "openai_compatible"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "key_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Hint"
+          },
+          "key_unreadable": {
+            "title": "Key Unreadable",
+            "type": "boolean"
+          },
+          "set_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Set By"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "base_url",
+          "model",
+          "key_hint",
+          "key_unreadable",
+          "set_by",
+          "updated_at"
+        ],
+        "title": "AiProviderOut",
+        "type": "object"
+      },
+      "AiSettingsOut": {
+        "properties": {
+          "mine": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiProviderOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "server": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiProviderOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "using": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mine",
+                  "server"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Using"
+          },
+          "can_manage_server": {
+            "title": "Can Manage Server",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mine",
+          "server",
+          "using",
+          "can_manage_server"
+        ],
+        "title": "AiSettingsOut",
+        "type": "object"
+      },
+      "AiProviderIn": {
+        "properties": {
+          "provider": {
+            "enum": [
+              "gemini",
+              "openai_compatible"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "base_url": {
+            "default": "",
+            "title": "Base Url",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
+        ],
+        "title": "AiProviderIn",
+        "type": "object"
+      },
+      "AiModelsOut": {
+        "properties": {
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "required": [
+          "models",
+          "message"
+        ],
+        "title": "AiModelsOut",
+        "type": "object"
+      },
+      "AiCheckIn": {
+        "description": "What the form holds, for Fetch models and Test connection (saved or not).",
+        "properties": {
+          "provider": {
+            "enum": [
+              "gemini",
+              "openai_compatible"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "base_url": {
+            "default": "",
+            "title": "Base Url",
+            "type": "string"
+          },
+          "model": {
+            "default": "",
+            "title": "Model",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "saved": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mine",
+                  "server"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saved"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "AiCheckIn",
+        "type": "object"
+      },
+      "AiTestOut": {
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "millis": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Millis"
+          }
+        },
+        "required": [
+          "ok",
+          "message",
+          "millis"
+        ],
+        "title": "AiTestOut",
         "type": "object"
       }
     },

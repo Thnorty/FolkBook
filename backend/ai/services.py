@@ -1,0 +1,162 @@
+"""Which AI Quick capture uses, saving it (your own, or the server's for admins), and
+checking it: Fetch models and Test connection."""
+
+import time
+from urllib.parse import urlsplit
+
+from django.core.exceptions import PermissionDenied, ValidationError
+
+from accounts.models import User
+from ai.client import GEMINI_BASE_URL, AiError, Target, chat, list_models
+from ai.models import AiProvider
+from ai.schemas import AiCheckIn, AiProviderIn
+from core.secrets import seal, unseal
+
+
+def provider_for(user: User) -> AiProvider | None:
+    """Your own AI, else the server's, else none (AI is off)."""
+    return _own(user) or _server()
+
+
+def ai_settings(user: User) -> dict:
+    mine, server = _own(user), _server()
+    return {
+        "mine": _out(mine),
+        "server": _out(server),
+        "using": "mine" if mine else "server" if server else None,
+        "can_manage_server": user.is_staff,
+    }
+
+
+def save_provider(user: User, data: AiProviderIn, *, server: bool) -> AiProvider:
+    _check_may_change(user, server)
+    model = data.model.strip()
+    base_url = _address(data)
+    if not model:
+        raise ValidationError({"model": "Pick a model."})
+    if data.key is not None:
+        _check_key(data.key.strip())
+
+    row = _server() if server else _own(user)
+    row = row or AiProvider(user=None if server else user, for_server=server)
+    row.provider, row.base_url, row.model = data.provider, base_url, model
+    if data.key is not None:
+        key = data.key.strip()
+        row.key = seal(key) if key else ""
+    if server:
+        row.set_by = user
+    row.save()
+    return row
+
+
+def remove_provider(user: User, *, server: bool) -> None:
+    _check_may_change(user, server)
+    AiProvider.objects.filter(**({"for_server": True} if server else {"user": user})).delete()
+
+
+def target_for_check(user: User, data: AiCheckIn) -> Target:
+    """Where Fetch models and Test connection send their request: what's in the form.
+
+    With `saved` and no key typed, the stored key, but only to the stored provider and
+    address: a stored key never goes anywhere else (a changed address asks for the key again).
+    The server's needs an admin.
+    """
+    base = _address(data)
+    key = (data.key or "").strip()
+    _check_key(key)
+    if data.key is None and data.saved is not None:
+        _check_may_change(user, data.saved == "server")
+        row = _server() if data.saved == "server" else _own(user)
+        if row is not None and row.key:
+            if (row.provider, row.base_url.rstrip("/")) != (data.provider, base.rstrip("/")):
+                raise AiError("changed", "Enter the key again to test a new address.")
+            return Target.of(row, model=data.model.strip() or None)
+    target_base = GEMINI_BASE_URL if data.provider == AiProvider.Kind.GEMINI else base
+    return Target(target_base, key, data.model.strip())
+
+
+def test_connection(user: User, data: AiCheckIn) -> dict:
+    """A one-word question: did the AI answer, and how fast?"""
+    try:
+        target = target_for_check(user, data)
+        started = time.monotonic()
+        chat(target, [{"role": "user", "content": "Reply with the single word: ok"}], timeout=30)
+    except AiError as error:
+        return {"ok": False, "message": error.message, "millis": None}
+    millis = round((time.monotonic() - started) * 1000)
+    took = f"{millis} ms" if millis < 1000 else f"{millis / 1000:.1f} s"
+    return {
+        "ok": True,
+        "message": f"Connected · {target.model} answered in {took}",
+        "millis": millis,
+    }
+
+
+def fetch_models(user: User, data: AiCheckIn) -> dict:
+    try:
+        return {"models": list_models(target_for_check(user, data)), "message": None}
+    except AiError as error:
+        return {"models": [], "message": error.message}
+
+
+def key_of(row: AiProvider) -> str | None:
+    """The key in plain text, "" without one, None when it can't be read anymore."""
+    return unseal(row.key) if row.key else ""
+
+
+def _own(user: User) -> AiProvider | None:
+    return AiProvider.objects.filter(user=user).first()
+
+
+def _server() -> AiProvider | None:
+    return AiProvider.objects.filter(for_server=True).select_related("set_by__me").first()
+
+
+def _check_may_change(user: User, server: bool) -> None:
+    if server and not user.is_staff:
+        raise PermissionDenied("Only admins can set the server's AI.")
+
+
+def _address(data: AiProviderIn | AiCheckIn) -> str:
+    """The form's address, checked: "" for Gemini (it has its own), otherwise http(s) with a
+    host and a valid port, and no query or fragment (they'd change what's asked for)."""
+    if data.provider != AiProvider.Kind.OPENAI_COMPATIBLE:
+        return ""
+    url = data.base_url.strip()
+    try:
+        parts = urlsplit(url)
+        valid = (
+            parts.scheme in {"http", "https"}
+            and bool(parts.hostname)
+            and not parts.query
+            and not parts.fragment
+            and "#" not in url
+            and "?" not in url
+        )
+        parts.port  # noqa: B018 — raises ValueError for a port that isn't a number
+    except ValueError:
+        valid = False
+    if not valid:
+        raise ValidationError({"base_url": "Use the server's address, starting with http://"})
+    return url
+
+
+def _check_key(key: str) -> None:
+    # A key goes into a request header: printable ASCII only (no line breaks, no spaces).
+    if any(not 32 < ord(char) < 127 for char in key):
+        raise ValidationError({"key": "A key is letters, digits and symbols, with no spaces."})
+
+
+def _out(row: AiProvider | None) -> dict | None:
+    if row is None:
+        return None
+    key = key_of(row)
+    return {
+        "provider": row.provider,
+        "base_url": row.base_url,
+        "model": row.model,
+        "key_hint": key[-4:] if key else None,
+        "key_unreadable": key is None,
+        "set_by": row.set_by.display_name if row.for_server and row.set_by else None,
+        "updated_at": row.updated_at,
+    }
