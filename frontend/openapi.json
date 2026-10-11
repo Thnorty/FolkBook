@@ -6019,6 +6019,7 @@
           "tags": {
             "default": [],
             "items": {
+              "maxLength": 50,
               "type": "string"
             },
             "title": "Tags",
@@ -6118,6 +6119,7 @@
             "anyOf": [
               {
                 "items": {
+                  "maxLength": 50,
                   "type": "string"
                 },
                 "type": "array"

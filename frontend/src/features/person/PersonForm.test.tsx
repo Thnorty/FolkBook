@@ -99,6 +99,21 @@ const dialog = (name: string | RegExp) => screen.findByRole('dialog', { name })
 afterEach(clearCookies)
 
 describe('adding someone', () => {
+  it('keeps a tag as short as the server takes', async () => {
+    const writes = server()
+    renderApp('/people')
+    await userEvent.click(await screen.findByRole('button', { name: /Add person/ }))
+    const form = await dialog('Add someone')
+
+    await userEvent.type(within(form).getByLabelText('Name'), 'Tom')
+    await userEvent.click(within(form).getByRole('button', { name: /More details/ }))
+    await userEvent.type(within(form).getByLabelText('Tags'), `${'x'.repeat(60)}{Enter}`)
+    await userEvent.click(within(form).getByRole('button', { name: 'Save person' }))
+
+    await waitFor(() => expect(writes).toHaveLength(1))
+    expect((writes[0].body as { tags: string[] }).tags).toEqual(['x'.repeat(50)])
+  })
+
   it('saves what you typed and opens their page', async () => {
     const writes = server()
     const router = renderApp('/people')

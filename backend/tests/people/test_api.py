@@ -185,6 +185,18 @@ def test_tags_are_reused_ignoring_case(api, world):
     assert body["tags"] == ["Climbing"]
 
 
+def test_a_tag_must_fit(api, world):
+    client = api.login(world.ela)
+    too_long = "x" * 51
+
+    created = client.post("/people", {"name": "Ada", "tags": [too_long]})
+    changed = client.patch(f"/people/{world.emma.pk}", {"tags": [too_long]})
+
+    assert (created.status_code, changed.status_code) == (422, 422)
+    assert not Person.objects.filter(name="Ada").exists()
+    assert client.post("/people", {"name": "Ada", "tags": ["x" * 50]}).status_code == 201
+
+
 @pytest.mark.parametrize(
     "payload",
     [
