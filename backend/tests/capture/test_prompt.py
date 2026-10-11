@@ -69,15 +69,15 @@ def test_reads_people_connections_aids_and_entries(stub_ai, target):
     draft = read_capture(target, TEXT, TODAY)
 
     assert [(p["ref"], p["name"], p["work"]) for p in draft.people] == [
-        ("t", "Tom", "Spotify"),
-        ("e", "Emma", None),
+        ("p1", "Tom", "Spotify"),
+        ("p2", "Emma", None),
     ]
     assert draft.people[0]["tags"] == ["climbing"]
-    assert draft.connections == [{"a": "t", "b": "e", "type": "cousin", "label": ""}]
-    assert draft.memory_aids == [{"about": "t", "text": "Likes climbing"}]
+    assert draft.connections == [{"a": "p1", "b": "p2", "type": "cousin", "label": ""}]
+    assert draft.memory_aids == [{"about": "p1", "text": "Likes climbing"}]
     assert draft.entries == [
         {
-            "about": "t",
+            "about": "p1",
             "kind": "met",
             "date": datetime.date(2026, 10, 10),
             "label": "Coffee",
@@ -115,10 +115,10 @@ def test_inconsistent_parts_are_dropped(stub_ai, target):
 
     assert [p["name"] for p in draft.people] == ["Tom", "Emma"]
     assert draft.connections == [
-        {"a": "t", "b": "e", "type": "cousin", "label": ""},
-        {"a": "me", "b": "t", "type": "friend", "label": ""},
+        {"a": "p1", "b": "p2", "type": "cousin", "label": ""},
+        {"a": "me", "b": "p1", "type": "friend", "label": ""},
     ]
-    assert draft.memory_aids == [{"about": "t", "text": "Likes climbing"}]
+    assert draft.memory_aids == [{"about": "p1", "text": "Likes climbing"}]
     assert draft.entries == []
 
 
@@ -190,3 +190,73 @@ def test_nonsense_is_asked_again_then_refused(stub_ai, target):
         read_capture(target, TEXT, TODAY)
     assert error.value.kind == "bad_answer"
     assert error.value.message == "The AI's answer didn't make sense. Try again."
+
+
+def test_birthday_years_outside_the_calendar_are_left_out(stub_ai, target):
+    stub_ai.chat_reply(
+        answer(
+            people=[
+                person("a", "Ana", birthday="0000-04-03"),
+                person("b", "Bo", birthday="1750-04-03"),
+                person("c", "Cem", birthday="9999-12-31"),
+            ]
+        )
+    )
+
+    draft = read_capture(target, TEXT, TODAY)
+
+    assert [p["birthday"] for p in draft.people] == [
+        {"day": 3, "month": 4, "year": None},
+        {"day": 3, "month": 4, "year": None},
+        {"day": 31, "month": 12, "year": None},
+    ]
+
+
+def test_refs_are_the_servers_own(stub_ai, target):
+    # The AI's refs could clash with "me" or the draft's own ids (c1, m1, e1).
+    stub_ai.chat_reply(
+        answer(
+            people=[person("me", "Ela"), person("c1", "Tom"), person("e1", "Emma")],
+            connections=[
+                {"a": "c1", "b": "e1", "type": "cousin", "label": None},
+                {"a": "me", "b": "c1", "type": "friend", "label": None},
+            ],
+            memory_aids=[{"about": "c1", "text": "Likes climbing"}],
+        )
+    )
+
+    draft = read_capture(target, TEXT, TODAY)
+
+    assert [(p["ref"], p["name"]) for p in draft.people] == [("p1", "Tom"), ("p2", "Emma")]
+    assert [(c["a"], c["b"]) for c in draft.connections] == [("p1", "p2"), ("me", "p1")]
+    assert draft.memory_aids == [{"about": "p1", "text": "Likes climbing"}]
+
+
+def test_long_values_are_cut_to_what_can_be_saved(stub_ai, target):
+    stub_ai.chat_reply(
+        answer(
+            people=[
+                person(
+                    "t",
+                    "T" * 250,
+                    how_we_met="h" * 400,
+                    work="w" * 250,
+                    tags=["climbing", "x" * 60],
+                )
+            ],
+            connections=[{"a": "me", "b": "t", "type": "met_at", "label": "l" * 250}],
+            memory_aids=[{"about": "t", "text": "m" * 400}],
+            entries=[
+                {"about": "t", "kind": "met", "date": "2026-10-10", "label": "c" * 150, "note": "n"}
+            ],
+        )
+    )
+
+    draft = read_capture(target, TEXT, TODAY)
+
+    tom = draft.people[0]
+    assert (len(tom["name"]), len(tom["how_we_met"]), len(tom["work"])) == (200, 300, 200)
+    assert tom["tags"] == ["climbing"]
+    assert len(draft.connections[0]["label"]) == 200
+    assert len(draft.memory_aids[0]["text"]) == 300
+    assert len(draft.entries[0]["label"]) == 100

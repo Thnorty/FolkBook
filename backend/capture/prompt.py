@@ -12,7 +12,9 @@ from dataclasses import dataclass, field
 
 from ai.client import AiError, Target, chat
 from interactions.models import Interaction
-from relationships.models import LABELLED_TYPES, RelationshipType
+from people.models import MemoryAid, Person, Tag
+from people.schemas import FIRST_YEAR, LAST_YEAR
+from relationships.models import LABELLED_TYPES, Relationship, RelationshipType
 
 ME = "me"
 CONNECTION_TYPES = [str(t) for t in RelationshipType]
@@ -116,24 +118,32 @@ def _clean(answer: dict, today: datetime.date) -> AiDraft:
     ):
         raise ValueError("not a capture")
     draft = AiDraft()
+    # The server's own refs (p1, p2…): the AI's could clash with "me" or the draft's ids.
+    refs: dict[str, str] = {}
     for item in answer["people"]:
         person = _person(item)
-        if person and all(p["ref"] != person["ref"] for p in draft.people):
+        if person and person["ref"] not in refs and person["ref"] != ME:
+            refs[person["ref"]] = person["ref"] = f"p{len(refs) + 1}"
             draft.people.append(person)
-    refs = {p["ref"] for p in draft.people}
-    draft.connections = [
-        c for c in map(_connection, answer["connections"]) if c and _links(c, refs)
-    ]
-    draft.memory_aids = [a for a in map(_aid, answer["memory_aids"]) if a and a["about"] in refs]
-    draft.entries = [
-        e for e in (_entry(item, today) for item in answer["entries"]) if e and e["about"] in refs
-    ]
+    known = refs | {ME: ME}
+    for connection in filter(None, map(_connection, answer["connections"])):
+        a, b = known.get(connection["a"]), known.get(connection["b"])
+        if a and b and a != b:
+            draft.connections.append(connection | {"a": a, "b": b})
+    for part in filter(None, map(_aid, answer["memory_aids"])):
+        if part["about"] in refs:
+            draft.memory_aids.append(part | {"about": refs[part["about"]]})
+    for part in filter(None, (_entry(item, today) for item in answer["entries"])):
+        if part["about"] in refs:
+            draft.entries.append(part | {"about": refs[part["about"]]})
     return draft
 
 
-def _text(item: dict, key: str) -> str:
+def _text(item: dict, key: str, model=None, field: str | None = None) -> str:
+    """The stripped text, cut to what `model.field` can hold."""
     value = item.get(key)
-    return value.strip() if isinstance(value, str) else ""
+    text = value.strip() if isinstance(value, str) else ""
+    return text[: model._meta.get_field(field or key).max_length] if model else text
 
 
 def _person(item) -> dict | None:
@@ -142,11 +152,11 @@ def _person(item) -> dict | None:
     tags = item.get("tags") if isinstance(item.get("tags"), list) else []
     return {
         "ref": _text(item, "ref"),
-        "name": _text(item, "name"),
-        "how_we_met": _text(item, "how_we_met") or None,
-        "work": _text(item, "work") or None,
+        "name": _text(item, "name", Person),
+        "how_we_met": _text(item, "how_we_met", Person) or None,
+        "work": _text(item, "work", Person) or None,
         "birthday": _birthday(item.get("birthday")),
-        "tags": list(dict.fromkeys(t.strip() for t in tags if isinstance(t, str) and t.strip())),
+        "tags": list(dict.fromkeys(t.strip() for t in tags if _fits_tag(t))),
     }
 
 
@@ -159,6 +169,8 @@ def _birthday(value) -> dict | None:
     if not match:
         return None
     year = int(match[1]) if match[1] != "-" else None
+    if year is not None and not FIRST_YEAR <= year <= LAST_YEAR:
+        year = None  # "0000" and the like: a model's way of saying it doesn't know
     day, month = int(match[3]), int(match[2])
     try:
         datetime.date(year or 2000, month, day)  # 2000: a leap year, so 29 February fits
@@ -174,22 +186,17 @@ def _connection(item) -> dict | None:
         "a": _text(item, "a"),
         "b": _text(item, "b"),
         "type": item["type"],
-        "label": _text(item, "label"),
+        "label": _text(item, "label", Relationship),
     }
     if connection["type"] in LABELLED_TYPES and not connection["label"]:
         return None
     return connection
 
 
-def _links(connection: dict, refs: set[str]) -> bool:
-    a, b = connection["a"], connection["b"]
-    return a != b and {a, b} <= refs | {ME}
-
-
 def _aid(item) -> dict | None:
     if not isinstance(item, dict) or not _text(item, "text"):
         return None
-    return {"about": _text(item, "about"), "text": _text(item, "text")}
+    return {"about": _text(item, "about"), "text": _text(item, "text", MemoryAid)}
 
 
 def _entry(item, today: datetime.date) -> dict | None:
@@ -199,7 +206,7 @@ def _entry(item, today: datetime.date) -> dict | None:
         date = datetime.date.fromisoformat(_text(item, "date"))
     except ValueError:
         return None
-    label = _text(item, "label")
+    label = _text(item, "label", Interaction)
     if item["kind"] == Interaction.InteractionKind.CUSTOM and not label:
         label = "Other"  # what the timeline calls an entry of no particular kind
     return {
@@ -207,5 +214,9 @@ def _entry(item, today: datetime.date) -> dict | None:
         "kind": item["kind"],
         "date": min(date, today),
         "label": label,
-        "note": _text(item, "note"),
+        "note": _text(item, "note", Interaction),
     }
+
+
+def _fits_tag(tag) -> bool:
+    return isinstance(tag, str) and 0 < len(tag.strip()) <= Tag._meta.get_field("name").max_length

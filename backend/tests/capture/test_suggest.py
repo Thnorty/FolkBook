@@ -58,14 +58,14 @@ def test_matches_names_to_your_people(api, world, stub_ai, ela_ai):
     response = suggest(api, world.ela)
 
     assert response.status_code == 200
-    people = {p["ref"]: p for p in response.json()["people"]}
-    assert people["e"]["match"] == "choose"
-    assert [c["name"] for c in people["e"]["candidates"]] == ["Emma Berg", "Emma Yılmaz"]
-    assert people["m"]["match"] == "new"
-    assert people["m"]["candidates"] == []
-    assert people["y"]["match"] == "match"
-    assert [c["id"] for c in people["y"]["candidates"]] == [str(world.emma.pk)]
-    assert str(berg.pk) not in [c["id"] for c in people["y"]["candidates"]]
+    people = {p["name"]: p for p in response.json()["people"]}
+    assert people["Emma"]["match"] == "choose"
+    assert [c["name"] for c in people["Emma"]["candidates"]] == ["Emma Berg", "Emma Yılmaz"]
+    assert people["Mert"]["match"] == "new"
+    assert people["Mert"]["candidates"] == []
+    assert people["emma yilmaz"]["match"] == "match"
+    assert [c["id"] for c in people["emma yilmaz"]["candidates"]] == [str(world.emma.pk)]
+    assert str(berg.pk) not in [c["id"] for c in people["emma yilmaz"]["candidates"]]
 
 
 def test_your_own_people_come_first(api, world, stub_ai, ela_ai):
@@ -96,13 +96,13 @@ def test_candidates_say_what_you_may_change(api, world, stub_ai, ela_ai):
     world.emma.tags.create(owner=world.ela, name="family")
     reply(stub_ai, people=[person("t", "Tom"), person("e", "Emma")])
 
-    people = {p["ref"]: p for p in suggest(api, world.ela).json()["people"]}
+    people = {p["name"]: p for p in suggest(api, world.ela).json()["people"]}
 
-    tom = people["t"]["candidates"][0]  # Defne's; Ela only views Hackathon 2026
+    tom = people["Tom"]["candidates"][0]  # Defne's; Ela only views Hackathon 2026
     assert (tom["can_edit"], tom["can_tag"]) == (False, False)
     assert tom["owner"]["name"] == world.defne.me.name
     assert tom["detail"] == "Hackathon 2026"
-    emma = people["e"]["candidates"][0]
+    emma = people["Emma"]["candidates"][0]
     assert (emma["can_edit"], emma["can_tag"]) == (True, True)
     assert emma["current"] == {
         "how_we_met": "",
@@ -125,15 +125,15 @@ def test_candidates_say_whether_they_are_in_the_space(api, world, stub_ai, ela_a
 
     draft = suggest(api, world.ela, space_id=str(world.climbing.pk)).json()
 
-    people = {p["ref"]: p for p in draft["people"]}
-    assert people["o"]["candidates"][0]["in_space"] is True
-    assert people["e"]["candidates"][0]["in_space"] is False
+    people = {p["name"]: p for p in draft["people"]}
+    assert people["Oskar"]["candidates"][0]["in_space"] is True
+    assert people["Emma"]["candidates"][0]["in_space"] is False
     assert draft["connections"] == [
-        {"id": "c1", "a": "n", "b": "o", "type": "friend", "label": "", "parent_type": None},
+        {"id": "c1", "a": "p1", "b": "p2", "type": "friend", "label": "", "parent_type": None},
         {
             "id": "c2",
             "a": "me",
-            "b": "o",
+            "b": "p2",
             "type": "parent",
             "label": "",
             "parent_type": "biological",
@@ -161,11 +161,11 @@ def test_aids_and_entries_get_draft_ids(api, world, stub_ai, ela_ai):
 
     draft = suggest(api, world.ela).json()
 
-    assert draft["memory_aids"] == [{"id": "m1", "about": "n", "text": "Likes climbing"}]
+    assert draft["memory_aids"] == [{"id": "m1", "about": "p1", "text": "Likes climbing"}]
     assert draft["entries"] == [
         {
             "id": "e1",
-            "about": "n",
+            "about": "p1",
             "kind": "met",
             "date": "2026-10-10",
             "label": "",
