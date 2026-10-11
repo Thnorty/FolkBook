@@ -4437,6 +4437,160 @@
           }
         ]
       }
+    },
+    "/api/ai": {
+      "get": {
+        "operationId": "ai_api_get_ai",
+        "summary": "Get Ai",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Your own AI, the server's, and which one Quick capture uses. Never a key.",
+        "tags": [
+          "ai"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ai/mine": {
+      "put": {
+        "operationId": "ai_api_save_mine",
+        "summary": "Save Mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Your own AI. Leave `key` out to keep the stored one; \"\" removes it.",
+        "tags": [
+          "ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiProviderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ai_api_remove_mine",
+        "summary": "Remove Mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ai"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ai/server": {
+      "put": {
+        "operationId": "ai_api_save_server",
+        "summary": "Save Server",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The server's AI, for everyone without their own (admins only).",
+        "tags": [
+          "ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiProviderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ai_api_remove_server",
+        "summary": "Remove Server",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "ai"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -8349,6 +8503,157 @@
           "name"
         ],
         "title": "ApiKeyIn",
+        "type": "object"
+      },
+      "AiProviderOut": {
+        "properties": {
+          "provider": {
+            "enum": [
+              "gemini",
+              "openai_compatible"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "key_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Hint"
+          },
+          "key_unreadable": {
+            "title": "Key Unreadable",
+            "type": "boolean"
+          },
+          "set_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Set By"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "base_url",
+          "model",
+          "key_hint",
+          "key_unreadable",
+          "set_by",
+          "updated_at"
+        ],
+        "title": "AiProviderOut",
+        "type": "object"
+      },
+      "AiSettingsOut": {
+        "properties": {
+          "mine": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiProviderOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "server": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiProviderOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "using": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mine",
+                  "server"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Using"
+          },
+          "can_manage_server": {
+            "title": "Can Manage Server",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mine",
+          "server",
+          "using",
+          "can_manage_server"
+        ],
+        "title": "AiSettingsOut",
+        "type": "object"
+      },
+      "AiProviderIn": {
+        "properties": {
+          "provider": {
+            "enum": [
+              "gemini",
+              "openai_compatible"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "base_url": {
+            "default": "",
+            "title": "Base Url",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
+        ],
+        "title": "AiProviderIn",
         "type": "object"
       }
     },

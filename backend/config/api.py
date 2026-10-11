@@ -8,6 +8,7 @@ from ninja.security import django_auth
 
 from accounts.api import router as auth_router
 from accounts.api import users_router
+from ai.api import router as ai_router
 from api_keys.api import router as api_keys_router
 from api_keys.auth import KEY_OR_LOGIN
 from api_keys.services import InvalidApiKey, TooManyRequests
@@ -48,6 +49,7 @@ api.add_router("/search", search_router)
 api.add_router("/export", export_router)
 api.add_router("/imports", imports_router)
 api.add_router("/api-keys", api_keys_router, auth=django_auth)
+api.add_router("/ai", ai_router, auth=django_auth)
 
 
 @api.exception_handler(Exception)

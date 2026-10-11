@@ -27,6 +27,7 @@ COOKIE_ONLY = (
     "/api/api-keys",
     "/api/export/restore",
     "/api/keep-in-touch/settings",  # nudges for the whole book: the account's
+    "/api/ai",  # AI keys belong to the account, never to a script's key
 )
 # The book: API keys work here. A new router goes in one list or the other, on purpose.
 TAKES_KEYS = (
