@@ -28,6 +28,10 @@ services:
   # The API. Runs migrations on start; healthy once it answers.
   backend:
     <<: *backend
+    # An AI running on this machine (Ollama, LM Studio) is reachable as host.docker.internal;
+    # Docker Desktop has it built in, Linux needs this line.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy

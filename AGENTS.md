@@ -55,7 +55,7 @@ These rules are the product. Breaking one is a critical bug.
 - **Every person record has one owner.** Others see it by reference through shared spaces. Only the owner (or an editor of that space, for basic details) can change it.
 - **All visibility checks go through one backend permission layer: `backend/access/policy.py`.** Never filter "by hand" inside a view. Every endpoint, search, graph query, export and API-key request uses the same layer: start from its `visible_*` querysets and ask its `can_*` checks before writing. New rules go there, with tests in `tests/access/`.
 - **API keys:** stored hashed, shown once, scoped (read-only / read-write, limited spaces, optional private-notes access, off by default).
-- **Secrets** (AI keys, SMTP passwords) are encrypted at rest and never logged, never returned by the API, never sent to the frontend after saving.
+- **Secrets** (AI keys, SMTP passwords) are encrypted at rest with `core/secrets.py` (`seal` / `unseal`) and never logged, never returned by the API, never sent to the frontend after saving (show a hint, like a key's last four characters).
 - Links in emails must never change data on a plain GET (email scanners open links); use a confirmation page.
 - Validate all input on the backend. Never trust the client.
 
