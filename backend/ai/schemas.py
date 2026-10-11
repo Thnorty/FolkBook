@@ -29,3 +29,25 @@ class AiSettingsOut(Schema):
     server: AiProviderOut | None
     using: Literal["mine", "server"] | None
     can_manage_server: bool
+
+
+class AiCheckIn(Schema):
+    """What the form holds, for Fetch models and Test connection (saved or not)."""
+
+    provider: Provider
+    base_url: str = ""
+    model: str = ""
+    key: str | None = None
+    # Use the stored key of "mine" or "server" (admins) when the form has none.
+    saved: Literal["mine", "server"] | None = None
+
+
+class AiTestOut(Schema):
+    ok: bool
+    message: str
+    millis: int | None
+
+
+class AiModelsOut(Schema):
+    models: list[str]
+    message: str | None

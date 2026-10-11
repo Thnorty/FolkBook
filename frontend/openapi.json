@@ -4591,6 +4591,82 @@
           }
         ]
       }
+    },
+    "/api/ai/models": {
+      "post": {
+        "operationId": "ai_api_fetch_models",
+        "summary": "Fetch Models",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiModelsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The models the AI offers. Only their ids: never what the server sent back.",
+        "tags": [
+          "ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiCheckIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ai/test": {
+      "post": {
+        "operationId": "ai_api_test_connection",
+        "summary": "Test Connection",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiTestOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Ask the AI one word. A plain result, never what the server sent back.",
+        "tags": [
+          "ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiCheckIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -8654,6 +8730,118 @@
           "model"
         ],
         "title": "AiProviderIn",
+        "type": "object"
+      },
+      "AiModelsOut": {
+        "properties": {
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "required": [
+          "models",
+          "message"
+        ],
+        "title": "AiModelsOut",
+        "type": "object"
+      },
+      "AiCheckIn": {
+        "description": "What the form holds, for Fetch models and Test connection (saved or not).",
+        "properties": {
+          "provider": {
+            "enum": [
+              "gemini",
+              "openai_compatible"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "base_url": {
+            "default": "",
+            "title": "Base Url",
+            "type": "string"
+          },
+          "model": {
+            "default": "",
+            "title": "Model",
+            "type": "string"
+          },
+          "key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          },
+          "saved": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mine",
+                  "server"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Saved"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "AiCheckIn",
+        "type": "object"
+      },
+      "AiTestOut": {
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "millis": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Millis"
+          }
+        },
+        "required": [
+          "ok",
+          "message",
+          "millis"
+        ],
+        "title": "AiTestOut",
         "type": "object"
       }
     },

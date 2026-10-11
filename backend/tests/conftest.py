@@ -1,7 +1,8 @@
 import pytest
 
-# Shared fixtures: `world` (multi-user sample data) and `api` (JSON client for the API).
-pytest_plugins = ["tests.worlds", "tests.api_client"]
+# Shared fixtures: `world` (multi-user sample data), `api` (JSON client for the API) and
+# `stub_ai` (a stand-in AI server).
+pytest_plugins = ["tests.worlds", "tests.api_client", "tests.ai.stub"]
 
 
 @pytest.fixture(autouse=True)

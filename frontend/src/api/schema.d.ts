@@ -1549,6 +1549,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fetch Models
+         * @description The models the AI offers. Only their ids: never what the server sent back.
+         */
+        post: operations["ai_api_fetch_models"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Connection
+         * @description Ask the AI one word. A plain result, never what the server sent back.
+         */
+        post: operations["ai_api_test_connection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3043,6 +3083,47 @@ export interface components {
             model: string;
             /** Key */
             key?: string | null;
+        };
+        /** AiModelsOut */
+        AiModelsOut: {
+            /** Models */
+            models: string[];
+            /** Message */
+            message: string | null;
+        };
+        /**
+         * AiCheckIn
+         * @description What the form holds, for Fetch models and Test connection (saved or not).
+         */
+        AiCheckIn: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "gemini" | "openai_compatible";
+            /**
+             * Base Url
+             * @default
+             */
+            base_url?: string;
+            /**
+             * Model
+             * @default
+             */
+            model?: string;
+            /** Key */
+            key?: string | null;
+            /** Saved */
+            saved?: ("mine" | "server") | null;
+        };
+        /** AiTestOut */
+        AiTestOut: {
+            /** Ok */
+            ok: boolean;
+            /** Message */
+            message: string;
+            /** Millis */
+            millis: number | null;
         };
     };
     responses: never;
@@ -5504,6 +5585,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AiSettingsOut"];
+                };
+            };
+        };
+    };
+    ai_api_fetch_models: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiCheckIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiModelsOut"];
+                };
+            };
+        };
+    };
+    ai_api_test_connection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiCheckIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiTestOut"];
                 };
             };
         };

@@ -1,7 +1,7 @@
 from ninja import Router
 
 from ai import services
-from ai.schemas import AiProviderIn, AiSettingsOut
+from ai.schemas import AiCheckIn, AiModelsOut, AiProviderIn, AiSettingsOut, AiTestOut
 
 router = Router(tags=["ai"])
 
@@ -36,3 +36,15 @@ def save_server(request, payload: AiProviderIn):
 def remove_server(request):
     services.remove_provider(request.auth, server=True)
     return services.ai_settings(request.auth)
+
+
+@router.post("/models", response=AiModelsOut)
+def fetch_models(request, payload: AiCheckIn):
+    """The models the AI offers. Only their ids: never what the server sent back."""
+    return services.fetch_models(services.target_for_check(request.auth, payload))
+
+
+@router.post("/test", response=AiTestOut)
+def test_connection(request, payload: AiCheckIn):
+    """Ask the AI one word. A plain result, never what the server sent back."""
+    return services.test_connection(services.target_for_check(request.auth, payload))

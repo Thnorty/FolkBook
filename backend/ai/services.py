@@ -1,12 +1,15 @@
-"""Which AI Quick capture uses, and saving it: someone's own, or the server's (admins)."""
+"""Which AI Quick capture uses, saving it (your own, or the server's for admins), and
+checking it: Fetch models and Test connection."""
 
+import time
 from urllib.parse import urlsplit
 
 from django.core.exceptions import PermissionDenied, ValidationError
 
 from accounts.models import User
+from ai.client import GEMINI_BASE_URL, AiError, Target, chat, list_models
 from ai.models import AiProvider
-from ai.schemas import AiProviderIn
+from ai.schemas import AiCheckIn, AiProviderIn
 from core.secrets import seal, unseal
 
 
@@ -49,6 +52,44 @@ def save_provider(user: User, data: AiProviderIn, *, server: bool) -> AiProvider
 def remove_provider(user: User, *, server: bool) -> None:
     _check_may_change(user, server)
     AiProvider.objects.filter(**({"for_server": True} if server else {"user": user})).delete()
+
+
+def target_for_check(user: User, data: AiCheckIn) -> Target:
+    """Where Fetch models and Test connection send their request.
+
+    With `saved`, the stored row as it is (its address and key; only the model may come from
+    the form), so a stored key can't be sent anywhere else. The server's needs an admin.
+    """
+    if data.key is None and data.saved is not None:
+        _check_may_change(user, data.saved == "server")
+        row = _server() if data.saved == "server" else _own(user)
+        if row is not None:
+            return Target.of(row, model=data.model.strip() or None)
+    base = GEMINI_BASE_URL if data.provider == AiProvider.Kind.GEMINI else data.base_url.strip()
+    return Target(base, (data.key or "").strip(), data.model.strip())
+
+
+def test_connection(target: Target) -> dict:
+    """A one-word question: did the AI answer, and how fast?"""
+    started = time.monotonic()
+    try:
+        chat(target, [{"role": "user", "content": "Reply with the single word: ok"}], timeout=30)
+    except AiError as error:
+        return {"ok": False, "message": error.message, "millis": None}
+    millis = round((time.monotonic() - started) * 1000)
+    took = f"{millis} ms" if millis < 1000 else f"{millis / 1000:.1f} s"
+    return {
+        "ok": True,
+        "message": f"Connected · {target.model} answered in {took}",
+        "millis": millis,
+    }
+
+
+def fetch_models(target: Target) -> dict:
+    try:
+        return {"models": list_models(target), "message": None}
+    except AiError as error:
+        return {"models": [], "message": error.message}
 
 
 def key_of(row: AiProvider) -> str | None:
