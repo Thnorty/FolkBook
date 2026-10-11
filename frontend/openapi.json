@@ -4667,6 +4667,64 @@
           }
         ]
       }
+    },
+    "/api/capture/suggest": {
+      "post": {
+        "operationId": "capture_api_suggest",
+        "summary": "Suggest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftOut"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          },
+          "424": {
+            "description": "Failed Dependency",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Read `text` with your AI (or the server's) and match it to your people.\n\nOnly the text and today's date go to the AI. Nothing is saved.",
+        "tags": [
+          "capture"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -8842,6 +8900,355 @@
           "millis"
         ],
         "title": "AiTestOut",
+        "type": "object"
+      },
+      "CandidateOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current": {
+            "$ref": "#/components/schemas/CurrentOut"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "can_tag": {
+            "title": "Can Tag",
+            "type": "boolean"
+          },
+          "in_space": {
+            "title": "In Space",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "detail",
+          "owner",
+          "current",
+          "can_edit",
+          "can_tag",
+          "in_space"
+        ],
+        "title": "CandidateOut",
+        "type": "object"
+      },
+      "CurrentOut": {
+        "description": "A matched person's fields as they are now, to show what a change would replace.",
+        "properties": {
+          "how_we_met": {
+            "title": "How We Met",
+            "type": "string"
+          },
+          "work": {
+            "title": "Work",
+            "type": "string"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          }
+        },
+        "required": [
+          "how_we_met",
+          "work",
+          "birthday",
+          "tags"
+        ],
+        "title": "CurrentOut",
+        "type": "object"
+      },
+      "DraftAidOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "about": {
+            "title": "About",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "about",
+          "text"
+        ],
+        "title": "DraftAidOut",
+        "type": "object"
+      },
+      "DraftConnectionOut": {
+        "description": "`a` and `b` are refs or \"me\". For parent links, `a` is the parent of `b`.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/RelationshipType"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "parent_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "a",
+          "b",
+          "type",
+          "label",
+          "parent_type"
+        ],
+        "title": "DraftConnectionOut",
+        "type": "object"
+      },
+      "DraftEntryOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "about": {
+            "title": "About",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/InteractionKind"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "about",
+          "kind",
+          "date",
+          "label",
+          "note"
+        ],
+        "title": "DraftEntryOut",
+        "type": "object"
+      },
+      "DraftOut": {
+        "description": "What the AI read, matched to your people. Nothing is saved yet.",
+        "properties": {
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/DraftPersonOut"
+            },
+            "title": "People",
+            "type": "array"
+          },
+          "connections": {
+            "items": {
+              "$ref": "#/components/schemas/DraftConnectionOut"
+            },
+            "title": "Connections",
+            "type": "array"
+          },
+          "memory_aids": {
+            "items": {
+              "$ref": "#/components/schemas/DraftAidOut"
+            },
+            "title": "Memory Aids",
+            "type": "array"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/DraftEntryOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "people",
+          "connections",
+          "memory_aids",
+          "entries"
+        ],
+        "title": "DraftOut",
+        "type": "object"
+      },
+      "DraftPersonOut": {
+        "properties": {
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "how_we_met": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "How We Met"
+          },
+          "work": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work"
+          },
+          "birthday": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Birthday"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "match": {
+            "enum": [
+              "new",
+              "match",
+              "choose"
+            ],
+            "title": "Match",
+            "type": "string"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateOut"
+            },
+            "title": "Candidates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ref",
+          "name",
+          "how_we_met",
+          "work",
+          "birthday",
+          "tags",
+          "match",
+          "candidates"
+        ],
+        "title": "DraftPersonOut",
+        "type": "object"
+      },
+      "SuggestIn": {
+        "properties": {
+          "text": {
+            "maxLength": 4000,
+            "title": "Text",
+            "type": "string"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          },
+          "space_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space Id"
+          }
+        },
+        "required": [
+          "text",
+          "today"
+        ],
+        "title": "SuggestIn",
         "type": "object"
       }
     },

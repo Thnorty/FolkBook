@@ -4,6 +4,7 @@ import pytest
 
 from access.policy import (
     Access,
+    people_in_space,
     space_role,
     visible_contact_methods,
     visible_interactions,
@@ -52,6 +53,20 @@ def test_visible_people(world, who, expected):
 )
 def test_visible_spaces(world, who, expected):
     assert names(visible_spaces(access(world, who))) == expected
+
+
+@pytest.mark.parametrize(
+    ("who", "space", "expected"),
+    [
+        # Added to the space, plus the Me of its owner and members.
+        ("ela", "climbing", {"Oskar", "Ines", "Ela", "Deniz", "Kaan"}),
+        ("ela", "hackathon", {"Tom", "Ola", "Defne", "Ela"}),
+        ("deniz", "climbing", {"Oskar", "Ines", "Ela", "Deniz", "Kaan"}),
+        ("deniz", "hackathon", set()),
+    ],
+)
+def test_people_in_space(world, who, space, expected):
+    assert names(people_in_space(access(world, who), getattr(world, space))) == expected
 
 
 @pytest.mark.parametrize(
