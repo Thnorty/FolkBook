@@ -186,13 +186,21 @@ def test_due_endpoint_uses_the_users_own_date(api, ela):
 def test_settings_default_then_save(api, ela):
     client = api.login(ela)
 
-    assert client.get("/keep-in-touch/settings").json() == {
+    defaults = {
         "nudges_on": True,
         "default_interval_days": None,
+        "digest": "weekly",
+        "digest_weekday": 0,
+        "include_memory_aids": True,
+        "birthdays_days_before": 3,
+        "time_zone": "",
+        "email_ready": False,
+        "send_to": ela.email,
     }
+    assert client.get("/keep-in-touch/settings").json() == defaults
     saved = client.put("/keep-in-touch/settings", {"nudges_on": False, "default_interval_days": 60})
 
-    assert saved.json() == {"nudges_on": False, "default_interval_days": 60}
+    assert saved.json() == {**defaults, "nudges_on": False, "default_interval_days": 60}
     assert api.login(UserFactory()).get("/keep-in-touch/settings").json()["nudges_on"] is True
 
 

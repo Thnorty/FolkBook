@@ -16,6 +16,7 @@ from jobs import tasks
 from jobs.models import ScheduledRun
 from jobs.scheduler import PERIODIC_JOBS, Periodic, enqueue_due
 from people import tasks as people_tasks
+from reminders import tasks as reminders_tasks
 from tests.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -62,6 +63,7 @@ def test_what_runs_how_often():
         (people_tasks.purge_deleted_people, datetime.timedelta(minutes=1)),
         (imports_tasks.forget_taken_back_photos, datetime.timedelta(minutes=1)),
         (capture_tasks.forget_old_captures, DAY),
+        (reminders_tasks.queue_digests, datetime.timedelta(minutes=5)),
     }
 
 
