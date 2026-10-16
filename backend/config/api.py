@@ -25,6 +25,7 @@ from people.api import memory_aids_router
 from people.api import router as people_router
 from relationships.api import router as relationships_router
 from reminders.api import router as reminders_router
+from reminders.email_api import router as email_links_router
 from search.api import router as search_router
 from spaces.api import router as spaces_router
 from today.api import router as today_router
@@ -54,6 +55,8 @@ api.add_router("/api-keys", api_keys_router, auth=django_auth)
 api.add_router("/ai", ai_router, auth=django_auth)
 api.add_router("/capture", capture_router, auth=django_auth)
 api.add_router("/mail", mail_router, auth=django_auth)
+# Links in emails: the signed token in the path is what lets them in.
+api.add_router("/email-links", email_links_router, auth=None)
 
 
 @api.exception_handler(Exception)

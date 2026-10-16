@@ -17,6 +17,7 @@ from imports import tasks as imports_tasks
 from jobs import tasks
 from jobs.models import ScheduledRun
 from people import tasks as people_tasks
+from reminders import tasks as reminders_tasks
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,8 @@ PERIODIC_JOBS = [
     Periodic(people_tasks.purge_deleted_people, every=datetime.timedelta(minutes=1)),
     Periodic(imports_tasks.forget_taken_back_photos, every=datetime.timedelta(minutes=1)),
     Periodic(capture_tasks.forget_old_captures, every=datetime.timedelta(days=1)),
+    # Digests go out at 08:00 in each user's own time zone: look every few minutes.
+    Periodic(reminders_tasks.queue_digests, every=datetime.timedelta(minutes=5)),
 ]
 
 
