@@ -3369,7 +3369,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReminderSettingsSchema"
+                  "$ref": "#/components/schemas/ReminderSettingsOut"
                 }
               }
             }
@@ -3394,7 +3394,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReminderSettingsSchema"
+                  "$ref": "#/components/schemas/ReminderSettingsOut"
                 }
               }
             }
@@ -3413,6 +3413,34 @@
           },
           "required": true
         },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/keep-in-touch/settings/test-email": {
+      "post": {
+        "operationId": "reminders_api_send_test_email",
+        "summary": "Send Test Email",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigestTestOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Today's digest, now, to your own email: even with nothing in it.",
+        "tags": [
+          "reminders"
+        ],
         "security": [
           {
             "SessionAuth": []
@@ -4986,6 +5014,164 @@
           {
             "SessionAuth": []
           }
+        ]
+      }
+    },
+    "/api/email-links/unsubscribe/{token}": {
+      "get": {
+        "operationId": "reminders_email_api_preview_unsubscribe",
+        "summary": "Preview Unsubscribe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsubscribeOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "email links"
+        ]
+      },
+      "post": {
+        "operationId": "reminders_email_api_unsubscribe",
+        "summary": "Unsubscribe",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Also the email apps' one-click unsubscribe (RFC 8058), so no CSRF token.",
+        "tags": [
+          "email links"
+        ]
+      }
+    },
+    "/api/email-links/we-talked/{token}": {
+      "get": {
+        "operationId": "reminders_email_api_preview_talked",
+        "summary": "Preview Talked",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TalkedOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "email links"
+        ]
+      },
+      "post": {
+        "operationId": "reminders_email_api_log_talked",
+        "summary": "Log Talked",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TalkedLoggedOut"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "email links"
         ]
       }
     }
@@ -7777,8 +7963,7 @@
         "title": "NudgeOut",
         "type": "object"
       },
-      "ReminderSettingsSchema": {
-        "description": "Keep-in-touch settings for everyone.",
+      "ReminderSettingsOut": {
         "properties": {
           "nudges_on": {
             "default": true,
@@ -7797,9 +7982,148 @@
               }
             ],
             "title": "Default Interval Days"
+          },
+          "digest": {
+            "default": "weekly",
+            "enum": [
+              "off",
+              "daily",
+              "weekly"
+            ],
+            "title": "Digest",
+            "type": "string"
+          },
+          "digest_weekday": {
+            "default": 0,
+            "maximum": 6,
+            "minimum": 0,
+            "title": "Digest Weekday",
+            "type": "integer"
+          },
+          "include_memory_aids": {
+            "default": true,
+            "title": "Include Memory Aids",
+            "type": "boolean"
+          },
+          "birthdays_days_before": {
+            "anyOf": [
+              {
+                "maximum": 30,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 3,
+            "title": "Birthdays Days Before"
+          },
+          "time_zone": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Time Zone",
+            "type": "string"
+          },
+          "email_ready": {
+            "title": "Email Ready",
+            "type": "boolean"
+          },
+          "send_to": {
+            "title": "Send To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email_ready",
+          "send_to"
+        ],
+        "title": "ReminderSettingsOut",
+        "type": "object"
+      },
+      "ReminderSettingsSchema": {
+        "description": "Reminder settings for everyone: nudges, and the email digest.",
+        "properties": {
+          "nudges_on": {
+            "default": true,
+            "title": "Nudges On",
+            "type": "boolean"
+          },
+          "default_interval_days": {
+            "anyOf": [
+              {
+                "maximum": 3650,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Interval Days"
+          },
+          "digest": {
+            "default": "weekly",
+            "enum": [
+              "off",
+              "daily",
+              "weekly"
+            ],
+            "title": "Digest",
+            "type": "string"
+          },
+          "digest_weekday": {
+            "default": 0,
+            "maximum": 6,
+            "minimum": 0,
+            "title": "Digest Weekday",
+            "type": "integer"
+          },
+          "include_memory_aids": {
+            "default": true,
+            "title": "Include Memory Aids",
+            "type": "boolean"
+          },
+          "birthdays_days_before": {
+            "anyOf": [
+              {
+                "maximum": 30,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 3,
+            "title": "Birthdays Days Before"
+          },
+          "time_zone": {
+            "default": "",
+            "maxLength": 64,
+            "title": "Time Zone",
+            "type": "string"
           }
         },
         "title": "ReminderSettingsSchema",
+        "type": "object"
+      },
+      "DigestTestOut": {
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ],
+        "title": "DigestTestOut",
         "type": "object"
       },
       "KeepInTouchOut": {
@@ -10181,6 +10505,49 @@
           }
         },
         "title": "MailTestIn",
+        "type": "object"
+      },
+      "UnsubscribeOut": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "subscribed": {
+            "title": "Subscribed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "email",
+          "subscribed"
+        ],
+        "title": "UnsubscribeOut",
+        "type": "object"
+      },
+      "TalkedOut": {
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/PersonRef"
+          }
+        },
+        "required": [
+          "person"
+        ],
+        "title": "TalkedOut",
+        "type": "object"
+      },
+      "TalkedLoggedOut": {
+        "properties": {
+          "logged": {
+            "title": "Logged",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "logged"
+        ],
+        "title": "TalkedLoggedOut",
         "type": "object"
       }
     },

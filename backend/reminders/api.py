@@ -12,9 +12,11 @@ from people.models import Person
 from reminders import services
 from reminders.nudges import due_nudges, next_nudge_on, settings_for
 from reminders.schemas import (
+    DigestTestOut,
     KeepInTouchOut,
     KeepInTouchSchema,
     NudgeOut,
+    ReminderSettingsOut,
     ReminderSettingsSchema,
 )
 
@@ -27,15 +29,22 @@ def list_due(request, today: datetime.date | None = None):
     return due_nudges(access_for(request), today or timezone.localdate())
 
 
-# Nudges for the whole book are the account's: the login cookie only, never an API key.
-@router.get("/settings", response=ReminderSettingsSchema, auth=django_auth)
+# Nudges and emails for the whole book are the account's: the login cookie only.
+@router.get("/settings", response=ReminderSettingsOut, auth=django_auth)
 def get_settings(request):
-    return settings_for(access_for(request).user)
+    return services.settings_out(request.auth)
 
 
-@router.put("/settings", response=ReminderSettingsSchema, auth=django_auth)
+@router.put("/settings", response=ReminderSettingsOut, auth=django_auth)
 def save_settings(request, payload: ReminderSettingsSchema):
-    return services.save_settings(access_for(request), payload.model_dump())
+    services.save_settings(access_for(request), payload.model_dump())
+    return services.settings_out(request.auth)
+
+
+@router.post("/settings/test-email", response=DigestTestOut, auth=django_auth)
+def send_test_email(request):
+    """Today's digest, now, to your own email: even with nothing in it."""
+    return services.send_test_digest(request.auth)
 
 
 def keep_in_touch_out(access: Access, person: Person) -> KeepInTouchOut:

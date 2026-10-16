@@ -33,7 +33,15 @@ def email_ready() -> bool:
     return current() is not None
 
 
-def send(to: str, subject: str, template: str, context: dict, *, preview: str = "") -> None:
+def send(
+    to: str,
+    subject: str,
+    template: str,
+    context: dict,
+    *,
+    preview: str = "",
+    headers: dict | None = None,
+) -> None:
     """One email: `mail/{template}.txt` and `.html`, through the server's mailer.
 
     Raises EmailNotSetUp without one.
@@ -41,7 +49,9 @@ def send(to: str, subject: str, template: str, context: dict, *, preview: str = 
     config = current()
     if config is None:
         raise EmailNotSetUp
-    mailers.default.send_messages([_message(config, to, subject, template, context, preview)])
+    message = _message(config, to, subject, template, context, preview)
+    message.extra_headers.update(headers or {})
+    mailers.default.send_messages([message])
 
 
 def mail_settings(admin: User) -> dict:

@@ -3,7 +3,7 @@ import { api, formUpload, unwrap } from '@/api/client'
 import { currentUserQuery, forgetOtherData } from '@/api/session'
 import type { components } from '@/api/schema'
 
-export type ReminderSettings = components['schemas']['ReminderSettingsSchema']
+export type ReminderSettingsIn = components['schemas']['ReminderSettingsSchema']
 
 /** Where you're signed in, most recently used first. */
 export const devicesQuery = queryOptions({
@@ -37,13 +37,35 @@ export const reminderSettingsQuery = queryOptions({
   queryFn: ({ signal }) => unwrap(api.GET('/api/keep-in-touch/settings', { signal })),
 })
 
-/** Nudges on or off, and the default interval. Today and profiles follow. */
-export async function saveReminderSettings(queryClient: QueryClient, settings: ReminderSettings) {
-  const saved = await unwrap(api.PUT('/api/keep-in-touch/settings', { body: settings }))
+/**
+ * Nudges and the email digest. Today and profiles follow. The browser's time zone goes
+ * along, so the digest comes at 08:00 where the user is.
+ */
+export async function saveReminderSettings(
+  queryClient: QueryClient,
+  change: Partial<ReminderSettingsIn>,
+) {
+  const settings = await queryClient.ensureQueryData(reminderSettingsQuery)
+  const body: ReminderSettingsIn = {
+    nudges_on: settings.nudges_on,
+    default_interval_days: settings.default_interval_days,
+    digest: settings.digest,
+    digest_weekday: settings.digest_weekday,
+    include_memory_aids: settings.include_memory_aids,
+    birthdays_days_before: settings.birthdays_days_before,
+    ...change,
+    time_zone: browserTimeZone(),
+  }
+  const saved = await unwrap(api.PUT('/api/keep-in-touch/settings', { body }))
   queryClient.setQueryData(reminderSettingsQuery.queryKey, saved)
   await queryClient.invalidateQueries({ queryKey: ['people'] })
   return saved
 }
+
+/** Today's digest, now, to your own email. */
+export const sendTestDigest = () => unwrap(api.POST('/api/keep-in-touch/settings/test-email'))
+
+export const browserTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone ?? ''
 
 /** This server's FolkBook version, and where its source code is (AGPL). */
 export const aboutQuery = queryOptions({

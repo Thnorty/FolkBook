@@ -34,7 +34,13 @@ class KeepInTouch(BaseModel):
 
 
 class ReminderSettings(BaseModel):
-    """A user's keep-in-touch settings for everyone. Without a row, the defaults apply."""
+    """A user's reminder settings for everyone: nudges and the email digest. Without a row,
+    the defaults apply."""
+
+    class Digest(models.TextChoices):
+        OFF = "off"
+        DAILY = "daily"
+        WEEKLY = "weekly"
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reminder_settings"
@@ -45,6 +51,15 @@ class ReminderSettings(BaseModel):
         blank=True,
         help_text="For people without their own interval. Empty: only those with one.",
     )
+    digest = models.CharField(max_length=10, choices=Digest.choices, default=Digest.WEEKLY)
+    digest_weekday = models.PositiveSmallIntegerField(default=0, help_text="0 is Monday.")
+    include_memory_aids = models.BooleanField(default=True)
+    birthdays_days_before = models.PositiveSmallIntegerField(
+        null=True, blank=True, default=3, help_text="Empty: no birthdays in emails."
+    )
+    # The user's own time zone (from their browser), for "08:00" and for what "today" is.
+    time_zone = models.CharField(max_length=64, blank=True)
+    last_digest_on = models.DateField(null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "reminder settings"
@@ -53,6 +68,9 @@ class ReminderSettings(BaseModel):
                 condition=models.Q(default_interval_days__isnull=True)
                 | models.Q(default_interval_days__gte=1),
                 name="reminders_default_interval_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(digest_weekday__lte=6), name="reminders_digest_weekday"
             ),
         ]
 
