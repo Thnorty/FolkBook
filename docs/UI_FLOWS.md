@@ -59,6 +59,11 @@ flowchart LR
 3. Same optional steps as first run
 4. If the invite came with a shared space, show "Defne shared *Hackathon 2026* with you" on Today
 
+### 3.2a Forgot password
+1. Log in → **Forgot password?** With email set up, it sends a reset link to the address in the Email field ("Type your email first." when it's empty) and shows **Check your email** (7a): "If tom@… has an account here, a reset link is on its way", the link works once and lasts an hour, **← Back to log in**, **Send again** ("Sent again. Only the newest link works."). Without email: "Ask your FolkBook's admin for a reset link."
+2. The email (7b) has a **Choose a new password** button and the link written out
+3. The link opens **Choose a new password** (7c): new password twice → "Password changed", signed out everywhere → Log in. A link that's used, replaced or expired says so, and how to get a new one
+
 ### 3.3 Add a person (manual)
 1. "+" → **Add person**
 2. Minimal form: name (required), photo, pronouns (optional chips: not set · she · he · they), "how we met", spaces (multi-select chips)
@@ -180,7 +185,7 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
   - **Key created:** shown once with Copy ("Copied ✓"; without a clipboard it selects the key), its scope in one line, when it expires and "Use it as `Authorization: Bearer …`"; **I've saved it** closes it and the key is gone
   - **Revoke** asks in the row: "Revoke “Birthday script”? Anything using it stops working right away." An expired key has **Delete**, which needs no asking
 - **Nudges:** global on/off, default interval, email frequency (daily / weekly digest), "Send test email"
-- **Admin only: email (SMTP):** host, port, user, password, from address, TLS, "Send test email". Can also be set via env vars. Not configured → banner: "Email isn't set up; reminders only show on Today"
+- **Admin only: Email (SMTP)** (5w): host and port, Security (STARTTLS / SSL / TLS / None), username, password (a saved one shows "Saved" with Replace, and is asked for again when the host or username changes), From, then **Send test email** ("Goes to ela@…", then "✓ Sent to ela@… · 09:14" or why not) and Save; Remove asks first. Set through `FOLKBOOK_SMTP_*` instead → the settings are shown read-only with Send test email. Under it: "Links in emails open https://…". Not set up → for admins, a banner at the top of Settings, "Email isn't set up; reminders only show on Today · Set up email →", and a dot on Email (SMTP)
 - **Import / Export:** .vcf import, full export (JSON + photos: "Everything", with how many people and photos and the rough size, and a reminder that it holds private notes), .vcf export, restore
   - **Restore:** "Choose .zip" → the server checks the file (a broken file, one from a newer FolkBook, or a shared book is explained right under the button) → "Replace everything in your book?" shows whose book the file is, its people, spaces and photos, and how many people you have now, with **Download a copy of your book first** (the full export) → type your email to turn Restore on → toast "Your book is restored"
 - **Appearance:** light / dark / system, reduce motion
@@ -194,7 +199,7 @@ Sections, each hidden when empty; with nothing at all, an empty state (Add someo
 |---|---|---|---|
 | 1 | Setup / first run | full screen | centered card |
 | 2 | Invite accept + sign up | full screen | centered card |
-| 3 | Log in | full screen | centered card |
+| 3 | Log in, forgot password ("Check your email") and a reset link | full screen | centered card |
 | 4 | Today | tab | main view |
 | 5 | People list (filters, search) | tab | main view + list/grid toggle |
 | 6 | Person profile | full page | page or side panel |

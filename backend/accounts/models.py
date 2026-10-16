@@ -106,8 +106,9 @@ class FailedLogin(models.Model):
 class PasswordReset(BaseModel):
     """A one-time link to choose a new password.
 
-    An admin makes it for someone who forgot theirs (email links come with #37). Only
-    a hash of the token is kept: the link itself is shown once, to the admin.
+    An admin makes it for someone who forgot theirs and hands it over, or the user asks
+    for it by email (no `created_by`). Only a hash of the token is kept: the link itself
+    is shown once, to the admin, or sent once, by email.
     """
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="+")
@@ -117,6 +118,7 @@ class PasswordReset(BaseModel):
     token_hash = models.CharField(max_length=64, unique=True)
     expires_at = models.DateTimeField()
     used_at = models.DateTimeField(null=True, blank=True)
+    emailed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"Password reset for {self.user}"

@@ -1,0 +1,7 @@
+{% autoescape off %}Email works
+
+{{ site }} can send email through {{ host }}. Reminder digests and password resets will arrive like this one.
+
+--
+Sent by {{ site }} because {{ admin }} pressed Send test email.
+{% endautoescape %}
