@@ -8,7 +8,7 @@ from django_tasks_db.models import DBTaskResult
 
 from people.models import Person
 from reminders import tasks
-from reminders.digest import ago, digest_due, every
+from reminders.digest import ago, digest_due, every, initials
 from reminders.models import ReminderSettings
 from tests.factories import MemoryAidFactory, PersonFactory, UserFactory
 from tests.reminders.test_nudges import at, keep_in_touch, person
@@ -241,3 +241,11 @@ def test_no_digests_without_email():
     ReminderSettings.objects.create(user=user, digest="daily")
 
     assert tasks.queue_digests.call() == 0
+
+
+@pytest.mark.parametrize(
+    ("name", "said"),
+    [("Emma Yılmaz", "EY"), ("Ela", "E"), ("Ana María de la Cruz", "AC"), ("", "")],
+)
+def test_initials(name, said):
+    assert initials(name) == said

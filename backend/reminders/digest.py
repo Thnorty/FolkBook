@@ -107,7 +107,7 @@ def _person(user: User, nudge: Nudge, prefs: ReminderSettings, url: str) -> dict
     )
     return {
         "name": person.name,
-        "initials": "".join(word[0] for word in person.name.split()[:2]).upper(),
+        "initials": initials(person.name),
         "line": f"{since} · {every(nudge.interval_days)}",
         "remember": nudge.hint if prefs.include_memory_aids else "",
         "open_url": f"{url}/people/{person.pk}",
@@ -184,6 +184,12 @@ def every(days: int) -> str:
             count = days // size
             return f"every {unit}" if count == 1 else f"every {count} {unit}s"
     return "every day" if days == 1 else f"every {days} days"
+
+
+def initials(name: str) -> str:
+    """ "Emma Yılmaz" → "EY", "Ela" → "E", like the app's `initials`."""
+    words = name.split()
+    return "".join(word[0] for word in words[:1] + words[1:][-1:]).upper()
 
 
 def _day(on: datetime.date) -> str:
