@@ -118,6 +118,16 @@ Once an AI is set, Quick capture is the **+** button (or Shift+N anywhere): writ
 
 Keys are stored encrypted, with a key derived from `DJANGO_SECRET_KEY`: if you change that secret, enter your AI keys again (Settings → AI says which ones).
 
+## Email
+
+FolkBook emails password reset links (and, soon, reminder digests). It sends through an SMTP server you choose; set it up as an admin in **Settings → Email (SMTP)**, or with `FOLKBOOK_SMTP_*` in `.env` (see `.env.example`; the environment wins, and the app then shows the settings without letting anyone change them). **Send test email** tells you whether it works, and why not. Until email is set up, an admin makes reset links by hand (Settings → Users).
+
+- **Use a relay service** rather than sending from your own server: mail from a home or VPS address usually lands in spam. Any provider that gives you SMTP credentials works, e.g. [Brevo](https://www.brevo.com/), [Mailgun](https://www.mailgun.com/), [Postmark](https://postmarkapp.com/), [Amazon SES](https://aws.amazon.com/ses/), or your own mailbox's SMTP (Fastmail, Gmail with an app password). Verify your sending domain with them (SPF and DKIM) so emails arrive.
+- **Port and security:** 587 with STARTTLS is the usual choice; 465 is SSL / TLS.
+- **Links in emails** point at `FOLKBOOK_URL` (by default the first `DJANGO_CSRF_TRUSTED_ORIGINS`). Settings → Email shows which address they use.
+- The password is stored encrypted, like AI keys: if you change `DJANGO_SECRET_KEY`, enter it again.
+- Emails go out from the `worker` container; `docker compose logs worker` shows if sending fails.
+
 ## Using the API
 
 Scripts and apps can read or write your book with a personal API key (Settings → API keys). Send it as a bearer token:

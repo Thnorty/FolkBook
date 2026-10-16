@@ -1,14 +1,25 @@
 import type { ReactNode } from 'react'
 import { usePageTitle } from '@/lib/usePageTitle'
 
-/** One settings page: its title, and its parts. */
-export function SettingsPage({ title, children }: { title: string; children: ReactNode }) {
+/** One settings page: its title, what it's for, and its parts. */
+export function SettingsPage({
+  title,
+  note,
+  children,
+}: {
+  title: string
+  note?: ReactNode
+  children: ReactNode
+}) {
   usePageTitle(`${title} · Settings`)
   return (
     <section aria-labelledby="settings-title" className="flex flex-col gap-8">
-      <h2 id="settings-title" className="type-title">
-        {title}
-      </h2>
+      <div>
+        <h2 id="settings-title" className="type-title">
+          {title}
+        </h2>
+        {note && <p className="mt-1 text-ink-soft">{note}</p>}
+      </div>
       {children}
     </section>
   )

@@ -1,0 +1,6 @@
+{% extends "mail/base.html" %}
+{% block content %}
+<div style="font:26px/1.25 Georgia,'Times New Roman',serif;color:#221F1A;margin-top:20px">Email works</div>
+<div style="font:15px/1.6 Arial,Helvetica,sans-serif;color:#5A544B;margin-top:10px">{{ site }} can send email through {{ host }}. Reminder digests and password resets will arrive like this one.</div>
+{% endblock %}
+{% block footer %}Sent by {{ site }} because {{ admin }} pressed Send test email.{% endblock %}

@@ -233,6 +233,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Forgot Password
+         * @description Email a reset link that lasts an hour. The answer is the same whether or not there's
+         *     an account with this email.
+         */
+        post: operations["accounts_api_forgot_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/password-resets/{token}": {
         parameters: {
             query?: never;
@@ -1652,6 +1673,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mail/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Status
+         * @description Whether this server can send email (the log-in page asks before offering reset emails).
+         */
+        get: operations["mail_api_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Settings
+         * @description The server's SMTP settings (admins). Never the password.
+         */
+        get: operations["mail_api_get_settings"];
+        /**
+         * Save Settings
+         * @description Save the SMTP settings. Leave `password` out to keep the saved one; "" removes it.
+         */
+        put: operations["mail_api_save_settings"];
+        post?: never;
+        /** Remove Settings */
+        delete: operations["mail_api_remove_settings"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mail/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Test
+         * @description Send a short email to yourself, through the form's settings or the ones in use.
+         */
+        post: operations["mail_api_send_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1794,6 +1880,11 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+        };
+        /** ForgotPasswordIn */
+        ForgotPasswordIn: {
+            /** Email */
+            email: string;
         };
         /** ResetPreviewOut */
         ResetPreviewOut: {
@@ -3508,6 +3599,86 @@ export interface components {
             /** Restored */
             restored: number;
         };
+        /** MailStatusOut */
+        MailStatusOut: {
+            /** Ready */
+            ready: boolean;
+        };
+        /**
+         * MailSettingsOut
+         * @description The server's email settings, for admins.
+         */
+        MailSettingsOut: {
+            /** Ready */
+            ready: boolean;
+            /** Source */
+            source: ("environment" | "saved") | null;
+            smtp: components["schemas"]["SmtpOut"] | null;
+            /** Links To */
+            links_to: string;
+            /** Send To */
+            send_to: string;
+        };
+        /** SmtpOut */
+        SmtpOut: {
+            /** Host */
+            host: string;
+            /** Port */
+            port: number;
+            /**
+             * Security
+             * @enum {string}
+             */
+            security: "starttls" | "ssl" | "none";
+            /** Username */
+            username: string;
+            /** Has Password */
+            has_password: boolean;
+            /** Password Unreadable */
+            password_unreadable: boolean;
+            /** From Address */
+            from_address: string;
+            /** Set By */
+            set_by: string | null;
+            /** Updated At */
+            updated_at: string | null;
+        };
+        /** SmtpIn */
+        SmtpIn: {
+            /** Host */
+            host: string;
+            /**
+             * Port
+             * @default 587
+             */
+            port?: number;
+            /**
+             * Security
+             * @default starttls
+             * @enum {string}
+             */
+            security?: "starttls" | "ssl" | "none";
+            /**
+             * Username
+             * @default
+             */
+            username?: string;
+            /** Password */
+            password?: string | null;
+            /** From Address */
+            from_address: string;
+        };
+        /** MailTestOut */
+        MailTestOut: {
+            /** Ok */
+            ok: boolean;
+            /** Message */
+            message: string;
+        };
+        /** MailTestIn */
+        MailTestIn: {
+            smtp?: components["schemas"]["SmtpIn"] | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -3804,6 +3975,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResetLinkOut"];
+                };
+            };
+        };
+    };
+    accounts_api_forgot_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordIn"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
                 };
             };
         };
@@ -6104,6 +6306,114 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UndoneOut"];
+                };
+            };
+        };
+    };
+    mail_api_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MailStatusOut"];
+                };
+            };
+        };
+    };
+    mail_api_get_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MailSettingsOut"];
+                };
+            };
+        };
+    };
+    mail_api_save_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SmtpIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MailSettingsOut"];
+                };
+            };
+        };
+    };
+    mail_api_remove_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MailSettingsOut"];
+                };
+            };
+        };
+    };
+    mail_api_send_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MailTestIn"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MailTestOut"];
                 };
             };
         };

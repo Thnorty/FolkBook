@@ -1,0 +1,30 @@
+{% comment %}
+The layout of every FolkBook email (screens 6a, 7b): tables and inline styles, Georgia and
+Arial, no images, so it reads the same in every email app and with images off. Email apps
+don't support CSS variables, so the colors are the light theme's from tokens.css, written
+out: ink #221F1A, ink-soft #5A544B, faint #6F675B, line #E3DACA, page #FBF8F1,
+desk #EAE3D4, footer #F0E9DA, and the link and button blue #253C6B.
+{% endcomment %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{ subject }}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#EAE3D4">
+<div style="display:none;max-height:0;overflow:hidden;color:#EAE3D4">{{ preview }}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#EAE3D4">
+<tr><td align="center" style="padding:26px 12px 30px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#FBF8F1;border:1px solid #E3DACA">
+<tr><td style="height:6px;line-height:6px;font-size:6px;background-color:#253C6B">&nbsp;</td></tr>
+<tr><td style="padding:24px 32px 26px">
+<div style="border-bottom:1px solid #E3DACA;padding-bottom:12px;font:bold 20px Georgia,'Times New Roman',serif;color:#221F1A">FolkBook</div>
+{% block content %}{% endblock %}
+</td></tr>
+<tr><td style="padding:14px 32px 18px;background-color:#F0E9DA;font:12px/1.6 Arial,Helvetica,sans-serif;color:#6F675B">{% block footer %}{% endblock %}</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

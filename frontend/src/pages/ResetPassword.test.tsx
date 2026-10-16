@@ -4,11 +4,12 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
 
-function server({ usable = true } = {}) {
+function server({ usable = true, email = false } = {}) {
   const sent: unknown[] = []
   fakeServer({
     'GET /api/auth/csrf': () => new Response(null, { status: 204 }),
     'GET /api/auth/me': () => json({ detail: 'Not logged in' }, 401),
+    'GET /api/mail/status': () => json({ ready: email }),
     'GET /api/auth/password-resets/tok': () =>
       usable
         ? json({ email: 'ela@example.com', expires_at: '2099-01-01T12:00:00Z' })
@@ -51,5 +52,14 @@ describe('reset password', () => {
       await screen.findByRole('heading', { name: "This link doesn't work" }),
     ).toBeInTheDocument()
     expect(screen.getByText('Ask your admin for a new one.')).toBeInTheDocument()
+  })
+
+  it('says to ask for a new link by email when the server sends email', async () => {
+    server({ usable: false, email: true })
+    renderApp('/reset/tok')
+
+    expect(
+      await screen.findByText('Ask for a new one with “Forgot password?” on the log-in page.'),
+    ).toBeInTheDocument()
   })
 })

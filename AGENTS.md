@@ -72,7 +72,7 @@ These rules are the product. Breaking one is a critical bug.
   - Something the user can't see is **404**, never 403, so its existence isn't revealed. Visible but not allowed is **403**; a clash with existing data is **409** (`core.api.Conflict`); invalid input is **422**.
   - Errors always look like `{"detail": ...}`.
   - When the AI a request depends on fails (key refused, no answer in time, an answer that makes no sense, unreachable), the answer is **424** with the reason in the app's words: a 5xx would only show the app's generic message.
-  - Account-level routers take the login cookie only (`auth=django_auth`): `/auth`, `/users`, `/invites`, `/api-keys`, `/ai`, `/capture`… An API key gets 401 there. `tests/api_keys/test_sign_in.py` says which side every router is on.
+  - Account-level routers take the login cookie only (`auth=django_auth`): `/auth`, `/users`, `/invites`, `/api-keys`, `/ai`, `/capture`, `/mail`… An API key gets 401 there. `tests/api_keys/test_sign_in.py` says which side every router is on.
   - Lists are paginated: `{"items": [...], "count": N}`, 50 per page. Their query count must not grow with the number of rows (there's a test for each list).
   - Order names with `core.db.by_name()` (ICU collation), never plain `order_by("name")`.
   - A schema field that must hide data (e.g. contact details) gets an explicit resolver that returns the filtered value.
@@ -82,6 +82,7 @@ These rules are the product. Breaking one is a critical bug.
 - Timestamps in UTC; format dates for the user on the frontend.
 - **Ending access:** any change that can make users lose sight of people (leaving or unsharing a space, taking someone out of one, deleting someone) runs inside `people.kept.keeping_copies`, so users keep copies of the people they wrote about.
 - **Background jobs:** anything slow or scheduled (sending email, AI calls that don't need an answer right away, housekeeping) is a Django task: `@task` in `<app>/tasks.py`, enqueued from a service with `.enqueue()`. Periodic jobs go in `PERIODIC_JOBS` in `jobs/scheduler.py`. Jobs must be safe to run twice. Test them by calling `.call()`.
+- **Email:** send with `mail.services.send(to, subject, template, context)` from a job, never inside a request. Each email is `mail/templates/mail/<name>.txt` plus `<name>.html`, which extends `mail/base.html` (tables and inline styles; email apps ignore CSS variables, so its colors are written out there once). Links in emails use `settings.FOLKBOOK_URL`. Check `mail.services.email_ready()` before offering anything that needs email. Tests: `email_ready` sets email up, `mailoutbox` holds what was sent, `run_jobs_now` runs jobs on enqueue, and `fake_smtp` stands in for the SMTP server.
 - Names are Unicode (Yılmaz, Şen, Ayşe). Search and sorting must handle this correctly.
 
 ## Frontend conventions

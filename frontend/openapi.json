@@ -408,6 +408,42 @@
         ]
       }
     },
+    "/api/auth/forgot-password": {
+      "post": {
+        "operationId": "accounts_api_forgot_password",
+        "summary": "Forgot Password",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Email a reset link that lasts an hour. The answer is the same whether or not there's\nan account with this email.",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
     "/api/auth/password-resets/{token}": {
       "get": {
         "operationId": "accounts_api_preview_reset",
@@ -4802,6 +4838,156 @@
           }
         ]
       }
+    },
+    "/api/mail/status": {
+      "get": {
+        "operationId": "mail_api_status",
+        "summary": "Status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailStatusOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Whether this server can send email (the log-in page asks before offering reset emails).",
+        "tags": [
+          "mail"
+        ]
+      }
+    },
+    "/api/mail": {
+      "get": {
+        "operationId": "mail_api_get_settings",
+        "summary": "Get Settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "The server's SMTP settings (admins). Never the password.",
+        "tags": [
+          "mail"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "mail_api_save_settings",
+        "summary": "Save Settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Save the SMTP settings. Leave `password` out to keep the saved one; \"\" removes it.",
+        "tags": [
+          "mail"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmtpIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "mail_api_remove_settings",
+        "summary": "Remove Settings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailSettingsOut"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "mail"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/mail/test": {
+      "post": {
+        "operationId": "mail_api_send_test",
+        "summary": "Send Test",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailTestOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Send a short email to yourself, through the form's settings or the ones in use.",
+        "tags": [
+          "mail"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailTestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -5131,6 +5317,20 @@
           "user_id"
         ],
         "title": "ResetLinkIn",
+        "type": "object"
+      },
+      "ForgotPasswordIn": {
+        "properties": {
+          "email": {
+            "maxLength": 254,
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "ForgotPasswordIn",
         "type": "object"
       },
       "ResetPreviewOut": {
@@ -9755,6 +9955,232 @@
           "restored"
         ],
         "title": "UndoneOut",
+        "type": "object"
+      },
+      "MailStatusOut": {
+        "properties": {
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ready"
+        ],
+        "title": "MailStatusOut",
+        "type": "object"
+      },
+      "MailSettingsOut": {
+        "description": "The server's email settings, for admins.",
+        "properties": {
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "environment",
+                  "saved"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "smtp": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SmtpOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "links_to": {
+            "title": "Links To",
+            "type": "string"
+          },
+          "send_to": {
+            "title": "Send To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ready",
+          "source",
+          "smtp",
+          "links_to",
+          "send_to"
+        ],
+        "title": "MailSettingsOut",
+        "type": "object"
+      },
+      "SmtpOut": {
+        "properties": {
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "port": {
+            "title": "Port",
+            "type": "integer"
+          },
+          "security": {
+            "enum": [
+              "starttls",
+              "ssl",
+              "none"
+            ],
+            "title": "Security",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          },
+          "has_password": {
+            "title": "Has Password",
+            "type": "boolean"
+          },
+          "password_unreadable": {
+            "title": "Password Unreadable",
+            "type": "boolean"
+          },
+          "from_address": {
+            "title": "From Address",
+            "type": "string"
+          },
+          "set_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Set By"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "host",
+          "port",
+          "security",
+          "username",
+          "has_password",
+          "password_unreadable",
+          "from_address",
+          "set_by",
+          "updated_at"
+        ],
+        "title": "SmtpOut",
+        "type": "object"
+      },
+      "SmtpIn": {
+        "properties": {
+          "host": {
+            "maxLength": 253,
+            "title": "Host",
+            "type": "string"
+          },
+          "port": {
+            "default": 587,
+            "maximum": 65535,
+            "minimum": 1,
+            "title": "Port",
+            "type": "integer"
+          },
+          "security": {
+            "default": "starttls",
+            "enum": [
+              "starttls",
+              "ssl",
+              "none"
+            ],
+            "title": "Security",
+            "type": "string"
+          },
+          "username": {
+            "default": "",
+            "maxLength": 254,
+            "title": "Username",
+            "type": "string"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          },
+          "from_address": {
+            "maxLength": 320,
+            "title": "From Address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host",
+          "from_address"
+        ],
+        "title": "SmtpIn",
+        "type": "object"
+      },
+      "MailTestOut": {
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ],
+        "title": "MailTestOut",
+        "type": "object"
+      },
+      "MailTestIn": {
+        "properties": {
+          "smtp": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SmtpIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "MailTestIn",
         "type": "object"
       }
     },

@@ -11,6 +11,7 @@ from accounts.schemas import (
     CsrfOut,
     CurrentUserOut,
     DeviceOut,
+    ForgotPasswordIn,
     LoginIn,
     PasswordIn,
     ResetIn,
@@ -22,6 +23,7 @@ from accounts.schemas import (
 )
 from api_keys.auth import KEY_OR_LOGIN
 from core.api import ErrorOut, require_csrf
+from mail.backend import EmailNotSetUp
 
 router = Router(tags=["auth"])
 
@@ -94,6 +96,18 @@ def create_reset_link(request, payload: ResetLinkIn):
     return Status(
         201, {"path": f"/reset/{token}", "email": user.email, "expires_at": reset.expires_at}
     )
+
+
+@router.post("/forgot-password", response={202: None, 409: ErrorOut}, auth=None)
+def forgot_password(request, payload: ForgotPasswordIn):
+    """Email a reset link that lasts an hour. The answer is the same whether or not there's
+    an account with this email."""
+    require_csrf(request)
+    try:
+        services.email_reset_link(payload.email)
+    except EmailNotSetUp:
+        return Status(409, {"detail": "This server can't send email. Ask your admin for a link."})
+    return Status(202, None)
 
 
 @router.get("/password-resets/{token}", response={200: ResetPreviewOut, 404: ErrorOut}, auth=None)
