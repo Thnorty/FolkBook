@@ -1,11 +1,12 @@
 import { Maximize, Minus, Plus } from 'lucide-react'
 import {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  type MouseEvent,
   type PointerEvent,
-  type WheelEvent,
 } from 'react'
 import { relationChainLabel } from '@/features/person/labels'
 import { firstNameOf, initials } from '@/lib/names'
@@ -37,19 +38,34 @@ type View = { x: number; y: number; scale: number }
 const MIN_SCALE = 0.3
 const MAX_SCALE = 2
 const ZOOM_STEP = 1.25
+/** How much a wheel turn of one pixel zooms. */
+const WHEEL_SPEED = 0.002
+/** How far a press moves before it's a drag rather than a click. */
+const DRAG_START = 4
 /** Room kept around the tree when it fits itself into view. */
 const FIT_MARGIN = 24
 /** Where a face sits in its place: the line ends at its middle. */
 const FACE_TOP = 22
 
 const clamp = (scale: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale))
+const distance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+  Math.hypot(a.x - b.x, a.y - b.y)
+
+/** The view zoomed by `factor`, keeping the point (cx, cy) of the frame where it is. */
+function zoomed(now: View, factor: number, cx: number, cy: number): View {
+  const scale = clamp(now.scale * factor)
+  return {
+    scale,
+    x: cx - ((cx - now.x) * scale) / now.scale,
+    y: cy - ((cy - now.y) * scale) / now.scale,
+  }
+}
 
 /** Family tree mode (screens 3k, 3l): rows of generations, drawn with lines behind people. */
 export function FamilyTree({ data, toggles, selected, onSelect, onAddParent }: FamilyTreeProps) {
   const layout = useMemo(() => layoutTree(data, toggles), [data, toggles])
   const frame = useRef<HTMLElement>(null)
   const [view, setView] = useState<View>({ x: 0, y: 0, scale: 1 })
-  const drag = useRef<{ x: number; y: number } | null>(null)
 
   const fit = () => {
     const box = frame.current
@@ -78,44 +94,72 @@ export function FamilyTree({ data, toggles, selected, onSelect, onAddParent }: F
     fit()
   })
 
-  /** Zoom by `factor`, keeping the point (px, py) of the frame where it is. */
-  const zoom = (factor: number, px?: number, py?: number) =>
-    setView((now) => {
-      const scale = clamp(now.scale * factor)
-      const cx = px ?? (frame.current?.clientWidth ?? 0) / 2
-      const cy = py ?? (frame.current?.clientHeight ?? 0) / 2
-      return {
-        scale,
-        x: cx - ((cx - now.x) * scale) / now.scale,
-        y: cy - ((cy - now.y) * scale) / now.scale,
-      }
-    })
-
-  const onWheel = (event: WheelEvent) => {
-    const box = event.currentTarget.getBoundingClientRect()
-    zoom(
-      event.deltaY < 0 ? ZOOM_STEP : 1 / ZOOM_STEP,
-      event.clientX - box.left,
-      event.clientY - box.top,
-    )
+  const middle = () => [
+    (frame.current?.clientWidth ?? 0) / 2,
+    (frame.current?.clientHeight ?? 0) / 2,
+  ]
+  const zoom = (factor: number) => {
+    const [cx, cy] = middle()
+    setView((now) => zoomed(now, factor, cx, cy))
   }
+
+  // Wheel and trackpad pinch (ctrl + wheel) zoom the tree, never the page: a listener that
+  // may prevent the default, which React's onWheel can't.
+  useEffect(() => {
+    const box = frame.current
+    if (!box) return
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const pixels =
+        event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * 16 : event.deltaY
+      const at = box.getBoundingClientRect()
+      const [cx, cy] = [event.clientX - at.left, event.clientY - at.top]
+      setView((now) => zoomed(now, Math.exp(-pixels * WHEEL_SPEED), cx, cy))
+    }
+    box.addEventListener('wheel', onWheel, { passive: false })
+    return () => box.removeEventListener('wheel', onWheel)
+  }, [])
+
+  // Pointers by id: one drags (from anywhere, people too), two pinch.
+  const pointers = useRef(new Map<number, { x: number; y: number }>())
+  // Once a press has moved, it was a drag: the click that ends it doesn't open anyone.
+  const dragged = useRef(false)
   const onPointerDown = (event: PointerEvent) => {
-    if ((event.target as Element).closest('button')) return
-    drag.current = { x: event.clientX, y: event.clientY }
-    event.currentTarget.setPointerCapture(event.pointerId)
+    if (pointers.current.size === 0) dragged.current = false
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
   }
   const onPointerMove = (event: PointerEvent) => {
-    const from = drag.current
-    if (!from) return
-    drag.current = { x: event.clientX, y: event.clientY }
-    setView((now) => ({
-      ...now,
-      x: now.x + event.clientX - from.x,
-      y: now.y + event.clientY - from.y,
-    }))
+    const all = pointers.current
+    const before = all.get(event.pointerId)
+    if (!before) return
+    const now = { x: event.clientX, y: event.clientY }
+    if (all.size >= 2) {
+      const [a, b] = [...all.values()]
+      const other = a === before ? b : a
+      const at = event.currentTarget.getBoundingClientRect()
+      const factor = distance(now, other) / (distance(before, other) || 1)
+      const [cx, cy] = [(now.x + other.x) / 2 - at.left, (now.y + other.y) / 2 - at.top]
+      dragged.current = true
+      all.set(event.pointerId, now)
+      setView((view) => zoomed(view, factor, cx, cy))
+      return
+    }
+    if (!dragged.current && distance(now, before) < DRAG_START) return
+    if (!dragged.current) {
+      dragged.current = true
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }
+    all.set(event.pointerId, now)
+    setView((view) => ({ ...view, x: view.x + now.x - before.x, y: view.y + now.y - before.y }))
   }
-  const onPointerUp = () => {
-    drag.current = null
+  const onPointerUp = (event: PointerEvent) => {
+    pointers.current.delete(event.pointerId)
+  }
+  const onClickCapture = (event: MouseEvent) => {
+    if (!dragged.current) return
+    dragged.current = false
+    event.stopPropagation()
+    event.preventDefault()
   }
 
   return (
@@ -123,8 +167,8 @@ export function FamilyTree({ data, toggles, selected, onSelect, onAddParent }: F
       ref={frame}
       aria-label="Family tree"
       className="relative h-full touch-none overflow-hidden select-none"
-      onWheel={onWheel}
       onPointerDown={onPointerDown}
+      onClickCapture={onClickCapture}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
