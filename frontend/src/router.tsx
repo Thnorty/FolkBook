@@ -20,16 +20,14 @@ import { ProfilePage } from './features/person/ProfilePage'
 import { SpacePage } from './features/spaces/SpacePage'
 import { SpacesPage } from './features/spaces/SpacesPage'
 import { TodayPage } from './features/today/TodayPage'
-import {
-  AboutSettings,
-  AppearanceSettings,
-  ReminderSettingsPage,
-} from './features/settings/OtherSettings'
+import { AboutSettings, AppearanceSettings } from './features/settings/OtherSettings'
+import { ReminderSettingsPage } from './features/settings/ReminderSettingsPage'
 import { AiSettings } from './features/ai/AiSettings'
 import { ApiKeysSettings } from './features/apiKeys/ApiKeysSettings'
 import { InvitesSettings, UsersSettings } from './features/settings/AdminSettings'
 import { ImportExportSettings } from './features/settings/ImportExportSettings'
 import { EmailSettings } from './features/mail/EmailSettings'
+import { UnsubscribePage, WeTalkedPage } from './features/emailLinks/EmailLinkPages'
 import { ProfileSettings } from './features/settings/ProfileSettings'
 import { SettingsLayout } from './features/settings/SettingsLayout'
 import { validateGraphSearch } from './features/graph/search'
@@ -205,11 +203,25 @@ const resetRoute = createRoute({
   component: ResetPasswordPage,
 })
 
+/** Links in reminder emails: open to anyone who has them; the token says whose. */
+const unsubscribeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'unsubscribe/$token',
+  component: UnsubscribePage,
+})
+const weTalkedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'we-talked/$token',
+  component: WeTalkedPage,
+})
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   setupRoute,
   inviteRoute,
   resetRoute,
+  unsubscribeRoute,
+  weTalkedRoute,
   appRoute.addChildren(appPages),
   // The design system page, only while developing (the build leaves it out).
   ...(import.meta.env.DEV

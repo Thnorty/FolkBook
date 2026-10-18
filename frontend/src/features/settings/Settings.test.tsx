@@ -95,6 +95,25 @@ vi.mock('./queries', async (importOriginal) => ({
   },
 }))
 
+const REMINDER_SETTINGS = {
+  nudges_on: true,
+  default_interval_days: null as number | null,
+  digest: 'weekly',
+  digest_weekday: 0,
+  include_memory_aids: true,
+  birthdays_days_before: 3 as number | null,
+  time_zone: 'Europe/Istanbul',
+  email_ready: false,
+  send_to: 'ela@example.com',
+}
+const SAVED_FIELDS = {
+  digest: 'weekly',
+  digest_weekday: 0,
+  include_memory_aids: true,
+  birthdays_days_before: 3,
+  time_zone: expect.any(String), // the browser's
+}
+
 function server({
   preview = () => PREVIEW,
   previewWait,
@@ -105,7 +124,7 @@ function server({
   previewWait?: () => Promise<void> | undefined
 } = {}) {
   const writes: Write[] = []
-  let settings = { nudges_on: true, default_interval_days: null as number | null }
+  let settings = { ...REMINDER_SETTINGS }
   const record = async (request: Request) => {
     const body = ['DELETE'].includes(request.method) ? null : await request.json().catch(() => null)
     writes.push({ method: request.method, path: new URL(request.url).pathname, body })
@@ -161,7 +180,7 @@ function server({
     },
     'GET /api/keep-in-touch/settings': () => json(settings),
     'PUT /api/keep-in-touch/settings': async (request) => {
-      settings = (await record(request)) as typeof settings
+      settings = { ...settings, ...((await record(request)) as typeof settings) }
       return json(settings)
     },
     'GET /api/about': () => json({ version: '0.1.0', source_url: 'https://example.com/folkbook' }),
@@ -253,8 +272,8 @@ describe('settings', () => {
 
     await waitFor(() => expect(writes).toHaveLength(2))
     expect(writes.map((write) => write.body)).toEqual([
-      { nudges_on: false, default_interval_days: null },
-      { nudges_on: false, default_interval_days: 60 },
+      { nudges_on: false, default_interval_days: null, ...SAVED_FIELDS },
+      { nudges_on: false, default_interval_days: 60, ...SAVED_FIELDS },
     ])
   })
 

@@ -1,0 +1,1 @@
+- [Manual checks list](manual-checks-list.md) — save checks only the user can do in a GitHub checklist issue (email: #143)

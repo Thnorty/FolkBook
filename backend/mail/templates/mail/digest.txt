@@ -1,0 +1,23 @@
+{% autoescape off %}{{ heading }}
+{{ dated }}
+{% if people %}
+Nothing urgent — just people you said you'd keep up with.
+{% for person in people %}
+{{ person.name }}
+{{ person.line }}{% if person.remember %}
+Remember: {{ person.remember }}{% endif %}
+We talked: {{ person.talked_url }}
+Open in FolkBook: {{ person.open_url }}
+{% endfor %}{% if more %}
+And {{ more }} more on Today: {{ today_url }}
+{% endif %}{% endif %}{% if birthdays %}
+{{ birthdays_title }}
+{% for line in birthdays %}{{ line }}
+{% endfor %}{% endif %}{% if not people and not birthdays %}
+{{ nothing_due }}. Your digest only comes when there's someone in it.
+{% endif %}
+--
+You get this {{ schedule }} from {{ site }}. {% if memory_aids %}Memory aids are included — you can leave them out in Reminders settings.{% else %}Memory aids are left out.{% endif %}
+Digest settings: {{ settings_url }}
+Unsubscribe: {{ unsubscribe_url }}
+{% endautoescape %}

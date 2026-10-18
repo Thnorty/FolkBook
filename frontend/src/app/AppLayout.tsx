@@ -7,6 +7,7 @@ import { ConnectionFormProvider } from '@/features/person/ConnectionFormProvider
 import { InteractionFormProvider } from '@/features/person/InteractionFormProvider'
 import { PersonFormProvider } from '@/features/person/PersonFormProvider'
 import { usePersonForm } from '@/features/person/usePersonForm'
+import { useSaveTimeZone } from '@/features/settings/useSaveTimeZone'
 import { SpaceFormProvider } from '@/features/spaces/SpaceFormProvider'
 import { useShortcut } from '@/lib/shortcuts'
 import { PageFade } from '@/motion/PageTurn'
@@ -46,6 +47,7 @@ function Shell({ user }: { user: CurrentUser }) {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   useAccessEndedToasts()
+  useSaveTimeZone()
 
   useShortcut(
     SHORTCUTS.palette,

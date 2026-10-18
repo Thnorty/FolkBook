@@ -1085,6 +1085,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/keep-in-touch/settings/test-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Test Email
+         * @description Today's digest, now, to your own email: even with nothing in it.
+         */
+        post: operations["reminders_api_send_test_email"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/keep-in-touch/{person_id}": {
         parameters: {
             query?: never;
@@ -1732,6 +1752,45 @@ export interface paths {
          * @description Send a short email to yourself, through the form's settings or the ones in use.
          */
         post: operations["mail_api_send_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/email-links/unsubscribe/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview Unsubscribe */
+        get: operations["reminders_email_api_preview_unsubscribe"];
+        put?: never;
+        /**
+         * Unsubscribe
+         * @description Also the email apps' one-click unsubscribe (RFC 8058), so no CSRF token.
+         */
+        post: operations["reminders_email_api_unsubscribe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/email-links/we-talked/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Preview Talked */
+        get: operations["reminders_email_api_preview_talked"];
+        put?: never;
+        /** Log Talked */
+        post: operations["reminders_email_api_log_talked"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2759,9 +2818,49 @@ export interface components {
             /** Hint */
             hint: string;
         };
+        /** ReminderSettingsOut */
+        ReminderSettingsOut: {
+            /**
+             * Nudges On
+             * @default true
+             */
+            nudges_on?: boolean;
+            /** Default Interval Days */
+            default_interval_days?: number | null;
+            /**
+             * Digest
+             * @default weekly
+             * @enum {string}
+             */
+            digest?: "off" | "daily" | "weekly";
+            /**
+             * Digest Weekday
+             * @default 0
+             */
+            digest_weekday?: number;
+            /**
+             * Include Memory Aids
+             * @default true
+             */
+            include_memory_aids?: boolean;
+            /**
+             * Birthdays Days Before
+             * @default 3
+             */
+            birthdays_days_before?: number | null;
+            /**
+             * Time Zone
+             * @default
+             */
+            time_zone?: string;
+            /** Email Ready */
+            email_ready: boolean;
+            /** Send To */
+            send_to: string;
+        };
         /**
          * ReminderSettingsSchema
-         * @description Keep-in-touch settings for everyone.
+         * @description Reminder settings for everyone: nudges, and the email digest.
          */
         ReminderSettingsSchema: {
             /**
@@ -2771,6 +2870,39 @@ export interface components {
             nudges_on?: boolean;
             /** Default Interval Days */
             default_interval_days?: number | null;
+            /**
+             * Digest
+             * @default weekly
+             * @enum {string}
+             */
+            digest?: "off" | "daily" | "weekly";
+            /**
+             * Digest Weekday
+             * @default 0
+             */
+            digest_weekday?: number;
+            /**
+             * Include Memory Aids
+             * @default true
+             */
+            include_memory_aids?: boolean;
+            /**
+             * Birthdays Days Before
+             * @default 3
+             */
+            birthdays_days_before?: number | null;
+            /**
+             * Time Zone
+             * @default
+             */
+            time_zone?: string;
+        };
+        /** DigestTestOut */
+        DigestTestOut: {
+            /** Ok */
+            ok: boolean;
+            /** Message */
+            message: string;
         };
         /**
          * KeepInTouchOut
@@ -3678,6 +3810,22 @@ export interface components {
         /** MailTestIn */
         MailTestIn: {
             smtp?: components["schemas"]["SmtpIn"] | null;
+        };
+        /** UnsubscribeOut */
+        UnsubscribeOut: {
+            /** Email */
+            email: string;
+            /** Subscribed */
+            subscribed: boolean;
+        };
+        /** TalkedOut */
+        TalkedOut: {
+            person: components["schemas"]["PersonRef"];
+        };
+        /** TalkedLoggedOut */
+        TalkedLoggedOut: {
+            /** Logged */
+            logged: boolean;
         };
     };
     responses: never;
@@ -5470,7 +5618,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReminderSettingsSchema"];
+                    "application/json": components["schemas"]["ReminderSettingsOut"];
                 };
             };
         };
@@ -5494,7 +5642,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReminderSettingsSchema"];
+                    "application/json": components["schemas"]["ReminderSettingsOut"];
+                };
+            };
+        };
+    };
+    reminders_api_send_test_email: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DigestTestOut"];
                 };
             };
         };
@@ -6414,6 +6582,128 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MailTestOut"];
+                };
+            };
+        };
+    };
+    reminders_email_api_preview_unsubscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnsubscribeOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    reminders_email_api_unsubscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    reminders_email_api_preview_talked: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TalkedOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+        };
+    };
+    reminders_email_api_log_talked: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TalkedLoggedOut"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
                 };
             };
         };

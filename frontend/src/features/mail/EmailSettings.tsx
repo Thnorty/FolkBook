@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
 import { notify } from '@/lib/notify'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { SendTestEmail } from './SendTestEmail'
 import {
   mailSettingsQuery,
   removeMail,
@@ -21,8 +22,6 @@ const SECURITY = [
   { value: 'ssl', label: 'SSL / TLS' },
   { value: 'none', label: 'None' },
 ] as const satisfies { value: Smtp['security']; label: string }[]
-
-const timeFormat = new Intl.DateTimeFormat(undefined, { timeStyle: 'short' })
 
 /** Settings → Email (SMTP), for admins (screen 5w): how this server sends email. */
 export function EmailSettings() {
@@ -78,7 +77,7 @@ function FromEnvironment({ settings, smtp }: { settings: MailSettings; smtp: Smt
           </div>
         ))}
       </dl>
-      <TestLine settings={settings} smtp={() => null} />
+      <SendTestEmail goesTo={settings.send_to} send={() => sendTestMail(null)} />
     </div>
   )
 }
@@ -230,10 +229,11 @@ function SmtpForm({ settings }: { settings: MailSettings }) {
       </div>
 
       <div className="flex flex-wrap items-start gap-3 border-t border-line pt-4">
-        <TestLine
-          settings={settings}
+        <SendTestEmail
+          goesTo={settings.send_to}
           // The form as it is, saved or not; the browser checks the fields first.
-          smtp={() => (form.current?.reportValidity() ? smtp() : undefined)}
+          canSend={() => Boolean(form.current?.reportValidity())}
+          send={() => sendTestMail(smtp())}
         />
         <div className="ml-auto flex gap-2">
           {current && !removing && (
@@ -269,40 +269,5 @@ function SmtpForm({ settings }: { settings: MailSettings }) {
 
       {error && <p className="type-small text-danger">{error.message}</p>}
     </form>
-  )
-}
-
-type TestLineProps = {
-  settings: MailSettings
-  /** What to test: settings, null for the ones in use, or undefined to not send. */
-  smtp: () => SmtpIn | null | undefined
-}
-
-/** Send test email, and where it goes or how it went. */
-function TestLine({ settings, smtp }: TestLineProps) {
-  const test = useMutation({
-    mutationFn: (body: SmtpIn | null) => sendTestMail(body),
-  })
-  const send = () => {
-    const body = smtp()
-    if (body !== undefined) test.mutate(body)
-  }
-  const result = test.data
-  const failed = test.error?.message ?? (result && !result.ok ? result.message : null)
-
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-      <Button type="button" variant="secondary" disabled={test.isPending} onClick={send}>
-        Send test email
-      </Button>
-      <p role="status" className={failed ? 'type-small text-danger' : 'type-small text-ink-soft'}>
-        {test.isPending
-          ? 'Sending…'
-          : (failed ??
-            (result?.ok
-              ? `✓ ${result.message} · ${timeFormat.format(test.submittedAt)}`
-              : `Goes to ${settings.send_to}`))}
-      </p>
-    </div>
   )
 }

@@ -1,6 +1,10 @@
 import datetime
+from functools import cache
+from typing import Literal
+from zoneinfo import available_timezones
 
 from ninja import Field, Schema
+from pydantic import field_validator
 
 from people.schemas import PersonRef
 
@@ -21,10 +25,32 @@ class KeepInTouchOut(KeepInTouchSchema):
 
 
 class ReminderSettingsSchema(Schema):
-    """Keep-in-touch settings for everyone."""
+    """Reminder settings for everyone: nudges, and the email digest."""
 
     nudges_on: bool = True
     default_interval_days: int | None = Field(None, ge=1, le=3650)  # None: own intervals only
+    digest: Literal["off", "daily", "weekly"] = "weekly"
+    digest_weekday: int = Field(0, ge=0, le=6)  # 0 is Monday
+    include_memory_aids: bool = True
+    birthdays_days_before: int | None = Field(3, ge=0, le=30)  # None: no birthdays
+    time_zone: str = Field("", max_length=64)  # the browser's, e.g. "Europe/Istanbul"
+
+    @field_validator("time_zone")
+    @classmethod
+    def known_time_zone(cls, value: str) -> str:
+        if value and value not in _time_zones():
+            raise ValueError("Unknown time zone.")
+        return value
+
+
+class ReminderSettingsOut(ReminderSettingsSchema):
+    email_ready: bool  # without email, the digest settings do nothing
+    send_to: str  # where the digest goes: the account's email
+
+
+class DigestTestOut(Schema):
+    ok: bool
+    message: str
 
 
 class NudgeOut(Schema):
@@ -35,3 +61,8 @@ class NudgeOut(Schema):
     days_since: int
     last_talked_on: datetime.date | None
     hint: str
+
+
+@cache
+def _time_zones() -> set[str]:
+    return available_timezones()

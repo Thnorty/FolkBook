@@ -35,6 +35,14 @@ Design screens: 5w (Settings → Email (SMTP)), 5l (Log in), 7a (Check your emai
 - The job is safe to run twice: it records `PasswordReset.emailed_at` and skips a link that was already emailed, used or expired.
 - The email can't be unsubscribed from (security email), and says so.
 
+### Digests and birthday reminders (step 2)
+
+- **Settings → Reminders** (5r): digest Off / Daily / Weekly (one weekday), always at 08:00; include memory aids (on by default); birthdays in the email: leave them out, on the day, 1, 3 (default) or 7 days before; Send test email. Each change saves right away, like the rest of that page. The digest is **weekly by default**, so reminders go out once an admin sets up email (DECISIONS: reminders go out by email).
+- **Time zone:** nothing stored one before. Reminder settings keep the browser's (`Intl…timeZone`), sent with every save, and from any page while none is saved; until then the server's (UTC). "08:00" and "today" are the user's.
+- **When:** `queue_digests` runs every 5 minutes and enqueues `send_digest` for every active user whose local time is past 08:00 on a digest day and whose `last_digest_on` isn't that date. `send_digest` locks the settings row and records the date even when there was nothing to send, so it's safe to run twice and doesn't recompute all day. A server that was down at 08:00 sends later that day; a missed day isn't caught up.
+- **What:** the nudges due that day (`due_nudges`, most overdue first, at most 10 with "And N more on Today") with each one's pinned memory aid if allowed, and birthdays: a daily email has the ones exactly N days ahead, a weekly one the 7 days from N days ahead, so each birthday is mentioned once. Everything goes through the permission layer like Today: someone else's memory aids, timeline or private people never appear. Nothing due and no birthdays: no email (Send test email still sends one that says so).
+- **Links in the email** that work without logging in are signed tokens (`reminders/links.py`, Django's signing with its own salt for each): **Unsubscribe** (never runs out) and **We talked** (14 days). Opening one shows a page and changes nothing; its button does it. We talked asks the permission layer again when used (the person must still be in the user's book, the account active) and logs one "Talked" entry for the user's today, like the button on Today; a second click says it was already logged. Unsubscribe turns the digest off (password reset emails still come) and also answers the email apps' one-click unsubscribe (RFC 8058, `List-Unsubscribe-Post`). Digest settings and Open in FolkBook are plain links into the app (login as usual).
+
 ### Who sees what
 
 - `GET /api/mail/status` → `{ready}`: open to anyone (the log-in page needs it). It says only whether email works.
