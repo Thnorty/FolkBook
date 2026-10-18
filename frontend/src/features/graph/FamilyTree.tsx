@@ -231,7 +231,7 @@ function Person({
       <span aria-hidden className="max-w-full truncate type-small font-medium text-ink">
         {person.is_me ? 'Me' : person.name}
       </span>
-      <span aria-hidden className="max-w-full truncate type-meta text-ink-soft normal-case">
+      <span aria-hidden className="line-clamp-2 max-w-full type-meta text-ink-soft normal-case">
         {person.is_me ? person.name : relation}
       </span>
     </button>

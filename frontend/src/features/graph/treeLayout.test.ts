@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import BIG_FAMILY from '@/test/bigFamilyTree.json'
 import { ELAS_TREE, directLink, parentLink, partnerLink, step, treePerson } from '@/test/familyTree'
 import {
   NODE_WIDTH,
@@ -201,6 +202,34 @@ describe('layoutTree', () => {
     const wide = layoutTree(tree, ALL)
     noOverlaps(wide)
     expect(wide.width).toBeGreaterThanOrEqual(25 * NODE_WIDTH)
+  })
+
+  describe('a real family (24 people, four generations)', () => {
+    const big = layoutTree(BIG_FAMILY as TreeData, ALL)
+
+    it('keeps brothers and sisters together', () => {
+      expect(Math.abs(xOf(big, 'aylin') - xOf(big, 'deniz'))).toBe(NODE_WIDTH)
+    })
+
+    it('keeps "Add parent" slots near their person', () => {
+      for (const slot of big.slots) {
+        // A crowded row: everyone wants the middle, so some give way, but not across the tree.
+        expect(Math.abs(slot.x - xOf(big, slot.childId)), slot.key).toBeLessThanOrEqual(
+          3.5 * NODE_WIDTH,
+        )
+      }
+    })
+
+    it('draws no line from a parent across the tree', () => {
+      for (const line of big.lines.filter((l) => l.kind === 'child')) {
+        const [[x1], [x2]] = [line.points[0], line.points.at(-1)!]
+        // Me and Can share parents, and Me's partners make Me's group three wide: both can't
+        // be right under them, but no line runs across the tree.
+        expect(Math.abs(x1 - x2), line.id).toBeLessThanOrEqual(3 * NODE_WIDTH)
+      }
+    })
+
+    it('never overlaps two people', () => noOverlaps(big))
   })
 
   it('still places people whose links disagree with their generations', () => {

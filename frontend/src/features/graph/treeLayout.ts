@@ -36,7 +36,8 @@ export type TreeLayout = {
 /** Room for one person (centre to centre) and one generation. */
 export const NODE_WIDTH = 120
 export const ROW_HEIGHT = 140
-const SWEEPS = 4
+const SWEEPS = 8
+const PLACE_ROUNDS = 8
 
 const LINE_LABELS: Record<string, TreeLine['label']> = { adoptive: 'adopted', step: 'step' }
 const ROW_NAMES: Record<number, string> = {
@@ -126,13 +127,50 @@ function units(row: Node[], partners: Map<string, Set<string>>): string[][] {
 
 const mean = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
-/** Every unit's x, packed left to right in the given order, each as near `want` as fits. */
-function pack(row: string[][], x: Map<string, number>, want: (unit: string[]) => number) {
-  let end = -Infinity
+/** Units side by side in the given order, from 0: where they are while rows are ordered. */
+function packTight(row: string[][], x: Map<string, number>) {
+  let at = 0
   for (const unit of row) {
-    const start = Math.max(want(unit) - ((unit.length - 1) * NODE_WIDTH) / 2, end + NODE_WIDTH)
-    unit.forEach((id, i) => x.set(id, start + i * NODE_WIDTH))
-    end = start + (unit.length - 1) * NODE_WIDTH
+    unit.forEach((id, i) => x.set(id, (at + i) * NODE_WIDTH))
+    at += unit.length
+  }
+}
+
+type Block = { units: string[][]; starts: number[]; size: number }
+/** Where a block of units starts: the average of where its units want it to. */
+const blockStart = (block: Block) => mean(block.starts)
+
+/**
+ * Each unit as near the x it wants as the row allows, in the given order. Units that would
+ * overlap form a block centred on what they want together, so nothing drifts to one side.
+ */
+function place(row: string[][], x: Map<string, number>, want: (unit: string[]) => number) {
+  const blocks: Block[] = []
+  for (const unit of row) {
+    let block: Block = {
+      units: [unit],
+      starts: [want(unit) - ((unit.length - 1) * NODE_WIDTH) / 2],
+      size: unit.length * NODE_WIDTH,
+    }
+    while (blocks.length) {
+      const before = blocks.at(-1)!
+      if (blockStart(before) + before.size <= blockStart(block)) break
+      blocks.pop()
+      block = {
+        units: [...before.units, ...block.units],
+        // Each unit's wish, as a wish for where the whole block starts.
+        starts: [...before.starts, ...block.starts.map((start) => start - before.size)],
+        size: before.size + block.size,
+      }
+    }
+    blocks.push(block)
+  }
+  for (const block of blocks) {
+    let at = blockStart(block)
+    for (const unit of block.units) {
+      unit.forEach((id, i) => x.set(id, at + i * NODE_WIDTH))
+      at += unit.length * NODE_WIDTH
+    }
   }
 }
 
@@ -166,16 +204,21 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
     childrenOf.set(parent, [...(childrenOf.get(parent) ?? []), child])
   }
   const partners = new Map<string, Set<string>>()
+  const direct = new Map<string, string[]>()
   for (const link of links) {
     if (link.type === 'parent') relate(link.source, link.target)
-    if (link.type === 'partner') {
+    else if (link.type === 'partner') {
       partners.set(link.source, (partners.get(link.source) ?? new Set()).add(link.target))
       partners.set(link.target, (partners.get(link.target) ?? new Set()).add(link.source))
+    } else {
+      direct.set(link.source, [...(direct.get(link.source) ?? []), link.target])
+      direct.set(link.target, [...(direct.get(link.target) ?? []), link.source])
     }
   }
-  // A slot's two places stay together, like partners, above their person.
+  // A slot's two places stay together, like partners, above their person. Slots follow
+  // their person (as their "children") but never pull people around (as parents).
   for (const slot of slots) {
-    relate(`slot:${slot.key}`, slot.childId)
+    childrenOf.set(`slot:${slot.key}`, [slot.childId])
     const other = `slot:${slot.childId}:${1 - Number(slot.key.split(':')[1])}`
     if (slot.key.endsWith(':0') && slots.some((s) => `slot:${s.key}` === other)) {
       partners.set(`slot:${slot.key}`, new Set([other]))
@@ -183,38 +226,113 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
     }
   }
 
+  // A first order: as found walking out from the tree's person (partners, then children,
+  // then parents, then direct links), so each family starts out together.
+  const names = new Map(nodes.map((node) => [node.id, node.name]))
+  const byName = (ids: Iterable<string>) =>
+    [...ids].toSorted((a, b) => names.get(a)!.localeCompare(names.get(b)!) || a.localeCompare(b))
+  const found = new Map<string, number>()
+  const stack = [data.root, ...byName(names.keys()).toReversed()]
+  while (stack.length) {
+    const id = stack.pop()!
+    if (found.has(id) || !names.has(id)) continue
+    found.set(id, found.size)
+    const next = [
+      ...byName(partners.get(id) ?? []),
+      ...byName(childrenOf.get(id) ?? []),
+      ...byName(parentsOf.get(id) ?? []),
+      ...byName(direct.get(id) ?? []),
+    ]
+    stack.push(...next.toReversed())
+  }
+  const firstFound = (unit: string[]) => Math.min(...unit.map((id) => found.get(id)!))
+
   const generations = [...new Set(nodes.map((node) => node.generation))].toSorted((a, b) => b - a)
   const rows = generations.map((generation) =>
     units(
       nodes.filter((node) => node.generation === generation),
       partners,
-    ).toSorted((a, b) => Number(b.includes(data.root)) - Number(a.includes(data.root))),
+    ).toSorted((a, b) => firstFound(a) - firstFound(b)),
   )
 
-  // Order each row by where its people's parents (going down) or children (going up) are.
+  // Then each row by where its people's parents (going down) or children (going up) are.
   const x = new Map<string, number>()
   const here = (unit: string[]) => mean(unit.map((id) => x.get(id) ?? 0))
-  rows.forEach((row) => pack(row, x, () => 0))
-  const near = (relatives: Map<string, string[]>) => (unit: string[]) => {
-    const placed = unit.flatMap((id) => relatives.get(id) ?? []).filter((id) => x.has(id))
-    return placed.length ? mean(placed.map((id) => x.get(id)!)) : here(unit)
-  }
-  const sweep = (order: number[], relatives: Map<string, string[]>) => {
-    for (const r of order) {
-      const key = near(relatives)
-      const ranked = rows[r].map((unit, i) => ({ unit, i, at: key(unit) }))
-      rows[r] = ranked.toSorted((a, b) => a.at - b.at || a.i - b.i).map(({ unit }) => unit)
-      pack(rows[r], x, () => 0)
+  rows.forEach((row) => packTight(row, x))
+  const near =
+    (...relatives: Map<string, string[]>[]) =>
+    (unit: string[]) => {
+      // Each relative once: a couple's child pulls the couple once, not once per parent.
+      const placed = new Set(
+        unit.flatMap((id) => relatives.flatMap((of) => of.get(id) ?? [])).filter((id) => x.has(id)),
+      )
+      return placed.size ? mean([...placed].map((id) => x.get(id)!)) : here(unit)
     }
-  }
+  // How far a unit's people are from their relatives (parents or children), laid out from
+  // `start` in this order.
+  const awayFrom = (relatives: Map<string, string[]>) => (unit: string[], start: number) =>
+    unit.reduce((sum, id, i) => {
+      const placed = (relatives.get(id) ?? []).filter((other) => x.has(other))
+      if (!placed.length) return sum
+      return sum + Math.abs(start + i * NODE_WIDTH - mean(placed.map((other) => x.get(other)!)))
+    }, 0)
   const down = rows.map((_, i) => i)
-  for (let i = 0; i < SWEEPS; i++)
-    sweep(i % 2 ? down.toReversed() : down, i % 2 ? childrenOf : parentsOf)
+  // Sweeps can make things worse again: keep the best order seen, by crossing lines first,
+  // then by how far children are from their parents.
+  const parentLines = [...parentsOf].flatMap(([child, parents]) =>
+    parents.map((parent) => [parent, child] as const),
+  )
+  const score = () => {
+    let crossings = 0
+    for (let a = 0; a < parentLines.length; a++) {
+      for (let b = a + 1; b < parentLines.length; b++) {
+        const [pa, ca] = parentLines[a].map((id) => x.get(id)!)
+        const [pb, cb] = parentLines[b].map((id) => x.get(id)!)
+        if ((pa - pb) * (ca - cb) < 0) crossings++
+      }
+    }
+    const distance = parentLines.reduce((sum, [p, c]) => sum + Math.abs(x.get(p)! - x.get(c)!), 0)
+    return crossings * NODE_WIDTH * parentLines.length + distance
+  }
+  let best = { score: score(), rows: rows.map((row) => row.map((unit) => [...unit])) }
+  for (let i = 0; i < SWEEPS; i++) {
+    const relatives = i % 2 ? childrenOf : parentsOf
+    const key = near(relatives)
+    const away = awayFrom(relatives)
+    for (const r of i % 2 ? down.toReversed() : down) {
+      const ranked = rows[r].map((unit, at) => ({ unit, at, wants: key(unit) }))
+      rows[r] = ranked.toSorted((a, b) => a.wants - b.wants || a.at - b.at).map(({ unit }) => unit)
+      packTight(rows[r], x)
+      // Partners face their own families: Mateo, Ela | Can rather than Ela, Mateo | Can.
+      rows[r] = rows[r].map((unit) => {
+        const start = x.get(unit[0])!
+        return away(unit.toReversed(), start) < away(unit, start) ? unit.toReversed() : unit
+      })
+      packTight(rows[r], x)
+    }
+    const now = score()
+    if (now < best.score)
+      best = { score: now, rows: rows.map((row) => row.map((unit) => [...unit])) }
+  }
+  best.rows.forEach((row, r) => {
+    rows[r] = row
+    packTight(row, x)
+  })
 
-  // Then place them: parents over their children, then children under their parents.
-  for (const r of down.toReversed()) pack(rows[r], x, near(childrenOf))
-  for (const r of down) pack(rows[r], x, near(parentsOf))
+  // Then place them: under their parents, or (with none shown, like the oldest generation
+  // and slots) over their children, as far as the row allows.
+  const byParents = near(parentsOf)
+  const byOthers = near(childrenOf, direct)
+  const underParents = (unit: string[]) =>
+    unit.some((id) => parentsOf.get(id)?.some((parent) => x.has(parent)))
+      ? byParents(unit)
+      : byOthers(unit)
+  for (let i = 0; i < PLACE_ROUNDS; i++) {
+    for (const r of i % 2 ? down.toReversed() : down) place(rows[r], x, underParents)
+  }
 
+  // Whole pixels: the steps between people are whole, so spacing stays exact.
+  for (const [id, at] of x) x.set(id, Math.round(at))
   const left = Math.min(...x.values()) - NODE_WIDTH / 2
   const rowY = new Map(generations.map((generation, i) => [generation, (i + 0.5) * ROW_HEIGHT]))
   const at = (id: string, generation: number): [number, number] => [

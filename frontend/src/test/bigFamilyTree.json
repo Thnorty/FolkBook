@@ -1,0 +1,740 @@
+{
+ "root": "me",
+ "people": [
+  {
+   "id": "fatma",
+   "name": "Fatma Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 3,
+   "relation": [
+    {
+     "relation": "grandparent",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    },
+    {
+     "relation": "parent",
+     "pronouns": "she",
+     "parent_type": "biological",
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 2
+  },
+  {
+   "id": "huseyin",
+   "name": "Hüseyin Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 3,
+   "relation": [
+    {
+     "relation": "grandparent",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    },
+    {
+     "relation": "parent",
+     "pronouns": "he",
+     "parent_type": "biological",
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 2
+  },
+  {
+   "id": "leyla",
+   "name": "Leyla Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 2,
+   "relation": [
+    {
+     "relation": "grandparent",
+     "pronouns": "she",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 2
+  },
+  {
+   "id": "orhan",
+   "name": "Orhan Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 2,
+   "relation": [
+    {
+     "relation": "grandparent",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "kemal",
+   "name": "Kemal Yıldız",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 1,
+   "relation": [
+    {
+     "relation": "aunt_uncle",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": true,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "nilgun",
+   "name": "Nilgün Aksoy",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 1,
+   "relation": [
+    {
+     "relation": "parent",
+     "pronouns": "she",
+     "parent_type": "biological",
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 2
+  },
+  {
+   "id": "selim",
+   "name": "Selim Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 1,
+   "relation": [
+    {
+     "relation": "aunt_uncle",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "murat",
+   "name": "Murat Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 1,
+   "relation": [
+    {
+     "relation": "parent",
+     "pronouns": "he",
+     "parent_type": "biological",
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "rosa",
+   "name": "Rosa Ruiz",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 1,
+   "relation": [
+    {
+     "relation": "parent_in_law",
+     "pronouns": "she",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": true,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "sevgi",
+   "name": "Sevgi Aksoy",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 1,
+   "relation": [
+    {
+     "relation": "aunt_uncle",
+     "pronouns": "she",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "hakan",
+   "name": "Hakan Şen",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 1,
+   "relation": [
+    {
+     "relation": "parent",
+     "pronouns": "he",
+     "parent_type": "step",
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 2
+  },
+  {
+   "id": "gul",
+   "name": "Gül Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 1,
+   "relation": [
+    {
+     "relation": "aunt_uncle",
+     "pronouns": "she",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": true,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "zeynep",
+   "name": "Zeynep Kaya",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 0,
+   "relation": [
+    {
+     "relation": "sibling_in_law",
+     "pronouns": "she",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": true,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "me",
+   "name": "nurluoguz03",
+   "photo_url": null,
+   "is_me": true,
+   "pronouns": null,
+   "generation": 0,
+   "relation": [],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "mateo",
+   "name": "Mateo Ruiz",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 0,
+   "relation": [
+    {
+     "relation": "partner",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "aylin",
+   "name": "Aylin Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 0,
+   "relation": [
+    {
+     "relation": "cousin",
+     "pronouns": "she",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "deniz",
+   "name": "Deniz Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 0,
+   "relation": [
+    {
+     "relation": "cousin",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "eda",
+   "name": "Eda Şahin",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": 0,
+   "relation": [
+    {
+     "relation": "partner",
+     "pronouns": "she",
+     "parent_type": null,
+     "former": true
+    }
+   ],
+   "in_law": false,
+   "via_former": true,
+   "missing_parents": 0
+  },
+  {
+   "id": "diego",
+   "name": "Diego Ruiz",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 0,
+   "relation": [
+    {
+     "relation": "sibling_in_law",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": true,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "can",
+   "name": "Can Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": 0,
+   "relation": [
+    {
+     "relation": "sibling",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "emir",
+   "name": "Emir Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": -1,
+   "relation": [
+    {
+     "relation": "niece_nephew",
+     "pronouns": "he",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "ece",
+   "name": "Ece Ruiz",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": -1,
+   "relation": [
+    {
+     "relation": "child_in_law",
+     "pronouns": "she",
+     "parent_type": null,
+     "former": false
+    }
+   ],
+   "in_law": true,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "lina",
+   "name": "Lina Ruiz",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "she",
+   "generation": -1,
+   "relation": [
+    {
+     "relation": "child",
+     "pronouns": "she",
+     "parent_type": "biological",
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  },
+  {
+   "id": "arda",
+   "name": "Arda Nurlu",
+   "photo_url": null,
+   "is_me": false,
+   "pronouns": "he",
+   "generation": -1,
+   "relation": [
+    {
+     "relation": "child",
+     "pronouns": "he",
+     "parent_type": "biological",
+     "former": false
+    }
+   ],
+   "in_law": false,
+   "via_former": false,
+   "missing_parents": 0
+  }
+ ],
+ "links": [
+  {
+   "id": "l0",
+   "type": "parent",
+   "source": "huseyin",
+   "target": "orhan",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l1",
+   "type": "parent",
+   "source": "fatma",
+   "target": "orhan",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l2",
+   "type": "partner",
+   "source": "fatma",
+   "target": "huseyin",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l3",
+   "type": "parent",
+   "source": "orhan",
+   "target": "murat",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l4",
+   "type": "parent",
+   "source": "leyla",
+   "target": "murat",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l5",
+   "type": "partner",
+   "source": "leyla",
+   "target": "orhan",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l6",
+   "type": "parent",
+   "source": "orhan",
+   "target": "selim",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l7",
+   "type": "parent",
+   "source": "leyla",
+   "target": "selim",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l8",
+   "type": "partner",
+   "source": "selim",
+   "target": "gul",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l9",
+   "type": "parent",
+   "source": "selim",
+   "target": "aylin",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l10",
+   "type": "parent",
+   "source": "gul",
+   "target": "aylin",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l11",
+   "type": "parent",
+   "source": "selim",
+   "target": "deniz",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l12",
+   "type": "parent",
+   "source": "gul",
+   "target": "deniz",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l13",
+   "type": "parent",
+   "source": "murat",
+   "target": "me",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l14",
+   "type": "parent",
+   "source": "nilgun",
+   "target": "me",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l15",
+   "type": "parent",
+   "source": "murat",
+   "target": "can",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l16",
+   "type": "parent",
+   "source": "nilgun",
+   "target": "can",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l17",
+   "type": "partner",
+   "source": "nilgun",
+   "target": "murat",
+   "parent_type": null,
+   "former": true
+  },
+  {
+   "id": "l18",
+   "type": "partner",
+   "source": "nilgun",
+   "target": "hakan",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l19",
+   "type": "parent",
+   "source": "hakan",
+   "target": "me",
+   "parent_type": "step",
+   "former": false
+  },
+  {
+   "id": "l20",
+   "type": "partner",
+   "source": "zeynep",
+   "target": "can",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l21",
+   "type": "parent",
+   "source": "can",
+   "target": "emir",
+   "parent_type": "adoptive",
+   "former": false
+  },
+  {
+   "id": "l22",
+   "type": "parent",
+   "source": "zeynep",
+   "target": "emir",
+   "parent_type": "adoptive",
+   "former": false
+  },
+  {
+   "id": "l23",
+   "type": "partner",
+   "source": "me",
+   "target": "mateo",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l24",
+   "type": "parent",
+   "source": "rosa",
+   "target": "mateo",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l25",
+   "type": "sibling",
+   "source": "mateo",
+   "target": "diego",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l26",
+   "type": "parent",
+   "source": "me",
+   "target": "lina",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l27",
+   "type": "parent",
+   "source": "mateo",
+   "target": "lina",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l28",
+   "type": "partner",
+   "source": "ece",
+   "target": "lina",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l29",
+   "type": "parent",
+   "source": "me",
+   "target": "arda",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l30",
+   "type": "parent",
+   "source": "eda",
+   "target": "arda",
+   "parent_type": "biological",
+   "former": false
+  },
+  {
+   "id": "l31",
+   "type": "partner",
+   "source": "me",
+   "target": "eda",
+   "parent_type": null,
+   "former": true
+  },
+  {
+   "id": "l32",
+   "type": "sibling",
+   "source": "nilgun",
+   "target": "sevgi",
+   "parent_type": null,
+   "former": false
+  },
+  {
+   "id": "l33",
+   "type": "partner",
+   "source": "kemal",
+   "target": "sevgi",
+   "parent_type": null,
+   "former": false
+  }
+ ]
+}
