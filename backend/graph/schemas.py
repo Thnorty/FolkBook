@@ -3,6 +3,7 @@ from uuid import UUID
 from ninja import Schema
 
 from graph.queries import EdgeKind
+from people.models import Pronouns
 from people.schemas import PersonRef, SpaceRef
 
 
@@ -51,3 +52,42 @@ class PathsOut(Schema):
     """The shortest route first, then alternatives with a different first step."""
 
     paths: list[PathOut]
+
+
+class TreeStepOut(Schema):
+    """One step of how someone is related ("grandmother's cousin" is two)."""
+
+    relation: str  # a family relation code, or "relative"
+    pronouns: Pronouns | None  # the step's own person's, for "grandmother"
+    parent_type: str
+    former: bool
+
+
+class TreePersonOut(Schema):
+    id: UUID
+    name: str
+    photo_url: str | None
+    is_me: bool
+    pronouns: Pronouns | None
+    generation: int  # the tree's person 0, parents 1, children -1
+    relation: list[TreeStepOut]  # empty for the tree's person
+    in_law: bool  # only there through someone's partner: the In-laws toggle
+    via_former: bool  # only there through a partnership that ended: Former partners
+    missing_parents: int  # 0-2, for "Add parent" slots
+
+
+class TreeLinkOut(Schema):
+    """A stored family link. For parents, `source` is the parent of `target`."""
+
+    id: UUID
+    type: str
+    source: UUID
+    target: UUID
+    parent_type: str
+    former: bool
+
+
+class FamilyTreeOut(Schema):
+    root: UUID
+    people: list[TreePersonOut]
+    links: list[TreeLinkOut]

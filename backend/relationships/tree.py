@@ -12,11 +12,19 @@ Like `family.py`, it works on plain data (`Link`), so it's tested without a data
 import heapq
 from collections import defaultdict
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from itertools import count
 
-from relationships.family import FamilyGraph, FamilyRelation, Link, PersonId
+from access.policy import Access, can_link_privately, visible_people
+from people.models import Person
+from relationships.family import (
+    FamilyGraph,
+    FamilyRelation,
+    Link,
+    PersonId,
+    visible_family_links,
+)
 from relationships.models import RelationshipType
 
 
@@ -256,3 +264,25 @@ def walk(links: Iterable[Link], root: PersonId) -> list[TreePerson]:
         for r in reached.values()
     ]
     return sorted(people, key=lambda p: (-p.generation, str(p.person)))
+
+
+@dataclass(frozen=True)
+class FamilyTree:
+    root: Person
+    people: list[tuple[Person, TreePerson]]  # highest generation first
+    links: list[Link]  # the family links between people in the tree
+
+
+def family_tree(access: Access, person: Person) -> FamilyTree:
+    """The tree of `person`, from what `access` may see. Two queries: links, then people."""
+    links = visible_family_links(access)
+    placed = walk(links, person.pk)
+    people = visible_people(access).in_bulk([p.person for p in placed])
+    slots = can_link_privately(access)
+    shown = [
+        (people[p.person], p if slots else replace(p, missing_parents=0))
+        for p in placed
+        if p.person in people
+    ]
+    ids = {p.pk for p, _ in shown}
+    return FamilyTree(person, shown, [link for link in links if link.a in ids and link.b in ids])

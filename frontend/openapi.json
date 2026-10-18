@@ -2909,6 +2909,48 @@
         ]
       }
     },
+    "/api/graph/family-tree/{person_id}": {
+      "get": {
+        "operationId": "graph_api_get_family_tree",
+        "summary": "Get Family Tree",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "person_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Person Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyTreeOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Family tree mode: everyone linked to this person by family, by generation.",
+        "tags": [
+          "graph"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          },
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/memory-aids": {
       "get": {
         "operationId": "people_api_list_memory_aids",
@@ -7599,6 +7641,188 @@
           "paths"
         ],
         "title": "PathsOut",
+        "type": "object"
+      },
+      "FamilyTreeOut": {
+        "properties": {
+          "root": {
+            "format": "uuid",
+            "title": "Root",
+            "type": "string"
+          },
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/TreePersonOut"
+            },
+            "title": "People",
+            "type": "array"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/TreeLinkOut"
+            },
+            "title": "Links",
+            "type": "array"
+          }
+        },
+        "required": [
+          "root",
+          "people",
+          "links"
+        ],
+        "title": "FamilyTreeOut",
+        "type": "object"
+      },
+      "TreeLinkOut": {
+        "description": "A stored family link. For parents, `source` is the parent of `target`.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "source": {
+            "format": "uuid",
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "format": "uuid",
+            "title": "Target",
+            "type": "string"
+          },
+          "parent_type": {
+            "title": "Parent Type",
+            "type": "string"
+          },
+          "former": {
+            "title": "Former",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "source",
+          "target",
+          "parent_type",
+          "former"
+        ],
+        "title": "TreeLinkOut",
+        "type": "object"
+      },
+      "TreePersonOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "pronouns": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pronouns"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generation": {
+            "title": "Generation",
+            "type": "integer"
+          },
+          "relation": {
+            "items": {
+              "$ref": "#/components/schemas/TreeStepOut"
+            },
+            "title": "Relation",
+            "type": "array"
+          },
+          "in_law": {
+            "title": "In Law",
+            "type": "boolean"
+          },
+          "via_former": {
+            "title": "Via Former",
+            "type": "boolean"
+          },
+          "missing_parents": {
+            "title": "Missing Parents",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "photo_url",
+          "is_me",
+          "pronouns",
+          "generation",
+          "relation",
+          "in_law",
+          "via_former",
+          "missing_parents"
+        ],
+        "title": "TreePersonOut",
+        "type": "object"
+      },
+      "TreeStepOut": {
+        "description": "One step of how someone is related (\"grandmother's cousin\" is two).",
+        "properties": {
+          "relation": {
+            "title": "Relation",
+            "type": "string"
+          },
+          "pronouns": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pronouns"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parent_type": {
+            "title": "Parent Type",
+            "type": "string"
+          },
+          "former": {
+            "title": "Former",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "relation",
+          "pronouns",
+          "parent_type",
+          "former"
+        ],
+        "title": "TreeStepOut",
         "type": "object"
       },
       "MemoryAidOut": {

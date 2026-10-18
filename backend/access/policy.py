@@ -276,6 +276,11 @@ def visible_relationships(access: Access) -> QuerySet[Relationship]:
     return Relationship.objects.filter(in_visible_space, person_a__in=people, person_b__in=people)
 
 
+def can_link_privately(access: Access) -> bool:
+    """Whether the user may add private links (outside any space) to people they can see."""
+    return not access.read_only and not access.is_space_limited
+
+
 def can_create_relationship(
     access: Access, a: Person, b: Person, space: Space | None = None
 ) -> bool:
@@ -287,7 +292,7 @@ def can_create_relationship(
     if access.read_only or not (can_see_person(access, a) and can_see_person(access, b)):
         return False
     if space is None:
-        return not access.is_space_limited
+        return can_link_privately(access)
     if not can_change_space_people(access, space):
         return False
     in_space = Person.objects.filter(_people_in(Space.objects.filter(pk=space.pk)))
