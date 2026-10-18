@@ -5,6 +5,7 @@ from ninja import Schema
 from graph.queries import EdgeKind
 from people.models import Pronouns
 from people.schemas import PersonRef, SpaceRef
+from relationships.models import ParentType, RelationshipType
 
 
 class GraphNodeOut(Schema):
@@ -59,7 +60,7 @@ class TreeStepOut(Schema):
 
     relation: str  # a family relation code, or "relative"
     pronouns: Pronouns | None  # the step's own person's, for "grandmother"
-    parent_type: str
+    parent_type: ParentType | None  # for parents and children
     former: bool
 
 
@@ -80,10 +81,10 @@ class TreeLinkOut(Schema):
     """A stored family link. For parents, `source` is the parent of `target`."""
 
     id: UUID
-    type: str
+    type: RelationshipType
     source: UUID
     target: UUID
-    parent_type: str
+    parent_type: ParentType | None  # for parent links
     former: bool
 
 

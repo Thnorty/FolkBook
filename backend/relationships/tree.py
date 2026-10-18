@@ -33,7 +33,7 @@ class Kind(Enum):
 
     ROOT = "root"
     LINE = "line"  # an ancestor: reached from the root by parent links only, going up
-    UPPER = "upper"  # family through a direct link, before any step down (an aunt, her parents)
+    UPPER = "upper"  # family through a direct link up, before any step down (an aunt, her parents)
     BLOOD = "blood"  # family after a step down: going up from here meets a child's other parent
     ROOT_PARTNER = "root_partner"
     STEP = "step"  # an ancestor's partner
@@ -54,8 +54,8 @@ class Move(Enum):
     PARTNER = "partner"
 
 
-def _next(kind: Kind, move: Move) -> Kind | None:
-    """Where a move from someone of `kind` leads, or None when the walk stops there."""
+def _next(kind: Kind, move: Move, up: int) -> Kind | None:
+    """Where a move (`up` generations) from someone of `kind` leads; None: the walk stops."""
     if move is Move.PARTNER:
         if kind is Kind.ROOT:
             return Kind.ROOT_PARTNER
@@ -63,10 +63,12 @@ def _next(kind: Kind, move: Move) -> Kind | None:
             return Kind.STEP
         return None if kind is Kind.LEAF else Kind.LEAF
     match kind:
-        case Kind.ROOT | Kind.LINE:
-            return {Move.UP: Kind.LINE, Move.DIRECT: Kind.UPPER}.get(move, Kind.BLOOD)
-        case Kind.UPPER:
-            return Kind.BLOOD if move is Move.DOWN else Kind.UPPER
+        case Kind.ROOT | Kind.LINE | Kind.UPPER:
+            if move is Move.UP:
+                return Kind.UPPER if kind is Kind.UPPER else Kind.LINE
+            # A direct link up (a grandparent, an aunt) is still above everyone's children;
+            # a sibling or cousin linked directly is like one reached by going down.
+            return Kind.UPPER if move is Move.DIRECT and up > 0 else Kind.BLOOD
         case Kind.BLOOD:
             # A child's other parent who isn't family: an in-law, without their family.
             return Kind.LEAF if move is Move.UP else Kind.BLOOD
@@ -130,8 +132,15 @@ class _Reached:
 
     @property
     def key(self) -> tuple:
-        """Better first: not through an ex, not an in-law, closer, closer kin."""
-        return (self.via_former, self.in_law, self.distance, self.kind.rank)
+        """Better first: the root's own partners (whatever else they are), then not through
+        an ex, not an in-law, closer, closer kin."""
+        return (
+            self.kind is not Kind.ROOT_PARTNER,
+            self.via_former,
+            self.in_law,
+            self.distance,
+            self.kind.rank,
+        )
 
 
 # "a is b's …" for a directional direct link: how many generations a is above b.
@@ -160,21 +169,28 @@ def _moves(links: Iterable[Link]) -> dict[PersonId, list[tuple[PersonId, Move, i
     return moves
 
 
-def _reach(links: Iterable[Link], root: PersonId) -> dict[PersonId, _Reached]:
-    """Everyone in the tree, each by their best route from the root."""
+def _reach(links: Iterable[Link], root: PersonId) -> tuple[dict[PersonId, _Reached], set[PersonId]]:
+    """Everyone in the tree, each by their best route from the root; and the root's line.
+
+    Someone can be reached in several ways (an ex who is also a child's parent, a
+    grandparent also linked directly): their place comes from the best one, but the walk
+    goes on from each of them, so no way loses the people only it leads to.
+    """
     moves = _moves(links)
     order = count()  # keeps the heap's order stable for equal keys
     start = _Reached(root, Kind.ROOT, 0, False, False, 0)
     queue = [(start.key, next(order), start)]
     fixed: dict[PersonId, _Reached] = {}
+    walked: set[tuple[PersonId, Kind]] = set()
     while queue:
         _, _, here = heapq.heappop(queue)
-        if here.person in fixed:
+        if (here.person, here.kind) in walked:
             continue
-        fixed[here.person] = here
+        walked.add((here.person, here.kind))
+        fixed.setdefault(here.person, here)
         for other, move, up, link in moves[here.person]:
-            kind = _next(here.kind, move)
-            if kind is None or other in fixed:
+            kind = _next(here.kind, move, up)
+            if kind is None or (other, kind) in walked:
                 continue
             there = _Reached(
                 other,
@@ -187,7 +203,8 @@ def _reach(links: Iterable[Link], root: PersonId) -> dict[PersonId, _Reached]:
                 link,
             )
             heapq.heappush(queue, (there.key, next(order), there))
-    return fixed
+    line = {person for person, kind in walked if kind in (Kind.ROOT, Kind.LINE)}
+    return fixed, line
 
 
 class _Namer:
@@ -249,7 +266,7 @@ def _parent_counts(links: list[Link]) -> dict[PersonId, int]:
 def walk(links: Iterable[Link], root: PersonId) -> list[TreePerson]:
     """The tree of `root`: everyone in it, highest generation first."""
     links = list(links)
-    reached = _reach(links, root)
+    reached, line = _reach(links, root)
     namer = _Namer(links, reached, root)
     parents = _parent_counts(links)
     people = [
@@ -259,7 +276,7 @@ def walk(links: Iterable[Link], root: PersonId) -> list[TreePerson]:
             r.in_law,
             r.via_former,
             namer.chain(r.person),
-            max(0, 2 - parents.get(r.person, 0)) if r.kind in (Kind.ROOT, Kind.LINE) else 0,
+            max(0, 2 - parents.get(r.person, 0)) if r.person in line else 0,
         )
         for r in reached.values()
     ]

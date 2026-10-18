@@ -7682,8 +7682,7 @@
             "type": "string"
           },
           "type": {
-            "title": "Type",
-            "type": "string"
+            "$ref": "#/components/schemas/RelationshipType"
           },
           "source": {
             "format": "uuid",
@@ -7696,8 +7695,14 @@
             "type": "string"
           },
           "parent_type": {
-            "title": "Parent Type",
-            "type": "string"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "former": {
             "title": "Former",
@@ -7808,8 +7813,14 @@
             ]
           },
           "parent_type": {
-            "title": "Parent Type",
-            "type": "string"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParentType"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "former": {
             "title": "Former",

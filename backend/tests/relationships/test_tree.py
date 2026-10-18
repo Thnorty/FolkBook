@@ -104,6 +104,26 @@ def test_elas_tree():
             id="cousins who married appear once, as family",
         ),
         pytest.param(
+            ["R partner:former X", "R parent K", "X parent K", "Y parent X"],
+            {"R": (0, F, F), "X": (0, F, T), "K": (-1, F, F), "Y": (1, T, T)},
+            id="an ex who is also your child's parent keeps their family, as former",
+        ),
+        pytest.param(
+            ["G grandparent R", "P parent R", "G parent P", "H partner G", "H parent Z"],
+            {"R": (0, F, F), "P": (1, F, F), "G": (2, F, F), "H": (2, F, F), "Z": (1, F, F)},
+            id="a leftover direct grandparent link changes nothing",
+        ),
+        pytest.param(
+            ["R cousin C", "A parent C", "B parent C", "Y parent B"],
+            {"R": (0, F, F), "C": (0, F, F), "A": (1, T, F), "B": (1, T, F)},
+            id="a directly linked cousin's parents are in-laws, without their family",
+        ),
+        pytest.param(
+            ["R sibling S", "M parent R", "M parent S", "X parent S", "Q parent X"],
+            {"R": (0, F, F), "S": (0, F, F), "M": (1, F, F), "X": (1, T, F)},
+            id="a directly linked half-sibling's other parent is an in-law",
+        ),
+        pytest.param(
             ["X friend Y"],
             {"R": (0, F, F)},
             id="no family: only the root",
@@ -214,6 +234,11 @@ def test_missing_parents_for_the_root_and_ancestors_only():
         "Q": 0,
         "C": 0,
     }
+
+
+def test_a_leftover_direct_grandparent_link_keeps_their_slots():
+    tree = tree_of(["G grandparent R", "P parent R", "G parent P"])
+    assert tree["G"].missing_parents == 2
 
 
 def test_three_parents_miss_none():

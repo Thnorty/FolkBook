@@ -2720,8 +2720,7 @@ export interface components {
              * Format: uuid
              */
             id: string;
-            /** Type */
-            type: string;
+            type: components["schemas"]["RelationshipType"];
             /**
              * Source
              * Format: uuid
@@ -2732,8 +2731,7 @@ export interface components {
              * Format: uuid
              */
             target: string;
-            /** Parent Type */
-            parent_type: string;
+            parent_type: components["schemas"]["ParentType"] | null;
             /** Former */
             former: boolean;
         };
@@ -2770,8 +2768,7 @@ export interface components {
             /** Relation */
             relation: string;
             pronouns: components["schemas"]["Pronouns"] | null;
-            /** Parent Type */
-            parent_type: string;
+            parent_type: components["schemas"]["ParentType"] | null;
             /** Former */
             former: boolean;
         };

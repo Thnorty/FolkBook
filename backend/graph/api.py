@@ -66,7 +66,7 @@ def _tree_out(tree: FamilyTree, me_id: UUID) -> dict:
                     {
                         "relation": step.relation,
                         "pronouns": people[step.person].pronouns or None,
-                        "parent_type": step.parent_type,
+                        "parent_type": step.parent_type or None,
                         "former": step.former,
                     }
                     for step in placed.relation
@@ -83,7 +83,7 @@ def _tree_out(tree: FamilyTree, me_id: UUID) -> dict:
                 "type": link.type,
                 "source": link.a,
                 "target": link.b,
-                "parent_type": link.parent_type,
+                "parent_type": link.parent_type or None,
                 "former": link.is_former,
             }
             for link in tree.links

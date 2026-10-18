@@ -68,6 +68,9 @@ def test_a_small_family(api, world):
         False,
     )
     assert len(body["links"]) == 3
+    together = links[tuple(sorted([str(world.emma.pk), str(world.ela.me.pk)]))]
+    assert together["parent_type"] is None  # like the profile's family: no type but for parents
+    assert people["Ela"]["relation"][0]["parent_type"] is None
 
 
 def test_someone_with_no_family_is_a_tree_of_one(api, world):
