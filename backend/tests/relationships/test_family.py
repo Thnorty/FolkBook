@@ -1,32 +1,18 @@
 """Derived family relations, table-driven on plain data (no database).
 
-Links are written as short strings: "A parent B" means A is B's parent.
-Modifiers: "parent:step", "parent:adoptive", "partner:former".
+Links are written as short strings (see `specs.py`): "A parent B" means A is B's parent.
 """
 
 import pytest
 
-from relationships.family import FamilyGraph, FamilyRelation, Link, Relation
+from relationships.family import FamilyGraph, FamilyRelation, Relation
+from tests.relationships.specs import links
 
 R = Relation
 
 
 def graph(*specs: str) -> FamilyGraph:
-    links = []
-    for index, spec in enumerate(specs):
-        a, kind, b = spec.split()
-        type_, _, modifier = kind.partition(":")
-        links.append(
-            Link(
-                id=f"link{index}",
-                a=a,
-                b=b,
-                type=type_,
-                parent_type=(modifier or "biological") if type_ == "parent" else "",
-                is_former=modifier == "former",
-            )
-        )
-    return FamilyGraph(links)
+    return FamilyGraph(links(*specs))
 
 
 def summary(relations: list[FamilyRelation]) -> set[tuple]:

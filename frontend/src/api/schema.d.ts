@@ -969,6 +969,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/graph/family-tree/{person_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Family Tree
+         * @description Family tree mode: everyone linked to this person by family, by generation.
+         */
+        get: operations["graph_api_get_family_tree"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/memory-aids": {
         parameters: {
             query?: never;
@@ -2677,6 +2697,80 @@ export interface components {
         PathsOut: {
             /** Paths */
             paths: components["schemas"]["PathOut"][];
+        };
+        /** FamilyTreeOut */
+        FamilyTreeOut: {
+            /**
+             * Root
+             * Format: uuid
+             */
+            root: string;
+            /** People */
+            people: components["schemas"]["TreePersonOut"][];
+            /** Links */
+            links: components["schemas"]["TreeLinkOut"][];
+        };
+        /**
+         * TreeLinkOut
+         * @description A stored family link. For parents, `source` is the parent of `target`.
+         */
+        TreeLinkOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            type: components["schemas"]["RelationshipType"];
+            /**
+             * Source
+             * Format: uuid
+             */
+            source: string;
+            /**
+             * Target
+             * Format: uuid
+             */
+            target: string;
+            parent_type: components["schemas"]["ParentType"] | null;
+            /** Former */
+            former: boolean;
+        };
+        /** TreePersonOut */
+        TreePersonOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Photo Url */
+            photo_url: string | null;
+            /** Is Me */
+            is_me: boolean;
+            pronouns: components["schemas"]["Pronouns"] | null;
+            /** Generation */
+            generation: number;
+            /** Relation */
+            relation: components["schemas"]["TreeStepOut"][];
+            /** In Law */
+            in_law: boolean;
+            /** Via Former */
+            via_former: boolean;
+            /** Missing Parents */
+            missing_parents: number;
+        };
+        /**
+         * TreeStepOut
+         * @description One step of how someone is related ("grandmother's cousin" is two).
+         */
+        TreeStepOut: {
+            /** Relation */
+            relation: string;
+            pronouns: components["schemas"]["Pronouns"] | null;
+            parent_type: components["schemas"]["ParentType"] | null;
+            /** Former */
+            former: boolean;
         };
         /** MemoryAidOut */
         MemoryAidOut: {
@@ -5389,6 +5483,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PathsOut"];
+                };
+            };
+        };
+    };
+    graph_api_get_family_tree: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilyTreeOut"];
                 };
             };
         };

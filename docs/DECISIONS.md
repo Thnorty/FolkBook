@@ -70,6 +70,12 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
   - **In-laws:** your partner's parents and siblings, your siblings' partners, your children's partners. Through an ended partnership they're *former* in-laws.
   - A direct "other family" link that the stored parents now explain is shown once, as derived, with a pointer to the direct link so the app can offer to remove it.
   - Relation names are gender-neutral (parent, sibling, aunt/uncle).
+- **Family tree** (`relationships/tree.py`), from the same visible links: everyone linked to one person by family, by generation.
+  - **Always in it:** blood family at any distance (through parent links and direct "other family" links), the person's own partners, step-parents (an ancestor's partner) and step-siblings, the person's partner's children.
+  - **In-laws** (behind a toggle): everyone else's partners, a child's other parent who isn't family, and the family of the person's own partners. The tree crosses at most one partnership that isn't the person's or an ancestor's, so it stays one family plus the people married into it.
+  - **Former partners** (behind a toggle): anyone only there through a partnership that ended.
+  - **Relation words:** what the profile's Family section names; further out, a chain of up to three steps ("grandmother's cousin"); past that, "relative".
+  - **"Add parent"** slots for the person and their ancestors with fewer than two parents, when the viewer may add private links.
 
 ## Data details
 - Birthdays store day, month and an optional year (the year is often unknown).
