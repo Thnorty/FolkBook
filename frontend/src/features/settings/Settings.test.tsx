@@ -102,7 +102,7 @@ const REMINDER_SETTINGS = {
   digest_weekday: 0,
   include_memory_aids: true,
   birthdays_days_before: 3 as number | null,
-  time_zone: '',
+  time_zone: 'Europe/Istanbul',
   email_ready: false,
   send_to: 'ela@example.com',
 }
