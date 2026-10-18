@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { resetPassword, resetPreviewQuery } from '@/features/account/queries'
+import { mailStatusQuery } from '@/features/mail/queries'
 import { usePageTitle } from '@/lib/usePageTitle'
 
 const timeFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' })
@@ -14,6 +15,7 @@ const timeFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', tim
 export function ResetPasswordPage() {
   const { token } = useParams({ from: '/reset/$token' })
   const link = useQuery(resetPreviewQuery(token))
+  const email = useQuery(mailStatusQuery).data
   const [password, setPassword] = useState('')
   const [again, setAgain] = useState('')
   const save = useMutation({ mutationFn: () => resetPassword(token, password) })
@@ -44,7 +46,11 @@ export function ResetPasswordPage() {
       <AuthFrame>
         <h1 className="mt-6 type-title">This link doesn&apos;t work</h1>
         <p className="mt-2 text-ink-soft">{link.error.message}</p>
-        <p className="mt-2 text-ink-soft">Ask your admin for a new one.</p>
+        <p className="mt-2 text-ink-soft">
+          {email?.ready
+            ? 'Ask for a new one with “Forgot password?” on the log-in page.'
+            : 'Ask your admin for a new one.'}
+        </p>
         <Button asChild variant="secondary" className="mt-6 w-full">
           <Link to="/login">Back to log in</Link>
         </Button>

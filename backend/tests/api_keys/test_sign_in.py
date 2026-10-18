@@ -29,6 +29,7 @@ COOKIE_ONLY = (
     "/api/keep-in-touch/settings",  # nudges for the whole book: the account's
     "/api/ai",  # AI keys belong to the account, never to a script's key
     "/api/capture",  # it uses the account's AI
+    "/api/mail",  # the server's email settings, for admins
 )
 # The book: API keys work here. A new router goes in one list or the other, on purpose.
 TAKES_KEYS = (
@@ -117,6 +118,7 @@ def test_cookie_only_endpoints_refuse_keys(api, world):
     assert client.put("/keep-in-touch/settings", {"nudges_on": False}).status_code == 401
     assert client.get(f"/keep-in-touch/{world.oskar.pk}").status_code == 200
     assert client.post("/export/restore/check").status_code == 401
+    assert client.get("/mail").status_code == 401
     me = client.get("/auth/me")
     assert me.status_code == 200
     assert me.json()["email"] == "ela@example.com"

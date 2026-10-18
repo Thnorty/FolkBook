@@ -29,6 +29,7 @@ import { AiSettings } from './features/ai/AiSettings'
 import { ApiKeysSettings } from './features/apiKeys/ApiKeysSettings'
 import { InvitesSettings, UsersSettings } from './features/settings/AdminSettings'
 import { ImportExportSettings } from './features/settings/ImportExportSettings'
+import { EmailSettings } from './features/mail/EmailSettings'
 import { ProfileSettings } from './features/settings/ProfileSettings'
 import { SettingsLayout } from './features/settings/SettingsLayout'
 import { validateGraphSearch } from './features/graph/search'
@@ -145,6 +146,12 @@ const settingsTree = settingsRoute.addChildren([
     path: 'invites',
     beforeLoad: ({ context }) => adminOnly(context.queryClient),
     component: InvitesSettings,
+  }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'email',
+    beforeLoad: ({ context }) => adminOnly(context.queryClient),
+    component: EmailSettings,
   }),
 ])
 

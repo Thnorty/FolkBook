@@ -9,6 +9,7 @@ export const SETTINGS_SECTIONS = [
   { to: '/settings/about', label: 'About', admin: false },
   { to: '/settings/users', label: 'Users', admin: true },
   { to: '/settings/invites', label: 'Invite links', admin: true },
+  { to: '/settings/email', label: 'Email (SMTP)', admin: true },
 ] as const
 
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]

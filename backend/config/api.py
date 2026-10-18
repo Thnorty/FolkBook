@@ -20,6 +20,7 @@ from imports.api import router as imports_router
 from interactions.api import router as interactions_router
 from invites.api import router as invites_router
 from invites.api import setup_router
+from mail.api import router as mail_router
 from people.api import memory_aids_router
 from people.api import router as people_router
 from relationships.api import router as relationships_router
@@ -52,6 +53,7 @@ api.add_router("/imports", imports_router)
 api.add_router("/api-keys", api_keys_router, auth=django_auth)
 api.add_router("/ai", ai_router, auth=django_auth)
 api.add_router("/capture", capture_router, auth=django_auth)
+api.add_router("/mail", mail_router, auth=django_auth)
 
 
 @api.exception_handler(Exception)

@@ -16,8 +16,12 @@ from django.http import HttpRequest
 from django.utils import timezone
 
 from accounts.models import Device, FailedLogin, PasswordReset, User
+from accounts.tasks import send_reset_email
 from core.api import Conflict
 from core.http import client_ip
+from core.secrets import seal
+from mail.backend import EmailNotSetUp
+from mail.services import email_ready
 
 # At most this many wrong passwords per email in the window, then wait.
 MAX_FAILED_LOGINS = 10
@@ -28,6 +32,10 @@ FAILED_LOGIN_WINDOW = datetime.timedelta(minutes=15)
 REMEMBER_FOR = datetime.timedelta(days=400)
 # Reset links are handed over by an admin (by chat, in person), so they last a day.
 RESET_LINK_LASTS = datetime.timedelta(hours=24)
+# Ones sent by email last an hour. At most this many emails per account an hour, so
+# nobody can fill someone's inbox with them.
+EMAILED_RESET_LASTS = datetime.timedelta(hours=1)
+MAX_RESET_EMAILS = 5
 # Don't write "last seen" on every request.
 LAST_SEEN_EVERY = datetime.timedelta(minutes=5)
 
@@ -165,11 +173,37 @@ def create_reset_link(admin: User, user: User) -> tuple[PasswordReset, str]:
     """
     if not admin.is_staff:
         raise PermissionDenied("Only an admin can make reset links.")
+    return _new_reset(user, created_by=admin, lasts=RESET_LINK_LASTS)
+
+
+@transaction.atomic
+def email_reset_link(email: str) -> None:
+    """Email a reset link to the account with this address, if there's one. Callers answer
+    the same either way, so nobody learns who has an account.
+
+    Raises EmailNotSetUp when the server can't send email.
+    """
+    if not email_ready():
+        raise EmailNotSetUp
+    user = User.objects.filter(email__iexact=email.strip(), is_active=True).first()
+    if user is None:
+        return
+    an_hour_ago = timezone.now() - datetime.timedelta(hours=1)
+    sent = PasswordReset.objects.filter(user=user, created_by=None, created_at__gte=an_hour_ago)
+    if sent.count() >= MAX_RESET_EMAILS:
+        return
+    reset, token = _new_reset(user, created_by=None, lasts=EMAILED_RESET_LASTS)
+    # Sealed: the job queue never holds a link that works.
+    send_reset_email.enqueue(str(reset.pk), seal(token))
+
+
+def _new_reset(user: User, created_by: User | None, lasts: datetime.timedelta):
+    """Older unused links stop working, so only the latest one counts."""
     now = timezone.now()
     PasswordReset.objects.filter(user=user, used_at=None, expires_at__gt=now).update(expires_at=now)
     token = secrets.token_urlsafe(24)
     reset = PasswordReset.objects.create(
-        user=user, created_by=admin, token_hash=_hash(token), expires_at=now + RESET_LINK_LASTS
+        user=user, created_by=created_by, token_hash=_hash(token), expires_at=now + lasts
     )
     return reset, token
 

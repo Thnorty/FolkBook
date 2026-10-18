@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "ai",
     "capture",
     "invites",
+    "mail",
     "jobs",
     "django_tasks_db",
 ]
@@ -159,8 +160,24 @@ TASKS = {
     }
 }
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
+# Email: SMTP settings from FOLKBOOK_SMTP_* when FOLKBOOK_SMTP_HOST is set, otherwise
+# saved by an admin in Settings → Email (SMTP). Tests swap the mailer for an outbox.
+MAILERS = {"default": {"BACKEND": "mail.backend.EmailBackend"}}
+FOLKBOOK_SMTP = (
+    {
+        "host": env("FOLKBOOK_SMTP_HOST"),
+        "port": int(env("FOLKBOOK_SMTP_PORT", "587")),
+        "security": env("FOLKBOOK_SMTP_SECURITY", "starttls"),
+        "username": env("FOLKBOOK_SMTP_USERNAME", ""),
+        "password": env("FOLKBOOK_SMTP_PASSWORD", ""),
+        "from_address": env("FOLKBOOK_SMTP_FROM", ""),
+    }
+    if env("FOLKBOOK_SMTP_HOST", "")
+    else None
+)
+if FOLKBOOK_SMTP and FOLKBOOK_SMTP["security"] not in {"starttls", "ssl", "none"}:
+    raise ImproperlyConfigured("FOLKBOOK_SMTP_SECURITY is starttls, ssl or none.")
+# Where links in emails lead: the address people open FolkBook at.
+FOLKBOOK_URL = env("FOLKBOOK_URL", (CSRF_TRUSTED_ORIGINS or ["http://localhost:8080"])[0]).rstrip(
+    "/"
+)

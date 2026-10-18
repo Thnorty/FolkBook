@@ -74,6 +74,10 @@ class ResetIn(Schema):
     password: str = Field(max_length=4096)
 
 
+class ForgotPasswordIn(Schema):
+    email: str = Field(max_length=254)
+
+
 class UserOut(Schema):
     """Someone with an account here, as admins see them."""
 

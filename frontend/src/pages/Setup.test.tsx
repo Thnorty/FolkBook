@@ -98,6 +98,53 @@ describe('first run', () => {
 })
 
 describe('forgot password', () => {
+  function emailServer() {
+    const asked: unknown[] = []
+    fakeServer({
+      'GET /api/auth/csrf': () => new Response(null, { status: 204 }),
+      'GET /api/auth/me': () => json({ detail: 'Not logged in' }, 401),
+      'GET /api/setup': () => json({ needed: false }),
+      'GET /api/mail/status': () => json({ ready: true }),
+      'POST /api/auth/forgot-password': async (request) => {
+        asked.push(await request.json())
+        return new Response(null, { status: 202 })
+      },
+    })
+    return asked
+  }
+
+  it('emails a reset link to the address typed above', async () => {
+    const asked = emailServer()
+    renderApp('/login')
+
+    await userEvent.type(await screen.findByLabelText('Email'), 'tom@example.com')
+    await userEvent.click(screen.getByRole('button', { name: 'Forgot password?' }))
+
+    expect(await screen.findByRole('heading', { name: 'Check your email' })).toBeInTheDocument()
+    expect(
+      screen.getByText('If tom@example.com has an account here, a reset link is on its way.'),
+    ).toBeInTheDocument()
+    expect(asked).toEqual([{ email: 'tom@example.com' }])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Send again' }))
+    expect(await screen.findByText('Sent again. Only the newest link works.')).toBeInTheDocument()
+    expect(asked).toHaveLength(2)
+
+    await userEvent.click(screen.getByRole('button', { name: '← Back to log in' }))
+    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument()
+  })
+
+  it('asks for the email first', async () => {
+    const asked = emailServer()
+    renderApp('/login')
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Forgot password?' }))
+
+    expect(await screen.findByText('Type your email first.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Email')).toHaveFocus()
+    expect(asked).toEqual([])
+  })
+
   it('says to ask the admin for a reset link', async () => {
     fakeServer({
       'GET /api/auth/me': () => json({ detail: 'Not logged in' }, 401),

@@ -1,0 +1,9 @@
+{% extends "mail/base.html" %}
+{% block content %}
+<div style="font:26px/1.25 Georgia,'Times New Roman',serif;color:#221F1A;margin-top:20px">Reset your password</div>
+<div style="font:15px/1.6 Arial,Helvetica,sans-serif;color:#5A544B;margin-top:10px">Someone — hopefully you — asked to reset the password for <b style="color:#221F1A">{{ email }}</b> on {{ site }}.</div>
+{% include "mail/button.html" with href=link label="Choose a new password" %}
+<div style="font:13px/1.6 Arial,Helvetica,sans-serif;color:#5A544B;margin-top:16px">The button works once and expires in 1 hour. Or paste this link:<br><a href="{{ link }}" style="font:12px ui-monospace,Menlo,Consolas,monospace;color:#253C6B;word-break:break-all">{{ link }}</a></div>
+<div style="font:13px/1.6 Arial,Helvetica,sans-serif;color:#5A544B;margin-top:16px;padding-top:14px;border-top:1px solid #E3DACA">Didn't ask for this? Ignore this email — your password stays the same.</div>
+{% endblock %}
+{% block footer %}Sent by {{ site }} because a reset was requested. You can't unsubscribe from security emails.{% endblock %}
