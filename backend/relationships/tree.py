@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from enum import Enum
 from itertools import count
 
-from relationships.family import Link, PersonId
+from relationships.family import FamilyGraph, FamilyRelation, Link, PersonId
 from relationships.models import RelationshipType
 
 
@@ -85,12 +85,28 @@ _RANKS = {
 IN_LAW_KINDS = frozenset({Kind.PARTNER_FAMILY, Kind.LEAF})
 
 
+RELATIVE = "relative"  # past MAX_STEPS steps there's no telling it in words
+MAX_STEPS = 3
+
+
+@dataclass(frozen=True)
+class Step:
+    """One step of how someone is related: "grandmother's cousin" is two."""
+
+    person: PersonId  # whose relation it is (the words use their pronouns)
+    relation: str  # a `Relation` value, or RELATIVE
+    parent_type: str = ""
+    former: bool = False
+
+
 @dataclass(frozen=True)
 class TreePerson:
     person: PersonId
     generation: int  # the root 0, parents +1, children -1
     in_law: bool
     via_former: bool
+    relation: tuple[Step, ...] = ()  # empty for the root
+    missing_parents: int = 0  # only for the root and ancestors: room for "Add parent"
 
 
 @dataclass(frozen=True)
@@ -166,8 +182,77 @@ def _reach(links: Iterable[Link], root: PersonId) -> dict[PersonId, _Reached]:
     return fixed
 
 
+class _Namer:
+    """Relations in words' codes: what the derivation says, then chains along the route."""
+
+    def __init__(self, links: list[Link], reached: dict[PersonId, _Reached], root: PersonId):
+        self.family = FamilyGraph(links)
+        self.reached = reached
+        self.root = root
+        self._named: dict[PersonId, dict[PersonId, FamilyRelation]] = {}
+
+    def named(self, anchor: PersonId) -> dict[PersonId, FamilyRelation]:
+        """Who the derivation names for `anchor`, each by the first relation (as profiles do)."""
+        if anchor not in self._named:
+            found: dict[PersonId, FamilyRelation] = {}
+            for relation in self.family.relations_of(anchor):
+                found.setdefault(relation.person, relation)
+            self._named[anchor] = found
+        return self._named[anchor]
+
+    def route(self, person: PersonId) -> list[PersonId]:
+        """From the root (left out) to `person`."""
+        found = []
+        while person != self.root:
+            found.append(person)
+            person = self.reached[person].previous
+        return found[::-1]
+
+    def chain(self, person: PersonId) -> tuple[Step, ...]:
+        if person == self.root:
+            return ()
+        route = self.route(person)
+        anchor, steps = self.root, []
+        while len(steps) < MAX_STEPS:
+            names = self.named(anchor)
+            if person in names:
+                return (*steps, _step(names[person]))
+            after = route[route.index(anchor) + 1 :] if anchor in route else route
+            known = [p for p in after[:-1] if p in names]
+            if not known:
+                break
+            anchor = known[-1]
+            steps.append(_step(names[anchor]))
+        return (Step(person, RELATIVE),)
+
+
+def _step(relation: FamilyRelation) -> Step:
+    return Step(relation.person, relation.relation, relation.parent_type, relation.former)
+
+
+def _parent_counts(links: list[Link]) -> dict[PersonId, int]:
+    parents: dict[PersonId, set[PersonId]] = defaultdict(set)
+    for link in links:
+        if link.type == RelationshipType.PARENT:
+            parents[link.b].add(link.a)
+    return {person: len(found) for person, found in parents.items()}
+
+
 def walk(links: Iterable[Link], root: PersonId) -> list[TreePerson]:
     """The tree of `root`: everyone in it, highest generation first."""
+    links = list(links)
     reached = _reach(links, root)
-    people = [TreePerson(r.person, r.generation, r.in_law, r.via_former) for r in reached.values()]
+    namer = _Namer(links, reached, root)
+    parents = _parent_counts(links)
+    people = [
+        TreePerson(
+            r.person,
+            r.generation,
+            r.in_law,
+            r.via_former,
+            namer.chain(r.person),
+            max(0, 2 - parents.get(r.person, 0)) if r.kind in (Kind.ROOT, Kind.LINE) else 0,
+        )
+        for r in reached.values()
+    ]
     return sorted(people, key=lambda p: (-p.generation, str(p.person)))

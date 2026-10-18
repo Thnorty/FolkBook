@@ -5,7 +5,8 @@ Links are written as short strings (see `specs.py`).
 
 import pytest
 
-from relationships.tree import TreePerson, walk
+from relationships.family import FamilyGraph
+from relationships.tree import Step, TreePerson, walk
 from tests.relationships.specs import links
 from tests.relationships.test_family import ELA
 
@@ -116,6 +117,108 @@ def test_who_is_in_the_tree(specs, expected):
 def test_a_loop_ends_with_everyone_once():
     people = walk(links("R parent B", "B parent R", "B partner R"), "R")
     assert sorted(p.person for p in people) == ["B", "R"]
+
+
+def words(person: TreePerson) -> list[str]:
+    return [step.relation + (":former" if step.former else "") for step in person.relation]
+
+
+def tree_of(specs, root="R") -> dict[str, TreePerson]:
+    return {p.person: p for p in walk(links(*specs), root)}
+
+
+def test_named_relations_match_the_profile():
+    tree = tree_of(ELA, "Ela")
+    named = {}
+    for relation in FamilyGraph(links(*ELA)).relations_of("Ela"):
+        named.setdefault(relation.person, relation)  # the profile shows the first
+
+    for person, relation in named.items():
+        assert tree[person].relation == (
+            Step(person, relation.relation, relation.parent_type, relation.former),
+        )
+    assert words(tree["Zeynep"]) == ["sibling_in_law"]
+    assert tree["Hakan"].relation[0].parent_type == "step"
+    assert tree["Ela"].relation == ()
+
+
+@pytest.mark.parametrize(
+    ("specs", "person", "expected"),
+    [
+        pytest.param(
+            ["G parent P", "P parent R", "G cousin X"],
+            "X",
+            ["grandparent", "cousin"],
+            id="grandmother's cousin",
+        ),
+        pytest.param(
+            ["G parent A", "G parent B", "A parent R", "B parent C", "C partner W"],
+            "W",
+            ["cousin", "partner"],
+            id="cousin's partner",
+        ),
+        pytest.param(
+            ["GG parent G", "G parent P", "P parent R"],
+            "GG",
+            ["grandparent", "parent"],
+            id="grandparent's parent",
+        ),
+        pytest.param(
+            ["GG parent G", "G parent P", "P parent R", "GG cousin X", "X partner Y"],
+            "X",
+            ["grandparent", "parent", "cousin"],
+            id="three steps",
+        ),
+        pytest.param(
+            ["GG parent G", "G parent P", "P parent R", "GG cousin X", "X partner Y"],
+            "Y",
+            ["relative"],
+            id="past three steps, a relative",
+        ),
+        pytest.param(
+            ["R partner:former X", "Y parent X"],
+            "Y",
+            ["parent_in_law:former"],
+            id="former in-law",
+        ),
+    ],
+)
+def test_chains(specs, person, expected):
+    assert words(tree_of(specs)[person]) == expected
+
+
+def test_each_step_is_about_its_own_person():
+    tree = tree_of(["G parent P", "P parent R", "G cousin X"])
+    assert [step.person for step in tree["X"].relation] == ["G", "X"]
+
+
+def test_missing_parents_for_the_root_and_ancestors_only():
+    tree = tree_of(
+        [
+            "P parent R",
+            "G parent P",
+            "X parent G",
+            "Y parent G",
+            "P parent S",
+            "R partner Q",
+            "R parent C",
+        ]
+    )
+    assert {name: p.missing_parents for name, p in tree.items()} == {
+        "R": 1,
+        "P": 1,
+        "G": 0,
+        "X": 2,
+        "Y": 2,
+        "S": 0,
+        "Q": 0,
+        "C": 0,
+    }
+
+
+def test_three_parents_miss_none():
+    tree = tree_of(["A parent R", "B parent:adoptive R", "C parent:step R"])
+    assert tree["R"].missing_parents == 0
 
 
 def test_highest_generation_first():
