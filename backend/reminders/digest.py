@@ -18,6 +18,8 @@ from today.birthdays import Birthday, upcoming_birthdays
 DIGEST_HOUR = 8
 # More than this and the email gets long; the rest are on Today.
 MAX_PEOPLE = 10
+# In an empty test digest: the preview line and the email itself.
+NOTHING_DUE = "No one is due and no birthdays are coming up"
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 
@@ -91,6 +93,7 @@ def email(user: User, digest: Digest, prefs: ReminderSettings) -> dict:
             "unsubscribe_url": f"{url}/unsubscribe/{unsubscribe}",
             "schedule": _schedule(prefs),
             "memory_aids": prefs.include_memory_aids,
+            "nothing_due": NOTHING_DUE,
         },
         # One-click unsubscribe from the email app itself (RFC 8058).
         "headers": {
@@ -136,7 +139,7 @@ def _subject(digest: Digest) -> str:
 
 
 def _heading(digest: Digest) -> str:
-    return _subject(digest) if digest.nudges else "Birthdays coming up"
+    return "Birthdays coming up" if digest.birthdays and not digest.nudges else _subject(digest)
 
 
 def _preview(digest: Digest) -> str:
@@ -150,7 +153,7 @@ def _preview(digest: Digest) -> str:
         coming = f"{len(digest.birthdays)} birthdays" if digest.birthdays else ""
     if names and coming:
         return f"{names} — plus {coming}."
-    return f"{names or coming}."
+    return f"{names or coming or NOTHING_DUE}."
 
 
 def _dated(digest: Digest) -> str:

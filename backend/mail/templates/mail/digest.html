@@ -28,7 +28,7 @@
 {% for line in birthdays %}<div style="font:15px/1.6 Arial,Helvetica,sans-serif;color:#221F1A;margin-top:6px">{{ line }}</div>{% endfor %}
 </div>
 {% endif %}
-{% if not people and not birthdays %}<div style="font:15px/1.6 Arial,Helvetica,sans-serif;color:#5A544B;margin-top:10px">No one is due and no birthdays are coming up. Your digest only comes when there's someone in it.</div>{% endif %}
+{% if not people and not birthdays %}<div style="font:15px/1.6 Arial,Helvetica,sans-serif;color:#5A544B;margin-top:10px">{{ nothing_due }}. Your digest only comes when there's someone in it.</div>{% endif %}
 {% endblock %}
 {% block footer %}You get this {{ schedule }} from {{ site }}. {% if memory_aids %}Memory aids are included — you can leave them out in Reminders settings.{% else %}Memory aids are left out.{% endif %}<br>
 <a href="{{ settings_url }}" style="color:#6F675B">Digest settings</a> · <a href="{{ unsubscribe_url }}" style="color:#6F675B">Unsubscribe</a>{% endblock %}
