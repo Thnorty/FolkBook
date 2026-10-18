@@ -1,25 +1,5 @@
-import type { Page, TestInfo } from '@playwright/test'
 import { ACCOUNTS, unique } from './accounts.ts'
-import { addPerson, expect, submitButton, test } from './fixtures.ts'
-
-/** On someone's profile: connect them to `other` as `kind` (the Connect dialog). */
-async function connect(page: Page, testInfo: TestInfo, other: string, kind: string) {
-  await page
-    .getByRole('region', { name: 'Connections' })
-    .getByRole('button', { name: 'Add' })
-    .click()
-  const dialog = page.getByRole('dialog')
-  await dialog.getByLabel('Who?').fill(other)
-  // Exactly: the list also offers "Create “…” as a new person".
-  await dialog
-    .getByRole('list', { name: 'People' })
-    .getByRole('button', { name: other, exact: true })
-    .click()
-  // The kinds are radio buttons drawn as chips: their labels take the click.
-  await dialog.getByText(kind, { exact: true }).click()
-  await submitButton(page, testInfo, { desktop: 'Connect them', phone: 'Connect' }).click()
-  await expect(dialog).toHaveCount(0)
-}
+import { addPerson, connect, expect, test } from './fixtures.ts'
 
 test('Ela finds how she knows Tom, from the graph and from a profile', async ({ as }, testInfo) => {
   const emma = unique('Emma')
