@@ -12,6 +12,13 @@ describe('validateGraphSearch', () => {
     expect(validateGraphSearch({ how: '', focus: ['emma'] })).toEqual({})
   })
 
+  it('keeps a family tree, which replaces a focus but not a route', () => {
+    expect(validateGraphSearch({ tree: 'ela' })).toEqual({ tree: 'ela' })
+    expect(validateGraphSearch({ tree: 'ela', focus: 'emma', hops: 2 })).toEqual({ tree: 'ela' })
+    expect(validateGraphSearch({ how: 'tom', tree: 'ela' })).toEqual({ how: 'tom' })
+    expect(validateGraphSearch({ tree: 3 })).toEqual({})
+  })
+
   it('keeps 2 steps of focus, and only with a focus', () => {
     expect(validateGraphSearch({ focus: 'emma', hops: 2 })).toEqual({ focus: 'emma', hops: 2 })
     expect(validateGraphSearch({ focus: 'emma', hops: '2' })).toEqual({ focus: 'emma', hops: 2 })

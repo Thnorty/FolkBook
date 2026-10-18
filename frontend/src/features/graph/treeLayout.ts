@@ -56,6 +56,15 @@ export function shownPeople(data: TreeData, toggles: TreeToggles): TreePerson[] 
   )
 }
 
+/** How many generations are shown above and below the tree's person. */
+export function generationSpan(people: TreePerson[]): { up: number; down: number } {
+  const generations = people.map((person) => person.generation)
+  return {
+    up: Math.max(0, ...generations),
+    down: Math.max(0, ...generations.map((generation) => -generation)),
+  }
+}
+
 /** "Grandparents", "Your generation", "Nilgün's generation", "4 generations up"… */
 export function rowLabel(generation: number, rootName: string, rootIsMe: boolean): string {
   if (generation === 0)
@@ -273,7 +282,6 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
     })
   }
 
-  const placedGenerations = people.map((person) => person.generation)
   const right = Math.max(...x.values()) - left + NODE_WIDTH / 2
   return {
     people: people.map((person) => {
@@ -292,8 +300,7 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
     })),
     width: right,
     height: generations.length * ROW_HEIGHT,
-    up: Math.max(0, ...placedGenerations),
-    down: Math.max(0, ...placedGenerations.map((generation) => -generation)),
+    ...generationSpan(people),
   }
 }
 

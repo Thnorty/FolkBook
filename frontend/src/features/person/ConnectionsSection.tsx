@@ -257,6 +257,13 @@ export function ConnectionsSection({ personId }: { personId: string }) {
             <div>
               <h3 className="px-2 pb-1 type-meta text-ink-faint">Family</h3>
               <Rows rows={familyRows} actions={actions} />
+              <Link
+                to="/graph"
+                search={{ tree: personId }}
+                className="mt-1 inline-block px-2 text-md font-medium text-accent hover:underline"
+              >
+                View family tree
+              </Link>
             </div>
           )}
           {otherRows.length > 0 && (
