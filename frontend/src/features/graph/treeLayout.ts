@@ -282,6 +282,8 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
   const parentLines = [...parentsOf].flatMap(([child, parents]) =>
     parents.map((parent) => [parent, child] as const),
   )
+  // Directly linked family (a sibling whose parents aren't known) should sit close, too.
+  const directLines = [...direct].flatMap(([a, others]) => others.map((b) => [a, b] as const))
   const score = () => {
     let crossings = 0
     for (let a = 0; a < parentLines.length; a++) {
@@ -291,13 +293,22 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
         if ((pa - pb) * (ca - cb) < 0) crossings++
       }
     }
-    const distance = parentLines.reduce((sum, [p, c]) => sum + Math.abs(x.get(p)! - x.get(c)!), 0)
+    const distance = [...parentLines, ...directLines].reduce(
+      (sum, [a, b]) => sum + Math.abs(x.get(a)! - x.get(b)!),
+      0,
+    )
     return crossings * NODE_WIDTH * parentLines.length + distance
   }
   let best = { score: score(), rows: rows.map((row) => row.map((unit) => [...unit])) }
   for (let i = 0; i < SWEEPS; i++) {
     const relatives = i % 2 ? childrenOf : parentsOf
-    const key = near(relatives)
+    // A unit with none of those (a sister linked directly, her husband) goes by its direct links.
+    const byRelatives = near(relatives)
+    const byDirect = near(direct)
+    const key = (unit: string[]) =>
+      unit.some((id) => relatives.get(id)?.some((other) => x.has(other)))
+        ? byRelatives(unit)
+        : byDirect(unit)
     const away = awayFrom(relatives)
     for (const r of i % 2 ? down.toReversed() : down) {
       const ranked = rows[r].map((unit, at) => ({ unit, at, wants: key(unit) }))

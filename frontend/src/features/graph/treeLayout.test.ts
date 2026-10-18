@@ -211,6 +211,12 @@ describe('layoutTree', () => {
       expect(Math.abs(xOf(big, 'aylin') - xOf(big, 'deniz'))).toBe(NODE_WIDTH)
     })
 
+    it('keeps directly linked brothers and sisters near each other', () => {
+      // Linked as siblings because their parents aren't in the book.
+      expect(Math.abs(xOf(big, 'sevgi') - xOf(big, 'nilgun'))).toBeLessThanOrEqual(2.5 * NODE_WIDTH)
+      expect(Math.abs(xOf(big, 'diego') - xOf(big, 'mateo'))).toBeLessThanOrEqual(2.5 * NODE_WIDTH)
+    })
+
     it('keeps "Add parent" slots near their person', () => {
       for (const slot of big.slots) {
         // A crowded row: everyone wants the middle, so some give way, but not across the tree.
