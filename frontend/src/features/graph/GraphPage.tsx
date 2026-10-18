@@ -28,6 +28,7 @@ import { PERSON_GONE } from './copy'
 import { focusCounts, focusLine } from './focus'
 import { FocusBar } from './FocusBar'
 import { HowDoIKnow } from './HowDoIKnow'
+import { CanvasButton } from './CanvasButton'
 import { NetworkCanvas } from './NetworkCanvas'
 import { graphQuery, neighborhoodQuery, pathsQuery } from './queries'
 import { RouteSummary } from './RouteSummary'
@@ -269,28 +270,6 @@ export function GraphPage() {
         </>
       )}
     </div>
-  )
-}
-
-function CanvasButton({
-  label,
-  onClick,
-  children,
-}: {
-  label: string
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <Button
-      variant="secondary"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="size-9 bg-card px-0"
-    >
-      {children}
-    </Button>
   )
 }
 
