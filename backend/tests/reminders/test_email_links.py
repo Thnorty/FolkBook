@@ -79,7 +79,10 @@ def test_an_empty_test_digest_says_so(api, ela, email_ready, mailoutbox):
 
     [message] = mailoutbox
     assert message.subject == "No one to catch up with right now"
+    assert message.body.startswith("No one to catch up with right now\n")  # not "Birthdays…"
     assert "Your digest only comes when there's someone in it." in message.body
+    html = message.alternatives[0].content
+    assert "No one is due and no birthdays are coming up.</div>" in html  # the preview line
 
 
 def test_no_test_digest_without_email(api, ela, mailoutbox):

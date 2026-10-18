@@ -14,7 +14,7 @@ And {{ more }} more on Today: {{ today_url }}
 {{ birthdays_title }}
 {% for line in birthdays %}{{ line }}
 {% endfor %}{% endif %}{% if not people and not birthdays %}
-No one is due and no birthdays are coming up. Your digest only comes when there's someone in it.
+{{ nothing_due }}. Your digest only comes when there's someone in it.
 {% endif %}
 --
 You get this {{ schedule }} from {{ site }}. {% if memory_aids %}Memory aids are included — you can leave them out in Reminders settings.{% else %}Memory aids are left out.{% endif %}
