@@ -302,7 +302,7 @@ function Legend() {
   return (
     <ul
       aria-label="Legend"
-      className="absolute bottom-3 left-3 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-line bg-card px-3 py-2 type-meta text-ink-soft normal-case shadow-paper"
+      className="absolute right-15 bottom-3 left-3 flex w-fit flex-wrap items-center gap-x-4 gap-y-1 rounded-card border border-line bg-card px-3 py-2 type-meta text-ink-soft normal-case shadow-paper"
     >
       <LegendItem dash={undefined}>parent · partner</LegendItem>
       <LegendItem dash={DASH.dashed}>former</LegendItem>
