@@ -91,8 +91,14 @@ function distinctLinks(links: TreeLink[], shown: Set<string>): TreeLink[] {
   })
 }
 
-/** Partners in the same row, as chains: [Murat, Nilgün, Hakan]. */
-function units(row: Node[], partners: Map<string, Set<string>>): string[][] {
+/** Two people's key, the same either way round. */
+const pairKey = (a: string, b: string) => [a, b].toSorted().join('+')
+
+/**
+ * Partners in the same row, as chains: [Murat, Nilgün, Hakan]. Someone with three or more
+ * partners goes in the middle, their partner now beside them and exes further out.
+ */
+function units(row: Node[], partners: Map<string, Set<string>>, former: Set<string>): string[][] {
   const inRow = new Set(row.map((node) => node.id))
   const names = new Map(row.map((node) => [node.id, node.name]))
   const byName = (a: string, b: string) =>
@@ -106,13 +112,27 @@ function units(row: Node[], partners: Map<string, Set<string>>): string[][] {
     // The whole group of partners, then walked from an end so partners sit side by side.
     const group = new Set([start])
     for (const id of group) near(id).forEach((p) => group.add(p))
-    const end = [...group].toSorted(byName).find((id) => near(id).length <= 1) ?? start
     const chain: string[] = []
-    let here: string | undefined = end
-    while (here) {
-      chain.push(here)
-      placed.add(here)
-      here = near(here).find((p) => !placed.has(p))
+    const hub = [...group].toSorted(byName).find((id) => near(id).length >= 3)
+    if (hub) {
+      const theirs = near(hub).toSorted(
+        (a, b) =>
+          Number(former.has(pairKey(hub, a))) - Number(former.has(pairKey(hub, b))) || byName(a, b),
+      )
+      const right = theirs.filter((_, i) => i % 2 === 0)
+      const left = theirs.filter((_, i) => i % 2 === 1).toReversed()
+      for (const id of [...left, hub, ...right]) {
+        chain.push(id)
+        placed.add(id)
+      }
+    } else {
+      let here: string | undefined =
+        [...group].toSorted(byName).find((id) => near(id).length <= 1) ?? start
+      while (here) {
+        chain.push(here)
+        placed.add(here)
+        here = near(here).find((p) => !placed.has(p))
+      }
     }
     for (const id of [...group].toSorted(byName)) {
       if (!placed.has(id)) {
@@ -204,10 +224,12 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
     childrenOf.set(parent, [...(childrenOf.get(parent) ?? []), child])
   }
   const partners = new Map<string, Set<string>>()
+  const formerPairs = new Set<string>()
   const direct = new Map<string, string[]>()
   for (const link of links) {
     if (link.type === 'parent') relate(link.source, link.target)
     else if (link.type === 'partner') {
+      if (link.former) formerPairs.add(pairKey(link.source, link.target))
       partners.set(link.source, (partners.get(link.source) ?? new Set()).add(link.target))
       partners.set(link.target, (partners.get(link.target) ?? new Set()).add(link.source))
     } else {
@@ -252,6 +274,7 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
     units(
       nodes.filter((node) => node.generation === generation),
       partners,
+      formerPairs,
     ).toSorted((a, b) => firstFound(a) - firstFound(b)),
   )
 
@@ -284,14 +307,20 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
   )
   // Directly linked family (a sibling whose parents aren't known) should sit close, too.
   const directLines = [...direct].flatMap(([a, others]) => others.map((b) => [a, b] as const))
+  const generationOfNode = new Map(nodes.map((node) => [node.id, node.generation]))
+  // Lines between the same two rows can cross; count those, by inversions.
+  const lineGroups = new Map<string, (typeof parentLines)[number][]>()
+  for (const line of parentLines) {
+    const rows = `${generationOfNode.get(line[0])}:${generationOfNode.get(line[1])}`
+    lineGroups.set(rows, [...(lineGroups.get(rows) ?? []), line])
+  }
   const score = () => {
     let crossings = 0
-    for (let a = 0; a < parentLines.length; a++) {
-      for (let b = a + 1; b < parentLines.length; b++) {
-        const [pa, ca] = parentLines[a].map((id) => x.get(id)!)
-        const [pb, cb] = parentLines[b].map((id) => x.get(id)!)
-        if ((pa - pb) * (ca - cb) < 0) crossings++
-      }
+    for (const group of lineGroups.values()) {
+      const ends = group
+        .map(([parent, child]) => [x.get(parent)!, x.get(child)!] as const)
+        .toSorted((a, b) => a[0] - b[0] || a[1] - b[1])
+      crossings += inversions(ends.map(([, child]) => child))
     }
     const distance = [...parentLines, ...directLines].reduce(
       (sum, [a, b]) => sum + Math.abs(x.get(a)! - x.get(b)!),
@@ -357,10 +386,22 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
   for (const link of links) {
     if (link.type === 'partner') {
       const [a, b] = [link.source, link.target].toSorted((p, q) => x.get(p)! - x.get(q)!)
+      const [[ax, ay], [bx]] = [point(a), point(b)]
+      // Someone in between: the line goes over them, not through them.
+      const over = nodes.some((node) => {
+        const at = x.get(node.id)!
+        return (
+          generationOfNode.get(node.id) === generationOfNode.get(a) &&
+          at - left > ax &&
+          at - left < bx
+        )
+      })
       lines.push({
         id: `partner:${a}:${b}`,
         kind: 'partner',
-        points: [point(a), point(b)],
+        points: over
+          ? [[ax, ay], [(ax + bx) / 2, ay - ROW_HEIGHT / 4], point(b)]
+          : [point(a), point(b)],
         label: link.former ? 'former' : 'partner',
         dashed: link.former,
         dotted: false,
@@ -385,7 +426,9 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
         (other) =>
           other.parent_type === first.parent_type &&
           partners.get(first.source)?.has(other.source) &&
-          generationOf.get(other.source) === generationOf.get(first.source),
+          generationOf.get(other.source) === generationOf.get(first.source) &&
+          // Only side by side: from between two people far apart, it would start at someone else.
+          Math.abs(x.get(other.source)! - x.get(first.source)!) === NODE_WIDTH,
       )
       const parents =
         pairAt >= 0 ? [first.source, remaining.splice(pairAt, 1)[0].source] : [first.source]
@@ -435,4 +478,20 @@ export function layoutTree(data: TreeData, toggles: TreeToggles): TreeLayout {
 
 function midpoint(a: [number, number], b: [number, number]): [number, number] {
   return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
+}
+
+/** How many pairs are out of order: lines crossing, once both ends are sorted by the first. */
+function inversions(values: number[]): number {
+  if (values.length < 2) return 0
+  const half = values.length >> 1
+  const [a, b] = [values.slice(0, half), values.slice(half)]
+  let count = inversions(a) + inversions(b)
+  const sortedA = a.toSorted((p, q) => p - q)
+  const sortedB = b.toSorted((p, q) => p - q)
+  let j = 0
+  for (const value of sortedA) {
+    while (j < sortedB.length && sortedB[j] < value) j++
+    count += j
+  }
+  return count
 }

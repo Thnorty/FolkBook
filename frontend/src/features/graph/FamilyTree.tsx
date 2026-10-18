@@ -266,31 +266,32 @@ function Slot({ slot, onPick }: { slot: PlacedSlot; onPick: () => void }) {
 const DASH = { dashed: '6 4', dotted: '1 4' }
 
 function Line({ line }: { line: TreeLine }) {
-  const points = line.points.map(([x, y]) => `${x},${y}`).join(' ')
   const [[x1, y1], [x2, y2]] = [line.points[0], line.points.at(-1)!]
+  const bend = line.points.length === 3 ? line.points[1] : null
+  // An arc over someone in between peaks halfway to its bend; the words sit on top of it.
+  const [lx, ly] = bend ? [bend[0], (y1 + 2 * bend[1] + y2) / 4] : [(x1 + x2) / 2, (y1 + y2) / 2]
+  const stroke = {
+    fill: 'none',
+    strokeWidth: 1.5,
+    strokeLinecap: 'round' as const,
+    strokeDasharray: line.dashed ? DASH.dashed : line.dotted ? DASH.dotted : undefined,
+    className: line.kind === 'slot' ? 'stroke-line' : 'stroke-line-strong',
+  }
   return (
     <g>
-      <polyline
-        points={points}
-        fill="none"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeDasharray={line.dashed ? DASH.dashed : line.dotted ? DASH.dotted : undefined}
-        className={line.kind === 'slot' ? 'stroke-line' : 'stroke-line-strong'}
-      />
-      {line.label && line.label !== 'partner' && (
+      {bend ? (
+        <path d={`M ${x1} ${y1} Q ${bend[0]} ${bend[1]} ${x2} ${y2}`} {...stroke} />
+      ) : (
+        <polyline points={line.points.map(([x, y]) => `${x},${y}`).join(' ')} {...stroke} />
+      )}
+      {line.label && (
         <text
-          x={(x1 + x2) / 2}
-          y={(y1 + y2) / 2 - 6}
+          x={lx}
+          y={ly - 6}
           textAnchor="middle"
-          className="fill-ink-soft text-xs"
+          className={cn('text-xs', line.label === 'partner' ? 'fill-ink-faint' : 'fill-ink-soft')}
         >
           {line.label}
-        </text>
-      )}
-      {line.label === 'partner' && (
-        <text x={(x1 + x2) / 2} y={y1 - 6} textAnchor="middle" className="fill-ink-faint text-xs">
-          partner
         </text>
       )}
     </g>

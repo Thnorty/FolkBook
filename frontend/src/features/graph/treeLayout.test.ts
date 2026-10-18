@@ -238,6 +238,85 @@ describe('layoutTree', () => {
     it('never overlaps two people', () => noOverlaps(big))
   })
 
+  describe('someone with three partners', () => {
+    // Cem: two exes (Ayla, Banu) and his partner now (Dilek), a child with Dilek.
+    const tree: TreeData = {
+      root: 'cem',
+      people: [
+        treePerson('cem', 'Cem', 0),
+        treePerson('ayla', 'Ayla', 0, [step('partner', null, { former: true })]),
+        treePerson('banu', 'Banu', 0, [step('partner', null, { former: true })]),
+        treePerson('dilek', 'Dilek', 0, [step('partner')]),
+        treePerson('kid', 'Kid', -1, [step('child')]),
+      ],
+      links: [
+        partnerLink('cem', 'ayla', true),
+        partnerLink('cem', 'banu', true),
+        partnerLink('cem', 'dilek'),
+        parentLink('cem', 'kid'),
+        parentLink('dilek', 'kid'),
+      ],
+    }
+    const drawn = layoutTree(tree, ALL)
+    const between = (a: number, b: number, y: number) =>
+      drawn.people.filter((p) => p.y === y && p.x > Math.min(a, b) && p.x < Math.max(a, b))
+
+    it('puts him in the middle, his partner now beside him', () => {
+      const order = drawn.people.toSorted((a, b) => a.x - b.x).map((p) => p.person.id)
+      expect(order.indexOf('cem')).not.toBe(0)
+      expect(order.indexOf('cem')).not.toBe(3)
+      expect(Math.abs(xOf(drawn, 'cem') - xOf(drawn, 'dilek'))).toBe(NODE_WIDTH)
+    })
+
+    it('arcs a partner line over anyone between the two', () => {
+      for (const line of drawn.lines.filter((l) => l.kind === 'partner')) {
+        const [[x1, y], [x2]] = [line.points[0], line.points.at(-1)!]
+        if (between(x1, x2, y).length) {
+          expect(line.points).toHaveLength(3)
+          expect(line.points[1][1]).toBeLessThan(y)
+        } else {
+          expect(line.points).toHaveLength(2)
+        }
+      }
+    })
+
+    it("never starts a child's line at someone else", () => {
+      const [line] = drawn.lines.filter((l) => l.kind === 'child')
+      const [x, y] = line.points[0]
+      const others = drawn.people.filter(
+        (p) => p.y === y && !['cem', 'dilek'].includes(p.person.id),
+      )
+      expect(others.some((p) => p.x === x)).toBe(false)
+    })
+  })
+
+  it('lays out a family of thousands in good time', () => {
+    // Six generations, three children per couple, everyone with a partner.
+    const people = [treePerson('p0', 'P 0', 0)]
+    const links = []
+    let next = 1
+    let parents = [['p0']]
+    for (let generation = -1; generation >= -6 && people.length < 2700; generation--) {
+      const children: string[][] = []
+      for (const couple of parents) {
+        for (let i = 0; i < 3 && people.length < 2700; i++) {
+          const child = `p${next++}`
+          const partner = `p${next++}`
+          people.push(treePerson(child, `P ${child}`, generation, [step('relative')]))
+          people.push(treePerson(partner, `Q ${partner}`, generation, [step('relative')]))
+          couple.forEach((parent) => links.push(parentLink(parent, child)))
+          links.push(partnerLink(child, partner))
+          children.push([child, partner])
+        }
+      }
+      parents = children
+    }
+    const started = performance.now()
+    layoutTree({ root: 'p0', people, links }, ALL)
+    // It used to take about 6 seconds, on every toggle.
+    expect(performance.now() - started).toBeLessThan(2500)
+  })
+
   it('still places people whose links disagree with their generations', () => {
     const tree: TreeData = {
       root: 'a',
