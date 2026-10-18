@@ -16,10 +16,10 @@ const SETTINGS = {
   send_to: 'ela@example.com',
 }
 
-function server({ emailReady = true } = {}) {
+function server({ emailReady = true, timeZone = SETTINGS.time_zone } = {}) {
   const saved: Record<string, unknown>[] = []
   const tests: string[] = []
-  let settings = { ...SETTINGS, email_ready: emailReady }
+  let settings = { ...SETTINGS, email_ready: emailReady, time_zone: timeZone }
   fakeServer({
     'GET /api/auth/me': () =>
       json({ id: 'u1', email: 'ela@example.com', is_admin: false, me: { id: 'me', name: 'Ela' } }),
@@ -119,5 +119,21 @@ describe('Settings → Reminders, the email digest', () => {
       ).toBeDisabled(),
     )
     expect(within(reminders).getByLabelText('In the email')).toBeDisabled()
+  })
+
+  it("saves the browser's time zone on any page until one is saved", async () => {
+    const { saved } = server({ timeZone: '' })
+    renderApp('/')
+
+    await waitFor(() => expect(saved).toHaveLength(1))
+    expect(saved[0]).toEqual({
+      nudges_on: true,
+      default_interval_days: 60,
+      digest: 'weekly',
+      digest_weekday: 0,
+      include_memory_aids: true,
+      birthdays_days_before: 3,
+      time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    })
   })
 })
