@@ -97,7 +97,8 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
   const [showAll, setShowAll] = useShowAll()
   const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(new Set())
   const [pointed, setPointed] = useState<string | null>(null)
-  const big = (graph.data?.nodes.length ?? 0) > FOLD_ABOVE && !focus
+  const people = graph.data ? graphSummary(graph.data).people : 0
+  const big = people > FOLD_ABOVE && !focus
   const folded = useMemo(() => {
     if (!big || showAll || !graph.data) return null
     return foldGraph(graph.data, {
@@ -209,8 +210,8 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
         {big && (
           <FoldBanner
             folded={Boolean(folded)}
-            shown={folded?.shown ?? graph.data.nodes.length}
-            total={graph.data.nodes.length}
+            shown={folded?.shown ?? people}
+            total={people}
             pointed={folded?.bubbles.find((bubble) => bubble.id === pointed)}
             onToggle={() => setShowAll(!showAll)}
           />

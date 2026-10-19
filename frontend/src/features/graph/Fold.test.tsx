@@ -52,7 +52,7 @@ function server(graph: GraphData) {
 
 // The test canvas (test/setup.ts): people as buttons, then a list of lines.
 const network = async () => (await screen.findByRole('list', { name: 'Lines' })).parentElement!
-const BUBBLE = 'Climbing club · +296 more'
+const BUBBLE = 'Climbing club · +297 more'
 
 afterEach(() => {
   clearCookies()
@@ -62,19 +62,19 @@ beforeAll(() => import('./GraphPage'))
 
 describe('big notebooks', () => {
   it('fold faraway spaces into bubbles, and say so', async () => {
-    server(bigBook(297)) // 301 people
+    server(bigBook(298)) // 301 people besides you
     renderApp('/graph')
     const drawn = await network()
 
     expect(within(drawn).getByRole('button', { name: BUBBLE })).toBeInTheDocument()
     expect(within(drawn).queryByRole('button', { name: 'c2' })).toBeNull()
     expect(within(drawn).getByRole('button', { name: 'c1' })).toBeInTheDocument() // 2 steps
-    expect(screen.getByText(/You \+ 2 steps · 5 of 301/)).toBeInTheDocument()
+    expect(screen.getByText(/You \+ 2 steps · 4 of 301/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Show all 301' })).toBeInTheDocument()
   })
 
   it('unfold a space on click, without opening anyone', async () => {
-    const requests = server(bigBook(297))
+    const requests = server(bigBook(298))
     renderApp('/graph')
     const drawn = await network()
 
@@ -87,7 +87,7 @@ describe('big notebooks', () => {
   })
 
   it('show everyone, and remember it on this device', async () => {
-    server(bigBook(297))
+    server(bigBook(298))
     renderApp('/graph')
     await network()
 
@@ -96,7 +96,7 @@ describe('big notebooks', () => {
     expect(screen.getByText('Showing all 301')).toBeInTheDocument()
 
     cleanup()
-    server(bigBook(297))
+    server(bigBook(298))
     renderApp('/graph')
     expect(within(await network()).getByRole('button', { name: 'c2' })).toBeInTheDocument()
 
@@ -105,7 +105,7 @@ describe('big notebooks', () => {
   })
 
   it('unfold a space picked in the filters', async () => {
-    server(bigBook(297))
+    server(bigBook(298))
     renderApp('/graph')
     const drawn = await network()
 
@@ -116,7 +116,7 @@ describe('big notebooks', () => {
   })
 
   it('never fold in focus mode', async () => {
-    server(bigBook(297))
+    server(bigBook(298))
     renderApp('/graph?focus=a1')
     await network()
 
@@ -125,11 +125,11 @@ describe('big notebooks', () => {
   })
 
   it('leave a notebook of 300 people as it is', async () => {
-    server(bigBook(296))
+    server(bigBook(297)) // 300 besides you
     renderApp('/graph')
     const drawn = await network()
 
-    expect(within(drawn).getByRole('button', { name: 'c296' })).toBeInTheDocument()
+    expect(within(drawn).getByRole('button', { name: 'c297' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Show all/ })).toBeNull()
   })
 })

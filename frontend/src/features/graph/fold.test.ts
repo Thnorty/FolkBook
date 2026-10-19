@@ -72,7 +72,8 @@ describe('foldGraph', () => {
 
   it('shows you and everyone two steps along drawn lines', () => {
     expect(ids(folded.graph)).toEqual(['a', 'b', 'm', 'me', 'n'])
-    expect([folded.shown, folded.total]).toEqual([5, 10])
+    // People other than you, as the graph's header counts them.
+    expect([folded.shown, folded.total]).toEqual([4, 9])
   })
 
   it('folds the rest by their first space, largest first', () => {
@@ -140,7 +141,7 @@ describe('foldGraph', () => {
       { unfolded: NONE, keep: NONE },
     )
     expect(close.bubbles).toEqual([])
-    expect([close.shown, close.total]).toEqual([2, 2])
+    expect([close.shown, close.total]).toEqual([1, 1])
   })
 
   it('names bubbles by space', () => {

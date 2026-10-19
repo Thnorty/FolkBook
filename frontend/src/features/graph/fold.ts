@@ -4,7 +4,7 @@ import type { GraphData } from './graphModel'
    everyone further is folded into one bubble per space, which unfolds on click. Plain
    data in and out, so it's tested without drawing anything. */
 
-/** Above this many people, faraway spaces are folded. */
+/** Above this many people (besides you), faraway spaces are folded. */
 export const FOLD_ABOVE = 300
 /** How far "near" reaches, in drawn lines. */
 const NEAR_STEPS = 2
@@ -21,6 +21,7 @@ export type Folded = {
   graph: GraphData
   bubbles: Bubble[]
   lines: BubbleLine[]
+  /** People other than you, as the graph's header counts them. */
   shown: number
   total: number
 }
@@ -100,7 +101,7 @@ export function foldGraph(
     // Largest first; equal ones in the order their people come.
     bubbles: [...bubbles.values()].toSorted((a, b) => b.count - a.count),
     lines: [...into.values()],
-    shown: shownNodes.length,
-    total: graph.nodes.length,
+    shown: shownNodes.filter((node) => !node.is_me).length,
+    total: graph.nodes.filter((node) => !node.is_me).length,
   }
 }
