@@ -31,6 +31,7 @@ Frontend only: `GET /api/graph` already sends every visible person and line.
 - **Clicking (or tapping) a bubble** shows all of that space's folded people, with every drawn line between shown people; the other bubbles stay. Unfolded spaces are page state: they reset on the next visit.
 - **Picking spaces in the filter chips** shows everyone in them, whatever their first space, while they're picked (choosing a space is asking to see it); the other spaces' bubbles hide, like their people.
 - **A route** ("How do I know…?"): its people are always shown, taken out of their bubble's count; the rest of that space stays folded.
+- **Folding back:** while spaces are unfolded, the banner lists them ("Unfolded: Climbing club ✕"); ✕ folds that one back into its bubble. **Fold faraway spaces** (shown whenever anything is unfolded, or after Show all) goes back to the start: every faraway space folded, nothing remembered from before.
 - **Show all N** (in the banner) turns folding off. It's remembered **on this device** (localStorage, `features/graph/foldPreference.ts`; unreadable or blocked storage means "fold"), and **Fold faraway spaces** turns it back on.
 
 ### The banner

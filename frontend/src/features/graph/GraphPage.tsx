@@ -219,8 +219,20 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
             bubbles={bubbles?.bubbles.length ?? 0}
             shown={folded?.shown ?? people}
             total={people}
+            unfolded={[...unfolded].map((id) => ({
+              id,
+              space: graphSpaces(graph.data).find((space) => space.id === id) ?? null,
+            }))}
             pointed={folded?.bubbles.find((bubble) => bubble.id === pointed)}
-            onToggle={() => setShowAll(!showAll)}
+            onShowAll={() => setShowAll(true)}
+            onFoldAll={() => {
+              // Back to the start: every faraway space folded, as when the graph opened.
+              setUnfolded(new Set())
+              setShowAll(false)
+            }}
+            onFoldSpace={(id) =>
+              setUnfolded((now) => new Set([...now].filter((space) => space !== id)))
+            }
           />
         )}
         {focus && (

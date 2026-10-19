@@ -127,6 +127,38 @@ describe('big notebooks', () => {
     expect(within(drawn).queryByRole('button', { name: BUBBLE })).toBeNull()
   })
 
+  it('fold an unfolded space back into its bubble from the banner', async () => {
+    server(bigBook(298))
+    renderApp('/graph')
+    const drawn = await network()
+    await userEvent.click(within(drawn).getByRole('button', { name: BUBBLE }))
+    await within(drawn).findByRole('button', { name: 'c2' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Fold Climbing club again' }))
+
+    expect(await within(drawn).findByRole('button', { name: BUBBLE })).toBeInTheDocument()
+    expect(within(drawn).queryByRole('button', { name: 'c2' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Fold Climbing club again' })).toBeNull()
+  })
+
+  it('fold everything back to the start, from unfolded bubbles or from Show all', async () => {
+    server(bigBook(298))
+    renderApp('/graph')
+    const drawn = await network()
+    expect(screen.queryByRole('button', { name: 'Fold faraway spaces' })).toBeNull()
+
+    await userEvent.click(within(drawn).getByRole('button', { name: BUBBLE }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Fold faraway spaces' }))
+    expect(await within(drawn).findByRole('button', { name: BUBBLE })).toBeInTheDocument()
+
+    // Unfold, then show all, then fold: back to the start, not to the unfolded club.
+    await userEvent.click(within(drawn).getByRole('button', { name: BUBBLE }))
+    await userEvent.click(screen.getByRole('button', { name: 'Show all 301' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Fold faraway spaces' }))
+    expect(await within(drawn).findByRole('button', { name: BUBBLE })).toBeInTheDocument()
+    expect(within(drawn).queryByRole('button', { name: 'c2' })).toBeNull()
+  })
+
   it('keep the person open beside the graph when a bubble unfolds', async () => {
     server(bigBook(298))
     renderApp('/graph')
