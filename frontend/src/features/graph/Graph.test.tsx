@@ -22,6 +22,8 @@ import {
   labelLinesOf,
   linesAround,
   graphSummary,
+  PERSON_SIZE,
+  sizeRange,
   routePeople,
   withRoute,
 } from './graphModel'
@@ -758,6 +760,16 @@ describe('toCanvas', () => {
       }),
     ])
     expect(Object.keys(clusters)).toEqual(['Family'])
+  })
+
+  it('gives everyone a size, so bubbles leave people as big as they were', () => {
+    const plain = toCanvas(GRAPH, NO_FILTERS, palette)
+    expect(plain.nodes.every((n) => n.size === PERSON_SIZE)).toBe(true)
+    expect(sizeRange(plain.nodes)).toEqual([PERSON_SIZE, PERSON_SIZE])
+
+    const folds = { bubbles: [{ id: 'fold:none', space: null, count: 300, direct: 0 }], lines: [] }
+    const big = toCanvas(GRAPH, NO_FILTERS, palette, {}, new Set(), folds)
+    expect(sizeRange(big.nodes)).toEqual([PERSON_SIZE, 40])
   })
 
   it('keeps you even when a space filter leaves you out', () => {

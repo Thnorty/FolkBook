@@ -135,6 +135,23 @@ describe('foldGraph', () => {
     ])
   })
 
+  it('shows everyone in a space picked in the filters, whatever their first space', () => {
+    // c2's first space is Climbing club, but she's in Work too.
+    const picked = foldGraph(GRAPH, { unfolded: NONE, keep: NONE, spaces: new Set(['work']) })
+    expect(ids(picked.graph)).toEqual(expect.arrayContaining(['c2', 'w']))
+    expect(ids(picked.graph)).not.toContain('c')
+  })
+
+  it('counts only near people as knowing a bubble directly', () => {
+    // Unfolded, Climbing club's c2 links into Work; c2 isn't near, so Work's count stays.
+    const graph: GraphData = {
+      nodes: [...GRAPH.nodes, person('w2', [WORK])],
+      edges: [...GRAPH.edges, edge('c2', 'w2')],
+    }
+    const open = foldGraph(graph, { unfolded: new Set(['climbing']), keep: NONE })
+    expect(open.bubbles.find((b) => b.id === 'fold:work')!.direct).toBe(1) // n only
+  })
+
   it('makes no bubbles when everyone is near', () => {
     const close = foldGraph(
       { nodes: [person('me', [], true), person('a', [WORK])], edges: [edge('me', 'a')] },

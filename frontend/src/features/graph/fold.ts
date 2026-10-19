@@ -12,7 +12,7 @@ const NEAR_STEPS = 2
 type Node = GraphData['nodes'][number]
 export type SpaceRef = Node['spaces'][number]
 
-/** A folded space: `direct` is how many shown people have lines into it. */
+/** A folded space: `direct` is how many near people have lines into it. */
 export type Bubble = { id: string; space: SpaceRef | null; count: number; direct: number }
 /** A shown person's lines into a bubble, drawn as one. */
 export type BubbleLine = { id: string; source: string; target: string; count: number }
@@ -28,6 +28,11 @@ export type Folded = {
 
 export const bubbleId = (spaceId: string | null) => `fold:${spaceId ?? 'none'}`
 export const isBubble = (id: string) => id.startsWith('fold:')
+/** The space a bubble holds: its id, or 'none' for people in no space. */
+export const spaceOfBubble = (id: string) => id.slice('fold:'.length)
+/** What a bubble is called: its space's name. */
+export const bubbleName = (bubble: Pick<Bubble, 'space'>) =>
+  bubble.space?.name ?? 'Not in any space'
 
 /** The space someone is folded into: their first (the one that colours them). */
 const firstSpace = (node: Node) => node.spaces[0] ?? null
@@ -37,11 +42,14 @@ export function foldGraph(
   {
     unfolded,
     keep,
+    spaces = new Set(),
   }: {
     /** Spaces shown in full (space ids; 'none' for people in no space). */
     unfolded: ReadonlySet<string>
     /** People shown whatever happens: a route's. */
     keep: ReadonlySet<string>
+    /** Spaces picked in the filters: everyone in them shows, whatever their first space. */
+    spaces?: ReadonlySet<string>
   },
 ): Folded {
   // Being in someone's space isn't a step: only lines that are drawn count.
@@ -60,7 +68,10 @@ export function foldGraph(
   }
 
   const isShown = (node: Node) =>
-    near.has(node.id) || keep.has(node.id) || unfolded.has(firstSpace(node)?.id ?? 'none')
+    near.has(node.id) ||
+    keep.has(node.id) ||
+    unfolded.has(firstSpace(node)?.id ?? 'none') ||
+    node.spaces.some((space) => spaces.has(space.id))
   const shownNodes = graph.nodes.filter(isShown)
   const shown = new Set(shownNodes.map((node) => node.id))
 
@@ -88,7 +99,8 @@ export function foldGraph(
       into.set(id, { ...line, count: line.count + 1 })
     }
   }
-  for (const line of into.values()) {
+  // "You know 3 directly": the near people with lines in, not everyone unfolded.
+  for (const line of [...into.values()].filter((line) => near.has(line.source))) {
     const bubble = bubbles.get(line.target)!
     bubbles.set(line.target, { ...bubble, direct: bubble.direct + 1 })
   }

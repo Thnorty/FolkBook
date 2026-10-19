@@ -21,6 +21,7 @@ import {
   type CanvasNode,
   type ClusterColors,
   type Focus,
+  sizeRange,
 } from './graphModel'
 import { trackPointer, widenLineReach } from './lineReach'
 import type { CanvasColors } from './usePalette'
@@ -56,6 +57,7 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
   ref,
 ) {
   const theme = useMemo(() => canvasTheme(colors), [colors])
+  const [minSize, maxSize] = useMemo(() => sizeRange(nodes), [nodes])
   const renderCluster = useMemo(() => spaceRing(clusters, colors), [clusters, colors])
   const [hovered, setHovered] = useState<string | null>(null)
   const pointed = usePointedLine()
@@ -84,6 +86,9 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         edges={shownEdges}
         theme={theme}
         layoutType="forceDirected2d"
+        // Sizes as given: told the real range, Reagraph's scaling leaves them as they are.
+        minNodeSize={minSize}
+        maxNodeSize={maxSize}
         layoutOverrides={SPACING}
         // Drawn where the layout ends up: animated, the lines swing round as people
         // fly out from the middle.

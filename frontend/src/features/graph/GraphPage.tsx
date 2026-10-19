@@ -28,7 +28,7 @@ import { FocusBar } from './FocusBar'
 import { HowDoIKnow } from './HowDoIKnow'
 import { CanvasButton } from './CanvasButton'
 import { FamilyTreeView } from './FamilyTreeView'
-import { FOLD_ABOVE, foldGraph, isBubble } from './fold'
+import { FOLD_ABOVE, foldGraph, isBubble, spaceOfBubble } from './fold'
 import { FoldBanner } from './FoldBanner'
 import { useShowAll } from './foldPreference'
 import { ModeSwitch } from './ModeSwitch'
@@ -92,54 +92,60 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
   const route = how ? paths.data?.paths[shownIndex] : undefined
   const steps = useStepReveal(route?.hops.length ?? 0, `${how}:${shownIndex}`)
 
-  // Big notebooks start with you + 2 steps, faraway spaces folded (3j); not in focus mode,
-  // which shows its own steps, nor on a device that chose Show all.
+  // Big notebooks start with you + 2 steps, faraway spaces folded (3j); not in focus mode
+  // once its own steps have arrived (until then the folded view stays, not all 900), nor
+  // on a device that chose Show all.
   const [showAll, setShowAll] = useShowAll()
   const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(new Set())
   const [pointed, setPointed] = useState<string | null>(null)
   const people = graph.data ? graphSummary(graph.data).people : 0
-  const big = people > FOLD_ABOVE && !focus
+  const big = people > FOLD_ABOVE
+  const focusShown = Boolean(focus && focused.data)
   const folded = useMemo(() => {
-    if (!big || showAll || !graph.data) return null
+    if (!big || showAll || focusShown || !graph.data) return null
     return foldGraph(graph.data, {
-      // A space picked in the filters is one you want to see.
-      unfolded: new Set([...unfolded, ...filters.spaces]),
+      unfolded,
       keep: new Set(route ? routePeople(route) : []),
+      // A space picked in the filters is one you want to see: everyone in it.
+      spaces: new Set(filters.spaces),
     })
-  }, [big, showAll, graph.data, unfolded, filters.spaces, route])
+  }, [big, showAll, focusShown, graph.data, unfolded, filters.spaces, route])
+  // With spaces picked, the other spaces' bubbles go too, like their people.
+  const bubbles = useMemo(
+    () =>
+      folded && {
+        bubbles: folded.bubbles.filter(
+          (bubble) => !filters.spaces.length || filters.spaces.includes(bubble.space?.id ?? ''),
+        ),
+        lines: folded.lines,
+      },
+    [folded, filters.spaces],
+  )
 
   const shown = (focus && focused.data) || folded?.graph || graph.data
   const faces = useNodeFaces(graph.data?.nodes, colors)
   const drawn = useMemo(() => {
     if (!shown) return undefined
-    const bubbles = folded
-      ? {
-          // With spaces picked, the other spaces' bubbles go too, like their people.
-          bubbles: folded.bubbles.filter(
-            (bubble) => !filters.spaces.length || filters.spaces.includes(bubble.space?.id ?? ''),
-          ),
-          lines: folded.lines,
-        }
-      : undefined
+    const folds = bubbles ?? undefined
     if (!route) {
       // The focused person stays drawn whatever the filters say.
       const keep = new Set(focus ? [focus] : [])
       return {
-        ...toCanvas(shown, filters, colors.palette, faces, keep, bubbles),
+        ...toCanvas(shown, filters, colors.palette, faces, keep, folds),
         route: undefined,
       }
     }
     const keep = new Set(routePeople(route))
     return withRoute(
-      toCanvas(shown, filters, colors.palette, faces, keep, bubbles),
+      toCanvas(shown, filters, colors.palette, faces, keep, folds),
       route,
       steps,
       colors.palette,
     )
-  }, [shown, filters, colors.palette, faces, route, steps, focus, folded])
+  }, [shown, filters, colors.palette, faces, route, steps, focus, bubbles])
   // A bubble unfolds its space; it's nobody to open beside the graph.
   const pick = (id: string | null) => {
-    if (id && isBubble(id)) setUnfolded(new Set([...unfolded, id.slice('fold:'.length)]))
+    if (id && isBubble(id)) setUnfolded((now) => new Set([...now, spaceOfBubble(id)]))
     else setSelected(id)
   }
   // Someone no longer drawn (after 2 → 1 step, or a filter) isn't open beside the graph.
@@ -207,9 +213,10 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
           <HowDoIKnow personId={how} meId={meId} onPick={showRoute} onClear={() => showRoute()} />
         </div>
         <FilterBar graph={graph.data} filters={filters} onChange={setFilters} />
-        {big && (
+        {big && !focus && (
           <FoldBanner
             folded={Boolean(folded)}
+            bubbles={bubbles?.bubbles.length ?? 0}
             shown={folded?.shown ?? people}
             total={people}
             pointed={folded?.bubbles.find((bubble) => bubble.id === pointed)}

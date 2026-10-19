@@ -50,6 +50,18 @@ function server(graph: GraphData) {
   })
 }
 
+/** Like `server`, but someone's neighborhood never arrives (focus mode, loading). */
+function fakeServerWithSlowFocus(graph: GraphData) {
+  fakeServer({
+    'GET /api/auth/me': () => json(ME),
+    'GET /api/auth/csrf': () => new Response(null, { status: 204 }),
+    'GET /api/spaces': () => json({ items: [], count: 0 }),
+    'GET /api/people': () => json({ items: [], count: 0 }),
+    'GET /api/graph': () => json(graph),
+    'GET /api/graph/neighborhood/a1': () => new Promise<Response>(() => {}),
+  })
+}
+
 // The test canvas (test/setup.ts): people as buttons, then a list of lines.
 const network = async () => (await screen.findByRole('list', { name: 'Lines' })).parentElement!
 const BUBBLE = 'Climbing club · +297 more'
@@ -113,6 +125,40 @@ describe('big notebooks', () => {
 
     await waitFor(() => expect(within(drawn).getByRole('button', { name: 'c2' })).toBeVisible())
     expect(within(drawn).queryByRole('button', { name: BUBBLE })).toBeNull()
+  })
+
+  it('keep the person open beside the graph when a bubble unfolds', async () => {
+    server(bigBook(298))
+    renderApp('/graph')
+    const drawn = await network()
+
+    await userEvent.click(within(drawn).getByRole('button', { name: 'a1' }))
+    const peek = await screen.findByRole('complementary', { name: 'Peek' })
+    await userEvent.click(within(drawn).getByRole('button', { name: BUBBLE }))
+
+    expect(await within(drawn).findByRole('button', { name: 'c2' })).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: 'Peek' })).toBe(peek)
+  })
+
+  it('say nothing is folded when everyone is near', async () => {
+    const book = bigBook(298)
+    // Everyone in the club is your friend: all within reach.
+    server({ ...book, edges: [...book.edges, ...book.nodes.slice(4).map((n) => link('me', n.id))] })
+    renderApp('/graph')
+    await network()
+
+    expect(screen.getByText('You + 2 steps · 301 of 301')).toBeInTheDocument()
+    expect(screen.queryByText(/faraway spaces are folded/)).toBeNull()
+  })
+
+  it('stay folded while a focus loads, without the banner', async () => {
+    fakeServerWithSlowFocus(bigBook(298))
+    renderApp('/graph?focus=a1')
+    const drawn = await network()
+
+    expect(within(drawn).getByRole('button', { name: BUBBLE })).toBeInTheDocument()
+    expect(within(drawn).queryByRole('button', { name: 'c2' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Show all/ })).toBeNull()
   })
 
   it('never fold in focus mode', async () => {

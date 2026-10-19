@@ -1,5 +1,5 @@
 import type { components } from '@/api/schema'
-import type { Bubble, BubbleLine } from './fold'
+import { bubbleName, type Bubble, type BubbleLine } from './fold'
 import { linkLabel } from '@/features/person/labels'
 import type { Route } from './route'
 
@@ -47,8 +47,8 @@ export type CanvasNode = {
   /** Me stays in the middle. */
   fx?: number
   fy?: number
-  /** Bigger than a person: a folded space. */
-  size?: number
+  /** A person is PERSON_SIZE; a folded space is bigger. */
+  size: number
   data: { cluster: string | null; isMe: boolean; bubble?: true }
 }
 
@@ -142,6 +142,7 @@ export function toCanvas(
         label: node.is_me ? 'Me' : node.name,
         fill: nodeFill(node, palette),
         icon: faces[node.id],
+        size: PERSON_SIZE,
         ...(node.is_me && { fx: 0, fy: 0 }),
         data: { cluster: node.is_me ? null : (node.spaces[0]?.name ?? null), isMe: node.is_me },
       })),
@@ -173,15 +174,26 @@ export function toCanvas(
   }
 }
 
+/**
+ * Everyone's size. Reagraph scales sizes between the smallest and largest it's told
+ * (`sizeRange`), so people have one too: with bubbles around, they'd shrink otherwise.
+ */
+export const PERSON_SIZE = 10
+
+/** The smallest and largest node size, for Reagraph to draw sizes as they are. */
+export function sizeRange(nodes: CanvasNode[]): [number, number] {
+  const sizes = nodes.map((node) => node.size)
+  return [Math.min(PERSON_SIZE, ...sizes), Math.max(PERSON_SIZE, ...sizes)]
+}
+
 /** Bubbles grow with how many they hold, up to a size that leaves room for the rest. */
 const BUBBLE_MIN = 14
 const BUBBLE_MAX = 40
 
 function bubbleNode(bubble: Bubble, palette: Palette): CanvasNode {
-  const name = bubble.space?.name ?? 'Not in any space'
   return {
     id: bubble.id,
-    label: `${name} · +${bubble.count} more`,
+    label: `${bubbleName(bubble)} · +${bubble.count} more`,
     fill: bubble.space ? palette.space[bubble.space.color] : palette.noSpace,
     size: Math.min(BUBBLE_MAX, BUBBLE_MIN + 2 * Math.sqrt(bubble.count)),
     data: { cluster: null, isMe: false, bubble: true },
