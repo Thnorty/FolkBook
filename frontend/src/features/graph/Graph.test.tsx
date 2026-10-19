@@ -22,6 +22,8 @@ import {
   labelLinesOf,
   linesAround,
   graphSummary,
+  PERSON_SIZE,
+  sizeRange,
   routePeople,
   withRoute,
 } from './graphModel'
@@ -713,6 +715,61 @@ describe('toCanvas', () => {
       }),
     ])
     expect(graphSummary(graph).connections).toBe(1)
+  })
+
+  it('draws folded spaces as bubbles, joined by dotted "via" lines', () => {
+    const folds = {
+      bubbles: [
+        { id: 'fold:s2', space: FAMILY, count: 212, direct: 1 },
+        { id: 'fold:none', space: null, count: 4, direct: 0 },
+      ],
+      lines: [
+        { id: 'fold:kerem:fold:s2', source: 'kerem', target: 'fold:s2', count: 3 },
+        { id: 'fold:emma:fold:s2', source: 'emma', target: 'fold:s2', count: 1 },
+        // Someone a filter hides: no line pointing nowhere.
+        { id: 'fold:gone:fold:s2', source: 'gone', target: 'fold:s2', count: 2 },
+      ],
+    }
+    const { nodes, edges, clusters } = toCanvas(
+      GRAPH,
+      { ...NO_FILTERS, spaces: ['s2'] },
+      palette,
+      {},
+      new Set(),
+      folds,
+    )
+
+    expect(nodes.find((n) => n.id === 'fold:s2')).toMatchObject({
+      label: 'Family · +212 more',
+      fill: 'red',
+      size: 40, // capped
+      data: { cluster: null, isMe: false, bubble: true },
+    })
+    expect(nodes.find((n) => n.id === 'fold:none')).toMatchObject({
+      label: 'Not in any space · +4 more',
+      fill: 'faint',
+      size: 18,
+    })
+    expect(edges.filter((e) => e.id.startsWith('fold:'))).toEqual([
+      expect.objectContaining({
+        source: 'kerem',
+        target: 'fold:s2',
+        label: 'via 3',
+        dashArray: [1, 2],
+        fill: 'faint line',
+      }),
+    ])
+    expect(Object.keys(clusters)).toEqual(['Family'])
+  })
+
+  it('gives everyone a size, so bubbles leave people as big as they were', () => {
+    const plain = toCanvas(GRAPH, NO_FILTERS, palette)
+    expect(plain.nodes.every((n) => n.size === PERSON_SIZE)).toBe(true)
+    expect(sizeRange(plain.nodes)).toEqual([PERSON_SIZE, PERSON_SIZE])
+
+    const folds = { bubbles: [{ id: 'fold:none', space: null, count: 300, direct: 0 }], lines: [] }
+    const big = toCanvas(GRAPH, NO_FILTERS, palette, {}, new Set(), folds)
+    expect(sizeRange(big.nodes)).toEqual([PERSON_SIZE, 40])
   })
 
   it('keeps you even when a space filter leaves you out', () => {

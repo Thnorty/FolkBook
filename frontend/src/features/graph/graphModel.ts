@@ -1,4 +1,5 @@
 import type { components } from '@/api/schema'
+import { bubbleName, type Bubble, type BubbleLine } from './fold'
 import { linkLabel } from '@/features/person/labels'
 import type { Route } from './route'
 
@@ -46,7 +47,9 @@ export type CanvasNode = {
   /** Me stays in the middle. */
   fx?: number
   fy?: number
-  data: { cluster: string | null; isMe: boolean }
+  /** A person is PERSON_SIZE; a folded space is bigger. */
+  size: number
+  data: { cluster: string | null; isMe: boolean; bubble?: true }
 }
 
 export type CanvasEdge = {
@@ -97,6 +100,8 @@ export function toCanvas(
   faces: Record<string, string> = {},
   /** People drawn whatever the filters say: the route being shown. */
   keep: ReadonlySet<string> = new Set(),
+  /** Faraway spaces folded into bubbles (big notebooks), and the lines into them. */
+  folds: { bubbles: Bubble[]; lines: BubbleLine[] } = { bubbles: [], lines: [] },
 ) {
   const keepEdge = (edge: ApiEdge) =>
     drawn(edge) &&
@@ -131,23 +136,67 @@ export function toCanvas(
 
   return {
     clusters,
-    nodes: nodes.map((node): CanvasNode => ({
-      id: node.id,
-      label: node.is_me ? 'Me' : node.name,
-      fill: nodeFill(node, palette),
-      icon: faces[node.id],
-      ...(node.is_me && { fx: 0, fy: 0 }),
-      data: { cluster: node.is_me ? null : (node.spaces[0]?.name ?? null), isMe: node.is_me },
-    })),
-    edges: edges.map((edge): CanvasEdge => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      label: lineLabel(edge),
-      ...(edge.former && { dashed: true }),
-      ...(edge.kind === 'member' && { dashed: true, dashArray: DOTS }),
-      fill: edge.kind === 'relationship' ? palette.edge : palette.sharedEdge,
-    })),
+    nodes: [
+      ...nodes.map((node): CanvasNode => ({
+        id: node.id,
+        label: node.is_me ? 'Me' : node.name,
+        fill: nodeFill(node, palette),
+        icon: faces[node.id],
+        size: PERSON_SIZE,
+        ...(node.is_me && { fx: 0, fy: 0 }),
+        data: { cluster: node.is_me ? null : (node.spaces[0]?.name ?? null), isMe: node.is_me },
+      })),
+      ...folds.bubbles.map((bubble) => bubbleNode(bubble, palette)),
+    ],
+    edges: [
+      ...edges.map((edge): CanvasEdge => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        label: lineLabel(edge),
+        ...(edge.former && { dashed: true }),
+        ...(edge.kind === 'member' && { dashed: true, dashArray: DOTS }),
+        fill: edge.kind === 'relationship' ? palette.edge : palette.sharedEdge,
+      })),
+      // Faint, like a shared space's: they say where a space hangs, not a relationship.
+      ...folds.lines
+        .filter((line) => shown.has(line.source))
+        .map((line): CanvasEdge => ({
+          id: line.id,
+          source: line.source,
+          target: line.target,
+          label: line.count > 1 ? `via ${line.count}` : undefined,
+          dashed: true,
+          dashArray: DOTS,
+          fill: palette.sharedEdge,
+        })),
+    ],
+  }
+}
+
+/**
+ * Everyone's size. Reagraph scales sizes between the smallest and largest it's told
+ * (`sizeRange`), so people have one too: with bubbles around, they'd shrink otherwise.
+ */
+export const PERSON_SIZE = 10
+
+/** The smallest and largest node size, for Reagraph to draw sizes as they are. */
+export function sizeRange(nodes: CanvasNode[]): [number, number] {
+  const sizes = nodes.map((node) => node.size)
+  return [Math.min(PERSON_SIZE, ...sizes), Math.max(PERSON_SIZE, ...sizes)]
+}
+
+/** Bubbles grow with how many they hold, up to a size that leaves room for the rest. */
+const BUBBLE_MIN = 14
+const BUBBLE_MAX = 40
+
+function bubbleNode(bubble: Bubble, palette: Palette): CanvasNode {
+  return {
+    id: bubble.id,
+    label: `${bubbleName(bubble)} · +${bubble.count} more`,
+    fill: bubble.space ? palette.space[bubble.space.color] : palette.noSpace,
+    size: Math.min(BUBBLE_MAX, BUBBLE_MIN + 2 * Math.sqrt(bubble.count)),
+    data: { cluster: null, isMe: false, bubble: true },
   }
 }
 

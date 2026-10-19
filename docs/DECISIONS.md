@@ -100,7 +100,7 @@ What we decided and why it matters. Work items live in [GitHub Issues](https://g
 - **People search** matches every word you type against names, how you met, work, tags, the spaces you can see, and your own notes and memory aids (never anyone else's). It ignores case and accents (Postgres `unaccent`), so "yilmaz" finds Yılmaz.
 - Visual direction: **warm notebook** (see `design/FolkBook.dc.html` and `docs/UI_FLOWS.md`).
 - Profile on desktop: peek side panel from lists/graph + expand to full page. Mobile: always full page.
-- Graph default: everyone for small notebooks (~300 people or fewer); otherwise Me + 2 hops with other spaces folded into bubbles.
+- Graph default: everyone for small notebooks (300 people or fewer); otherwise Me + 2 steps with other spaces folded into bubbles. Steps go along drawn lines (relationships, users sharing a space); being in someone's space isn't a step. Folded people go into their first space's bubble. "Show all" is remembered per device; unfolded bubbles last the visit.
 - Keyboard: `N` add person, `Shift+N` quick capture, `Ctrl/Cmd+K` command palette.
 - **App icon:** a notebook page with two space tabs on the ink-blue square (concept A). Sources are `frontend/public/icons/icon.svg` (rounded, for browsers and desktops) and `icon-maskable.svg` (full bleed with the notebook inside the safe circle, for Android and iOS); `npm run icons` renders the PNGs.
 - **Installable, but no offline data:** FolkBook installs as an app (manifest + service worker). The service worker only keeps an "offline" page and the icon; it never caches the app's data or API responses, so nothing about people is stored on the device. Offline editing is out of scope (the server is the notebook).

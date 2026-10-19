@@ -21,6 +21,7 @@ import {
   type CanvasNode,
   type ClusterColors,
   type Focus,
+  sizeRange,
 } from './graphModel'
 import { trackPointer, widenLineReach } from './lineReach'
 import type { CanvasColors } from './usePalette'
@@ -36,6 +37,8 @@ type NetworkCanvasProps = {
   colors: CanvasColors
   selected: string | null
   onSelect: (personId: string | null) => void
+  /** The node pointed at (a person or a folded space), or null when none is. */
+  onPoint?: (nodeId: string | null) => void
   /** The route being shown (its people and ink lines): lit up, everything else dimmed. */
   route?: string[]
 }
@@ -50,10 +53,11 @@ const SPACING = { linkDistance: 110, nodeStrength: -600 }
  * or tap it, or at one of its people.
  */
 export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(function NetworkCanvas(
-  { nodes, edges, clusters, colors, selected, onSelect, route },
+  { nodes, edges, clusters, colors, selected, onSelect, onPoint, route },
   ref,
 ) {
   const theme = useMemo(() => canvasTheme(colors), [colors])
+  const [minSize, maxSize] = useMemo(() => sizeRange(nodes), [nodes])
   const renderCluster = useMemo(() => spaceRing(clusters, colors), [clusters, colors])
   const [hovered, setHovered] = useState<string | null>(null)
   const pointed = usePointedLine()
@@ -82,6 +86,9 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         edges={shownEdges}
         theme={theme}
         layoutType="forceDirected2d"
+        // Sizes as given: told the real range, Reagraph's scaling leaves them as they are.
+        minNodeSize={minSize}
+        maxNodeSize={maxSize}
         layoutOverrides={SPACING}
         // Drawn where the layout ends up: animated, the lines swing round as people
         // fly out from the middle.
@@ -98,10 +105,21 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         actives={actives}
         onNodeClick={(node) => {
           setPickedLine(null)
+          // A clicked bubble unfolds and is gone, and nothing says the pointer left it.
+          if (node.data?.bubble) {
+            setHovered(null)
+            onPoint?.(null)
+          }
           onSelect(node.id)
         }}
-        onNodePointerOver={(node) => setHovered(node.id)}
-        onNodePointerOut={() => setHovered(null)}
+        onNodePointerOver={(node) => {
+          setHovered(node.id)
+          onPoint?.(node.id)
+        }}
+        onNodePointerOut={() => {
+          setHovered(null)
+          onPoint?.(null)
+        }}
         onEdgeClick={(edge) => setPickedLine(edge.id)}
         onEdgePointerOver={pointed.over}
         onEdgePointerOut={pointed.out}
