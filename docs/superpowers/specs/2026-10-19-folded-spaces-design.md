@@ -24,11 +24,11 @@ Frontend only: `GET /api/graph` already sends every visible person and line.
 - A bubble is a synthetic node: id `fold:<space id>` (`fold:none` for no space), label "Climbing club · +212 more", the space's colour (the no-space colour for "Not in any space"), and a size that grows with its count (Reagraph's `size`, capped so a huge bubble doesn't swallow the view).
 - **Lines into a bubble:** one faint line (the shared-space line style) from each near person who has at least one drawn line to someone inside it, labelled "via N" when N > 1 of their lines lead in. No lines between bubbles.
 - A bubble with nobody linked to anyone near still shows, unconnected.
-- **Hover** (and tap on phones, before the second tap unfolds): the line words show as for people, and the banner's hint becomes "Unfold Climbing club · 212 people · you know 3 directly" (3 = near people with lines into it).
+- **Hover** (desktop): the line words show as for people, and the banner's hint becomes "Unfold Climbing club · 212 people · you know 3 directly" (3 = near people with lines into it).
 
 ### Unfolding
 
-- **Clicking a bubble** shows all of that space's folded people, with every drawn line between shown people; the other bubbles stay. Unfolded spaces are page state: they reset on the next visit.
+- **Clicking (or tapping) a bubble** shows all of that space's folded people, with every drawn line between shown people; the other bubbles stay. Unfolded spaces are page state: they reset on the next visit.
 - **Picking a space in the filter chips** unfolds it (choosing a space is asking to see it).
 - **A route** ("How do I know…?"): its people are always shown, taken out of their bubble's count; the rest of that space stays folded.
 - **Show all N** (in the banner) turns folding off. It's remembered **on this device** (localStorage, `features/graph/foldPreference.ts`; unreadable or blocked storage means "fold"), and **Fold faraway spaces** turns it back on.
