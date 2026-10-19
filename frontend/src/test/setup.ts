@@ -48,6 +48,8 @@ vi.mock('reagraph', async () => {
         nodes: Node[]
         edges: Edge[]
         onNodeClick: (node: Node) => void
+        onNodePointerOver?: (node: Node) => void
+        onNodePointerOut?: (node: Node) => void
         onEdgeClick: (edge: Edge) => void
       },
       ref,
@@ -62,6 +64,9 @@ vi.mock('reagraph', async () => {
             {
               key: node.id,
               onClick: () => props.onNodeClick(node),
+              // Like Reagraph, nothing says the pointer left a node that's gone.
+              onMouseEnter: () => props.onNodePointerOver?.(node),
+              onMouseLeave: () => props.onNodePointerOut?.(node),
             },
             node.label,
           ),

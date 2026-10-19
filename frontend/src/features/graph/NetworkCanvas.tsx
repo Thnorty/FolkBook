@@ -105,6 +105,11 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
         actives={actives}
         onNodeClick={(node) => {
           setPickedLine(null)
+          // A clicked bubble unfolds and is gone, and nothing says the pointer left it.
+          if (node.data?.bubble) {
+            setHovered(null)
+            onPoint?.(null)
+          }
           onSelect(node.id)
         }}
         onNodePointerOver={(node) => {

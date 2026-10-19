@@ -141,6 +141,24 @@ describe('big notebooks', () => {
     expect(screen.queryByRole('button', { name: 'Fold Climbing club again' })).toBeNull()
   })
 
+  it('forget the bubble pointed at once it unfolds', async () => {
+    server(bigBook(298))
+    renderApp('/graph')
+    const drawn = await network()
+    const bubble = within(drawn).getByRole('button', { name: BUBBLE })
+
+    await userEvent.hover(bubble)
+    expect(screen.getByText(/Unfold Climbing club · 297 people/)).toBeInTheDocument()
+    await userEvent.click(bubble) // it's gone: no pointer-out comes
+    await within(drawn).findByRole('button', { name: 'c2' })
+    expect(screen.queryByText(/Unfold Climbing club/)).toBeNull()
+
+    // Folded back, it isn't pointed at either.
+    await userEvent.click(screen.getByRole('button', { name: 'Fold Climbing club again' }))
+    await within(drawn).findByRole('button', { name: BUBBLE })
+    expect(screen.queryByText(/Unfold Climbing club/)).toBeNull()
+  })
+
   it('fold everything back to the start, from unfolded bubbles or from Show all', async () => {
     server(bigBook(298))
     renderApp('/graph')
