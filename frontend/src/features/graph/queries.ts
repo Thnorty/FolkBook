@@ -38,3 +38,16 @@ export const neighborhoodQuery = (personId: string, hops: 1 | 2) =>
     placeholderData: (previous, previousQuery) =>
       previousQuery?.queryKey[3] === personId ? previous : undefined,
   })
+
+/** Family tree mode: everyone linked to someone by family, by generation. */
+export const familyTreeQuery = (personId: string) =>
+  queryOptions({
+    queryKey: ['people', 'graph', 'tree', personId],
+    queryFn: ({ signal }) =>
+      unwrap(
+        api.GET('/api/graph/family-tree/{person_id}', {
+          params: { path: { person_id: personId } },
+          signal,
+        }),
+      ),
+  })

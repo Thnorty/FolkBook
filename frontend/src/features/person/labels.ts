@@ -59,6 +59,14 @@ export function relationLabel(code: string, pronouns?: Pronouns | null): string 
   return RELATIONS[code] ?? code.replaceAll('_', ' ')
 }
 
+type TreeStep = components['schemas']['TreeStepOut']
+
+/** A family tree's relation in words: "grandmother's cousin", "former sister-in-law". */
+export function relationChainLabel(steps: TreeStep[]): string {
+  const words = steps.map((step) => relationLabel(step.relation, step.pronouns)).join("'s ")
+  return steps.at(-1)?.former ? `former ${words}` : words
+}
+
 /** The choices for pronouns, as the form shows them. */
 export const PRONOUNS: Record<Pronouns, string> = {
   she: 'she / her',

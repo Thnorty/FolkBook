@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { Info, Maximize, Minus, Plus, X } from 'lucide-react'
+import { Info, Maximize, Minus, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GraphCanvasRef } from 'reagraph'
 import { currentUserQuery } from '@/api/session'
@@ -8,8 +8,6 @@ import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { PeekPanel } from '@/features/people/PeekPanel'
 import { countOf } from '@/features/person/labels'
-import { memoryAidsQuery, personQuery } from '@/features/person/queries'
-import { useInteractionForm } from '@/features/person/useInteractionForm'
 import { usePersonForm } from '@/features/person/usePersonForm'
 import { SHORTCUTS } from '@/app/nav'
 import { ApiError } from '@/api/errors'
@@ -28,7 +26,11 @@ import { PERSON_GONE } from './copy'
 import { focusCounts, focusLine } from './focus'
 import { FocusBar } from './FocusBar'
 import { HowDoIKnow } from './HowDoIKnow'
+import { CanvasButton } from './CanvasButton'
+import { FamilyTreeView } from './FamilyTreeView'
+import { ModeSwitch } from './ModeSwitch'
 import { NetworkCanvas } from './NetworkCanvas'
+import { NodeSheet } from './NodeSheet'
 import { graphQuery, neighborhoodQuery, pathsQuery } from './queries'
 import { RouteSummary } from './RouteSummary'
 import type { GraphSearch } from './search'
@@ -38,11 +40,16 @@ import { useCanvasColors } from './usePalette'
 import { useStepReveal } from './useStepReveal'
 import { firstNameOf } from '@/lib/names'
 
-/** The network: you in the middle, everyone around, clustered by space (3b–3e, 3m, 3n). */
+/** The graph: the network, or someone's family tree (?tree=). */
 export function GraphPage() {
-  const graph = useQuery(graphQuery)
   // Typed by hand: this page is loaded lazily, so the router's own types can't reach it.
-  const { how: asked, focus, hops }: GraphSearch = useSearch({ from: '/app/graph' })
+  const search: GraphSearch = useSearch({ from: '/app/graph' })
+  return search.tree ? <FamilyTreeView rootId={search.tree} /> : <NetworkView search={search} />
+}
+
+/** The network: you in the middle, everyone around, clustered by space (3b–3e, 3m, 3n). */
+function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSearch }) {
+  const graph = useQuery(graphQuery)
   const navigate = useNavigate({ from: '/graph' })
 
   // A route to yourself (a typed or stale link) is no route.
@@ -153,6 +160,12 @@ export function GraphPage() {
             summary &&
             `${countOf(summary.people, 'person', 'people')} · ${countOf(summary.connections, 'connection')}`
           }
+          actions={
+            <ModeSwitch
+              mode="network"
+              onChange={() => void navigate({ search: { tree: selected ?? meId } })}
+            />
+          }
         />
         <div className="mt-4">
           <HowDoIKnow personId={how} meId={meId} onPick={showRoute} onClear={() => showRoute()} />
@@ -260,7 +273,7 @@ export function GraphPage() {
           <NodeSheet
             personId={selected}
             onClose={closePreview}
-            onFocus={() => setFocus(selected)}
+            primary={{ label: 'Focus', onClick: () => setFocus(selected) }}
             onHow={() => {
               showRoute(selected)
               closePreview()
@@ -269,28 +282,6 @@ export function GraphPage() {
         </>
       )}
     </div>
-  )
-}
-
-function CanvasButton({
-  label,
-  onClick,
-  children,
-}: {
-  label: string
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <Button
-      variant="secondary"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className="size-9 bg-card px-0"
-    >
-      {children}
-    </Button>
   )
 }
 
@@ -339,63 +330,6 @@ function FilterBar({
         Hide former
       </Toggle>
     </div>
-  )
-}
-
-/** The node preview on phones: a sheet from the bottom (screen 3d). */
-function NodeSheet({
-  personId,
-  onClose,
-  onFocus,
-  onHow,
-}: {
-  personId: string
-  onClose: () => void
-  onFocus: () => void
-  /** "How do I know them?" */
-  onHow: () => void
-}) {
-  const person = useQuery(personQuery(personId)).data
-  const aids = useQuery(memoryAidsQuery(personId)).data ?? []
-  const { openLog } = useInteractionForm()
-  if (!person) return null
-
-  return (
-    <section
-      aria-label={`${person.name}, preview`}
-      className="fixed inset-x-0 bottom-0 z-20 rounded-t-sheet border-t border-line bg-paper p-5 pb-24 shadow-float md:hidden"
-    >
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1">
-          <h2 className="type-title">{person.name}</h2>
-          {person.how_we_met && <p className="type-small text-ink-soft">{person.how_we_met}</p>}
-        </div>
-        <Button variant="ghost" aria-label="Close preview" className="w-9 px-0" onClick={onClose}>
-          <X aria-hidden />
-        </Button>
-      </div>
-      {aids[0] && <p className="mt-3 type-hand">{aids[0].text}</p>}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button asChild>
-          <Link to="/people/$personId" params={{ personId }}>
-            Open profile
-          </Link>
-        </Button>
-        <Button variant="secondary" onClick={onFocus}>
-          Focus
-        </Button>
-        {!person.is_me && (
-          <>
-            <Button variant="secondary" onClick={onHow}>
-              How do I know them?
-            </Button>
-            <Button variant="ghost" onClick={() => openLog(personId)}>
-              Log
-            </Button>
-          </>
-        )}
-      </div>
-    </section>
   )
 }
 

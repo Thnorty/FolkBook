@@ -137,13 +137,17 @@ A wizard at `/people/import` (Upload · Choose · Duplicates · Space · Done). 
 - **"How do I know…?":** a box under the header (`/` focuses it on desktop) finds someone in your book; so do *How do I know them?* in the peek panel and the phone sheet, and "How do I know Emma?" under a profile's Connections (not for your own Me). The route from your Me is drawn in ink a step at a time (all at once with reduced motion); its people and lines stay drawn whatever the filters say, everything else dims, and the view fits it. A card over the graph (a sheet on phones) spells it out: "How you know Tom · 2 steps", each step worded like the graph's lines ("friend", "shares Hackathon 2026", "in Hackathon 2026"), why someone else's person is in your book ("Tom came into your book with Hackathon 2026, shared by Defne."), up to two other routes ("Also via Emma Yılmaz: friend, then cousin" · *Show*, then *Back to the shortest*), *Open Tom's profile* · *Clear*. With no route: "You haven't said how you know Anna yet." and *Connect…*; someone gone: "This person isn't in your book anymore." Clear, the box's ✕ or Esc ends it (Esc closes an open peek first). The route and focus are in the URL (`?how=`, `?focus=`) and replace each other
 - The graph appears where its layout ends up, with no animation: animated, the lines swung round as people flew out from the middle
 - Zoom in / out / Fit buttons; empty graph: "Your graph starts with you"
-- Later: family tree (#36), folded space bubbles for big notebooks (#35)
+- Later: folded space bubbles for big notebooks (#35)
 
 ### 3.10 Family tree mode
-- Toggle in Graph ("Network / Family tree") or from a profile ("View family tree")
-- Generational layout (grandparents above, children below), partners side by side
-- Former partners shown with a dashed line; step/adoptive parents with a label
-- Tap an empty slot ("Add mother") to fill in missing family
+- **Getting there:** "Network / Family tree" in the Graph header ("Network / Tree" on phones) opens your own tree, or the tree of the person open in the peek; **View family tree** under a profile's Family opens theirs. The tree is in the URL (`?tree=`) and replaces a route or a focus; Network (or Esc, after an open peek closes) goes back
+- **Who's in it:** everyone linked to that person by family, as far as the links go: blood family, their partners, step-parents and step-siblings; with **In-laws** on, everyone else's partners and the family of their own partners (never through a second marriage); with **Former partners** on, anyone only there through a partnership that ended. Both toggles are on by default and only filter
+- **Layout:** one row per generation, labelled ("Grandparents", "Your generation" or "Nilgün's generation", "Children", "3 generations up"), partners side by side, children under their parents. Under each name, how they're related: the words the profile's Family uses, or a chain ("grandmother's cousin"), or "relative" past three steps
+- **Lines:** a couple's children come from between them; ended partnerships are dashed ("former"); adoptive and step parent links say so on the line; direct "other family" links are dotted. A key sits bottom left
+- **Header:** **Tree of** (change it to re-root the tree) · Former partners · In-laws · "How do I know…?" (shows the route in the network); "Family · 13 people" beside the title and "2 generations up · 1 down" above the tree
+- **Clicking someone:** the same peek (phones: sheet) as the network, with **Show their tree** instead of Focus
+- **Empty slots:** the person and their ancestors with fewer than two parents get dashed "Add parent of Nilgün" slots; tapping one opens the connection dialog with Parent chosen. Someone with no family yet: "No family linked to Anna yet." with **Connect…**
+- Drag to pan, wheel or pinch to zoom, + / − / Fit; the tree fits itself when it opens and appears in place, without animation
 
 ### 3.11 Log an interaction
 - From profile: **Log** (or `L`) → type (met, call, message, event, other) → date (today, yesterday or any earlier day) → time (optional) → note

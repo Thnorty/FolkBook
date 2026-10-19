@@ -295,6 +295,16 @@ describe('connecting people', () => {
     ).toHaveAttribute('href', '/graph?how=emma')
   })
 
+  it('opens their family tree from their family', async () => {
+    server()
+    const section = await openConnections()
+
+    expect(await within(section).findByRole('link', { name: 'View family tree' })).toHaveAttribute(
+      'href',
+      '/graph?tree=emma',
+    )
+  })
+
   it('has no such link on your own Me', async () => {
     server({ 'GET /api/people/me': () => json(person('me', 'Ela', { is_me: true })) })
     renderApp('/people/me')
