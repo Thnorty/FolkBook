@@ -10,6 +10,7 @@ import { usePersonForm } from '@/features/person/usePersonForm'
 import { spacesQuery } from '@/features/spaces/queries'
 import { cn } from '@/lib/utils'
 import type { FlyOrigin } from '@/motion/FlyFrom'
+import { PageFade } from '@/motion/PageTurn'
 import { EmptyBook } from './EmptyBook'
 import { PeekPanel } from './PeekPanel'
 import { FilterChips, FromImport, SpaceBanner } from './Filters'
@@ -131,7 +132,8 @@ export function PeoplePage() {
           )}
         </div>
 
-        <div className="mt-5">
+        {/* Picking another chip crossfades the list; typing a search doesn't. */}
+        <PageFade key={`${space}:${needs}:${kept}`} className="mt-5">
           <PeopleResults
             filters={{ search: q, space, needsDetails: needs, kept, importId }}
             grid={grid}
@@ -155,7 +157,7 @@ export function PeoplePage() {
             }
             onlyMe={!filtered && <EmptyBook />}
           />
-        </div>
+        </PageFade>
       </div>
       {peek && (
         <PeekPanel

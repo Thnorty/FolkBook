@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Pin, PinOff, Plus, X } from 'lucide-react'
+import { AnimatePresence } from 'motion/react'
 import { useState, type FormEvent } from 'react'
 import { StickyNote, type NoteColor } from '@/components/notebook/StickyNote'
 import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
+import { StickAndPeel } from '@/motion/StickAndPeel'
 import { ProfileSection } from './ProfileSection'
 import { addMemoryAid, memoryAidsQuery, pinMemoryAid, removeMemoryAid } from './queries'
 
@@ -20,8 +22,11 @@ const NOTE_BUTTON =
  */
 export function RememberSection({ personId }: { personId: string }) {
   const queryClient = useQueryClient()
-  const aids = useQuery(memoryAidsQuery(personId)).data ?? []
+  const loaded = useQuery(memoryAidsQuery(personId)).data
+  const aids = loaded ?? []
   const [adding, setAdding] = useState(false)
+  // The last note peels off before the empty prompt takes its place.
+  const [peelingLast, setPeelingLast] = useState(false)
   const add = useMutation({
     mutationFn: (text: string) => addMemoryAid(queryClient, personId, text),
     onSuccess: () => setAdding(false),
@@ -53,7 +58,7 @@ export function RememberSection({ personId }: { personId: string }) {
         )
       }
     >
-      {aids.length === 0 && !adding && (
+      {aids.length === 0 && !adding && !peelingLast && (
         <div className="flex flex-col gap-3">
           <div aria-hidden className="flex flex-wrap gap-2">
             {PROMPTS.map((prompt) => (
@@ -71,48 +76,54 @@ export function RememberSection({ personId }: { personId: string }) {
         </div>
       )}
 
-      {(aids.length > 0 || adding) && (
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {aids.map((aid, index) => (
-            <li key={aid.id} className="group relative">
-              {aid.pinned && (
-                // A tack holding the note up.
-                <Pin
-                  aria-hidden
-                  className="absolute -top-2.5 left-1/2 z-10 size-5 -translate-x-1/2 rotate-12 fill-danger text-danger drop-shadow-sm"
-                />
-              )}
-              <StickyNote seed={aid.id} color={COLORS[index % COLORS.length]}>
-                {aid.pinned && <span className="sr-only">Pinned: </span>}
-                {aid.text}
-              </StickyNote>
-              <div className="absolute -top-2 -right-2 flex gap-1">
-                <Tooltip content={aid.pinned ? 'Unpin' : 'Pin to the top'}>
+      {/* Kept once loaded, so the last note can peel off; hidden when nothing's left. */}
+      {loaded && (
+        <ul className="grid grid-cols-2 gap-4 empty:hidden sm:grid-cols-3">
+          <AnimatePresence initial={false} onExitComplete={() => setPeelingLast(false)}>
+            {aids.map((aid, index) => (
+              <StickAndPeel key={aid.id} className="group">
+                {aid.pinned && (
+                  // A tack holding the note up.
+                  <Pin
+                    aria-hidden
+                    className="absolute -top-2.5 left-1/2 z-10 size-5 -translate-x-1/2 rotate-12 fill-danger text-danger drop-shadow-sm"
+                  />
+                )}
+                <StickyNote seed={aid.id} color={COLORS[index % COLORS.length]}>
+                  {aid.pinned && <span className="sr-only">Pinned: </span>}
+                  {aid.text}
+                </StickyNote>
+                <div className="absolute -top-2 -right-2 flex gap-1">
+                  <Tooltip content={aid.pinned ? 'Unpin' : 'Pin to the top'}>
+                    <button
+                      type="button"
+                      aria-label={`Pin “${aid.text}”`}
+                      aria-pressed={aid.pinned}
+                      onClick={() => pin.mutate({ aidId: aid.id, pinned: !aid.pinned })}
+                      className={cn(NOTE_BUTTON, 'hover:text-ink')}
+                    >
+                      {aid.pinned ? (
+                        <PinOff aria-hidden className="size-3.5" />
+                      ) : (
+                        <Pin aria-hidden className="size-3.5" />
+                      )}
+                    </button>
+                  </Tooltip>
                   <button
                     type="button"
-                    aria-label={`Pin “${aid.text}”`}
-                    aria-pressed={aid.pinned}
-                    onClick={() => pin.mutate({ aidId: aid.id, pinned: !aid.pinned })}
-                    className={cn(NOTE_BUTTON, 'hover:text-ink')}
+                    aria-label={`Remove “${aid.text}”`}
+                    onClick={() => {
+                      if (aids.length === 1) setPeelingLast(true)
+                      remove.mutate(aid.id)
+                    }}
+                    className={cn(NOTE_BUTTON, 'hover:text-danger')}
                   >
-                    {aid.pinned ? (
-                      <PinOff aria-hidden className="size-3.5" />
-                    ) : (
-                      <Pin aria-hidden className="size-3.5" />
-                    )}
+                    <X aria-hidden className="size-3.5" />
                   </button>
-                </Tooltip>
-                <button
-                  type="button"
-                  aria-label={`Remove “${aid.text}”`}
-                  onClick={() => remove.mutate(aid.id)}
-                  className={cn(NOTE_BUTTON, 'hover:text-danger')}
-                >
-                  <X aria-hidden className="size-3.5" />
-                </button>
-              </div>
-            </li>
-          ))}
+                </div>
+              </StickAndPeel>
+            ))}
+          </AnimatePresence>
           {adding && (
             <li>
               <form onSubmit={submit} className="flex flex-col gap-2">
