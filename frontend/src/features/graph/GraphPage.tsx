@@ -28,6 +28,9 @@ import { FocusBar } from './FocusBar'
 import { HowDoIKnow } from './HowDoIKnow'
 import { CanvasButton } from './CanvasButton'
 import { FamilyTreeView } from './FamilyTreeView'
+import { FOLD_ABOVE, foldGraph, isBubble } from './fold'
+import { FoldBanner } from './FoldBanner'
+import { useShowAll } from './foldPreference'
 import { ModeSwitch } from './ModeSwitch'
 import { NetworkCanvas } from './NetworkCanvas'
 import { NodeSheet } from './NodeSheet'
@@ -89,23 +92,55 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
   const route = how ? paths.data?.paths[shownIndex] : undefined
   const steps = useStepReveal(route?.hops.length ?? 0, `${how}:${shownIndex}`)
 
-  const shown = (focus && focused.data) || graph.data
+  // Big notebooks start with you + 2 steps, faraway spaces folded (3j); not in focus mode,
+  // which shows its own steps, nor on a device that chose Show all.
+  const [showAll, setShowAll] = useShowAll()
+  const [unfolded, setUnfolded] = useState<ReadonlySet<string>>(new Set())
+  const [pointed, setPointed] = useState<string | null>(null)
+  const big = (graph.data?.nodes.length ?? 0) > FOLD_ABOVE && !focus
+  const folded = useMemo(() => {
+    if (!big || showAll || !graph.data) return null
+    return foldGraph(graph.data, {
+      // A space picked in the filters is one you want to see.
+      unfolded: new Set([...unfolded, ...filters.spaces]),
+      keep: new Set(route ? routePeople(route) : []),
+    })
+  }, [big, showAll, graph.data, unfolded, filters.spaces, route])
+
+  const shown = (focus && focused.data) || folded?.graph || graph.data
   const faces = useNodeFaces(graph.data?.nodes, colors)
   const drawn = useMemo(() => {
     if (!shown) return undefined
+    const bubbles = folded
+      ? {
+          // With spaces picked, the other spaces' bubbles go too, like their people.
+          bubbles: folded.bubbles.filter(
+            (bubble) => !filters.spaces.length || filters.spaces.includes(bubble.space?.id ?? ''),
+          ),
+          lines: folded.lines,
+        }
+      : undefined
     if (!route) {
       // The focused person stays drawn whatever the filters say.
       const keep = new Set(focus ? [focus] : [])
-      return { ...toCanvas(shown, filters, colors.palette, faces, keep), route: undefined }
+      return {
+        ...toCanvas(shown, filters, colors.palette, faces, keep, bubbles),
+        route: undefined,
+      }
     }
     const keep = new Set(routePeople(route))
     return withRoute(
-      toCanvas(shown, filters, colors.palette, faces, keep),
+      toCanvas(shown, filters, colors.palette, faces, keep, bubbles),
       route,
       steps,
       colors.palette,
     )
-  }, [shown, filters, colors.palette, faces, route, steps, focus])
+  }, [shown, filters, colors.palette, faces, route, steps, focus, folded])
+  // A bubble unfolds its space; it's nobody to open beside the graph.
+  const pick = (id: string | null) => {
+    if (id && isBubble(id)) setUnfolded(new Set([...unfolded, id.slice('fold:'.length)]))
+    else setSelected(id)
+  }
   // Someone no longer drawn (after 2 → 1 step, or a filter) isn't open beside the graph.
   const selected = picked && drawn?.nodes.some((node) => node.id === picked) ? picked : null
   // Esc leaves a route or focus, once an open peek has closed (the peek takes Esc first).
@@ -171,6 +206,15 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
           <HowDoIKnow personId={how} meId={meId} onPick={showRoute} onClear={() => showRoute()} />
         </div>
         <FilterBar graph={graph.data} filters={filters} onChange={setFilters} />
+        {big && (
+          <FoldBanner
+            folded={Boolean(folded)}
+            shown={folded?.shown ?? graph.data.nodes.length}
+            total={graph.data.nodes.length}
+            pointed={folded?.bubbles.find((bubble) => bubble.id === pointed)}
+            onToggle={() => setShowAll(!showAll)}
+          />
+        )}
         {focus && (
           <FocusBar
             name={focusName}
@@ -192,7 +236,8 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
                 clusters={drawn.clusters}
                 colors={colors}
                 selected={selected}
-                onSelect={setSelected}
+                onSelect={pick}
+                onPoint={setPointed}
                 route={drawn.route}
               />
             )}

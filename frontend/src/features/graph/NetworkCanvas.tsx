@@ -36,6 +36,8 @@ type NetworkCanvasProps = {
   colors: CanvasColors
   selected: string | null
   onSelect: (personId: string | null) => void
+  /** The node pointed at (a person or a folded space), or null when none is. */
+  onPoint?: (nodeId: string | null) => void
   /** The route being shown (its people and ink lines): lit up, everything else dimmed. */
   route?: string[]
 }
@@ -50,7 +52,7 @@ const SPACING = { linkDistance: 110, nodeStrength: -600 }
  * or tap it, or at one of its people.
  */
 export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(function NetworkCanvas(
-  { nodes, edges, clusters, colors, selected, onSelect, route },
+  { nodes, edges, clusters, colors, selected, onSelect, onPoint, route },
   ref,
 ) {
   const theme = useMemo(() => canvasTheme(colors), [colors])
@@ -100,8 +102,14 @@ export const NetworkCanvas = forwardRef<GraphCanvasRef, NetworkCanvasProps>(func
           setPickedLine(null)
           onSelect(node.id)
         }}
-        onNodePointerOver={(node) => setHovered(node.id)}
-        onNodePointerOut={() => setHovered(null)}
+        onNodePointerOver={(node) => {
+          setHovered(node.id)
+          onPoint?.(node.id)
+        }}
+        onNodePointerOut={() => {
+          setHovered(null)
+          onPoint?.(null)
+        }}
         onEdgeClick={(edge) => setPickedLine(edge.id)}
         onEdgePointerOver={pointed.over}
         onEdgePointerOut={pointed.out}
