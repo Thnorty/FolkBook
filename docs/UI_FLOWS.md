@@ -227,10 +227,10 @@ Inspired by the kind of details collected on [Design Spells](https://designspell
 - **Page turn:** opening a profile from a list feels like flipping to that page (shared-element transition: the card grows into the profile)
 - **Ink underline:** saving draws a quick ink stroke under the name / field
 - **Sticky notes:** memory aids tilt slightly and "stick" when added; peel animation on delete
-- **Polaroid photo:** photo drops in with a slight rotation on upload
+- **Polaroid photo:** a newly cropped photo drops into its frame in the person form, with a slight rotation (not on the profile, where the photo already travels with the page turn)
 - **Long-press person card (mobile):** radial or popup quick menu: log interaction, add memory aid, open in graph
 - **Ink path in graph:** "How do I know…?" draws the path hop by hop like a pen stroke
-- **Tabbed dividers:** switching spaces slides the colored tab like a notebook divider
+- **Tabbed dividers:** switching spaces slides the colored fill like a notebook divider. People picks a space with filter chips, not tabs, so the picked chip's fill slides under the others to the next one and the list crossfades
 - **Delete = tear out:** profile **⋯ → Tear out of the book…** → a confirm dialog lists what goes with them (connections, your memory aids, timeline and note, the spaces they leave) and warns who in a shared space will stop seeing them, by name ("Bora Kaya will no longer see Deniz there"; past four names, "and N others"), and offers **Download a copy first** (a .zip of just them, see Decisions) → the page tears away and a 10-second Undo toast appears
 - **Birthday occasion:** subtle confetti / doodle on a person's profile on their birthday
 - **Doodle empty states:** hand-drawn illustrations for empty Today, empty graph, no results

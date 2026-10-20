@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { UsersRound, X } from 'lucide-react'
+import * as m from 'motion/react-m'
 import type { ReactNode } from 'react'
 import type { components } from '@/api/schema'
 import { importQuery } from '@/features/imports/queries'
 import { ownership, peopleCount } from '@/features/spaces/labels'
 import { cn } from '@/lib/utils'
+import { DURATION, EASE_OUT } from '@/motion/tokens'
+import { useReducedMotion } from '@/motion/useReducedMotion'
 
 type Space = components['schemas']['SpaceOut']
 
@@ -17,6 +20,28 @@ type ChipProps = {
   space?: Space['color']
 }
 
+// Fully round. Set as a style, not a class, so Motion keeps the ends round as it stretches.
+const ROUND = 999
+
+/**
+ * The picked chip's fill. There's only ever one, so picking another chip slides it there
+ * (motion spec, "Space tab slide"), under the chips it passes. With reduced motion it
+ * simply appears.
+ */
+function PickedFill({ space }: { space?: Space['color'] }) {
+  const reduced = useReducedMotion()
+  return (
+    <m.span
+      aria-hidden
+      data-filter-fill
+      layoutId={reduced ? undefined : 'filter-fill'}
+      transition={{ duration: DURATION.filterSlide, ease: EASE_OUT }}
+      style={{ borderRadius: ROUND }}
+      className={cn('absolute -inset-px -z-10', space ? 'bg-space' : 'bg-ink')}
+    />
+  )
+}
+
 function Chip({ pressed, onClick, children, space }: ChipProps) {
   return (
     <button
@@ -25,14 +50,13 @@ function Chip({ pressed, onClick, children, space }: ChipProps) {
       onClick={onClick}
       data-space={space}
       className={cn(
-        'inline-flex h-9 flex-none cursor-pointer items-center gap-2 rounded-full border px-3.5 text-md font-medium whitespace-nowrap',
+        'relative inline-flex h-9 flex-none cursor-pointer items-center gap-2 rounded-full border px-3.5 text-md font-medium whitespace-nowrap transition-colors',
         pressed
-          ? space
-            ? 'border-transparent bg-space text-on-space'
-            : 'border-transparent bg-ink text-paper'
+          ? cn('border-transparent', space ? 'text-on-space' : 'text-paper')
           : 'border-line-strong bg-card text-ink-soft hover:text-ink',
       )}
     >
+      {pressed && <PickedFill space={space} />}
       {space && !pressed && <span aria-hidden className="h-3.5 w-0.75 rounded-full bg-space" />}
       {children}
     </button>
@@ -60,10 +84,13 @@ export function FilterChips({
   onChange,
 }: FilterChipsProps) {
   return (
-    <div
+    // Its own layer, so the fill slides under the other chips but stays on the page;
+    // layoutScroll keeps the slide right when the row is scrolled sideways (phones).
+    <m.div
+      layoutScroll
       role="group"
       aria-label="Filter"
-      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0"
+      className="isolate -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-wrap md:px-0"
     >
       <Chip pressed={!space && !needsDetails && !kept} onClick={() => onChange({})}>
         All
@@ -92,7 +119,7 @@ export function FilterChips({
       >
         All spaces →
       </Link>
-    </div>
+    </m.div>
   )
 }
 

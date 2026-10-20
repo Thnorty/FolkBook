@@ -8,6 +8,13 @@
 export const EASE = [0.2, 0.8, 0.2, 1] as const
 /** For things leaving for good, like a page torn out: slow start, gone fast. */
 export const EASE_IN = [0.4, 0, 1, 1] as const
+/** For things moving to where you just pointed, like the picked filter's fill. */
+export const EASE_OUT = [0, 0, 0.2, 1] as const
+/** Overshoots its target, then settles: a photo landing on the page. */
+export const EASE_OVERSHOOT = [0.34, 1.56, 0.64, 1] as const
+
+/** A sticky note settling onto the page with one small overshoot. Decorative. */
+export const STICK_SPRING = { type: 'spring', stiffness: 300, damping: 18 } as const
 
 export const LIMITS = { ui: 0.45, decorative: 0.7 } as const
 
@@ -22,6 +29,12 @@ export const DURATION = {
   ink: 0.7,
   /** A Fill in the blanks card arriving, or swiped away. */
   card: 0.28,
+  /** A sticky note peeling off when it's removed. */
+  peel: 0.34,
+  /** A new photo dropping into its polaroid frame. */
+  polaroidDrop: 0.42,
+  /** The picked filter's fill sliding to the chip just picked. */
+  filterSlide: 0.24,
   /** A dialog or sheet leaving (sliding down on phones). Also in src/index.css. */
   dialogOut: 0.22,
   /** With reduced motion, every effect becomes a plain fade this long. */

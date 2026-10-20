@@ -174,6 +174,21 @@ describe('People list', () => {
     expect(screen.getByText('Shared with 2')).toBeInTheDocument()
   })
 
+  it('slides one fill from the picked filter to the next', async () => {
+    server()
+    renderApp('/people')
+    const fills = () => document.querySelectorAll('[data-filter-fill]')
+    const all = await screen.findByRole('button', { name: 'All', pressed: true })
+    expect(fills()).toHaveLength(1)
+    expect(all).toContainElement(fills()[0] as HTMLElement)
+
+    const climbing = await screen.findByRole('button', { name: 'Climbing club' })
+    await userEvent.click(climbing)
+
+    await waitFor(() => expect(climbing).toContainElement(fills()[0] as HTMLElement))
+    expect(fills()).toHaveLength(1)
+  })
+
   it('shows the people from one import', async () => {
     const requests = server()
     renderApp('/people?import=i1')

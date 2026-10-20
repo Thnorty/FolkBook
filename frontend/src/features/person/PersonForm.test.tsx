@@ -181,6 +181,32 @@ describe('adding someone', () => {
     expect(writes[0]).toMatchObject({ path: '/api/people', body: { photo_caption: 'Tom' } })
   })
 
+  it('drops a new photo into its polaroid, but not the one already saved', async () => {
+    server(saved({ photo: { url: '/p', thumbnail_url: '/t', caption: 'Tom' } }))
+    renderApp('/people/tom')
+    await userEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+    const form = await dialog('Edit Tom Bergqvist')
+    // Somewhere around the photo, something is still turning as it lands.
+    const dropping = () => {
+      for (
+        let node: HTMLElement | null = form.querySelector('img');
+        node;
+        node = node.parentElement
+      )
+        if (node.style.transform.includes('rotate')) return true
+      return false
+    }
+    await within(form).findByRole('button', { name: 'Remove photo' })
+    expect(dropping()).toBe(false)
+
+    const file = new File(['raw'], 'IMG_2841.jpg', { type: 'image/jpeg' })
+    await userEvent.upload(within(form).getByLabelText('Replace photo'), file)
+    await userEvent.click(await within(form).findByRole('button', { name: 'Use photo' }))
+
+    await within(form).findByRole('button', { name: 'Remove photo' })
+    expect(dropping()).toBe(true)
+  })
+
   it('still saves with Ctrl+Enter after adding a photo', async () => {
     const writes = server()
     renderApp('/people')

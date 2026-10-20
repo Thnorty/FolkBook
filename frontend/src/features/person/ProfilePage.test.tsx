@@ -202,6 +202,42 @@ describe('profile page', () => {
     ])
   })
 
+  it('sticks on only the notes added, not the ones already there', async () => {
+    server()
+    renderApp('/people/emma')
+    const remember = await section('Remember')
+    const note = (text: string) => within(remember).getByText(text).closest('li')!
+    await within(remember).findByText('Kid: Arda, 6')
+    expect(note('Kid: Arda, 6').style.transform).not.toContain('rotate')
+
+    await userEvent.click(within(remember).getByRole('button', { name: 'Add' }))
+    await userEvent.type(
+      within(remember).getByRole('textbox', { name: 'New sticky note' }),
+      'Allergic to peanuts{Enter}',
+    )
+    await within(remember).findByText('Allergic to peanuts')
+    expect(note('Allergic to peanuts').style.transform).toContain('rotate')
+  })
+
+  it('peels the last note off before the empty prompt comes back', async () => {
+    server()
+    renderApp('/people/emma')
+    const remember = await section('Remember')
+    await within(remember).findByText('Kid: Arda, 6')
+    const note = () => within(remember).queryByText('Kid: Arda, 6')
+    const prompt = () => within(remember).queryByText(/embarrassed to forget/)
+    let both = false
+    const watch = new MutationObserver(() => (both ||= Boolean(note() && prompt())))
+    watch.observe(remember, { subtree: true, childList: true })
+
+    await userEvent.click(within(remember).getByRole('button', { name: 'Remove “Kid: Arda, 6”' }))
+
+    await waitFor(() => expect(prompt()).toBeInTheDocument())
+    watch.disconnect()
+    expect(note()).not.toBeInTheDocument()
+    expect(both).toBe(false)
+  })
+
   it('pins a sticky note to the top, and unpins it', async () => {
     const writes = server()
     renderApp('/people/emma')

@@ -12,6 +12,7 @@ import { SharedSpaceConfirm } from '@/features/spaces/SharedSpaceConfirm'
 import { canAddPeople, spacesQuery, type Space } from '@/features/spaces/queries'
 import { useSharedSpaceConfirmed } from '@/features/spaces/useSharedSpaceConfirmed'
 import { cn } from '@/lib/utils'
+import { PhotoDrop } from '@/motion/PhotoDrop'
 import { BirthdayFields, ContactFields, TagInput, type ContactValue } from './PersonFormFields'
 import { birthdayInput, type BirthdayValue } from './birthday'
 import { PRONOUNS, type Pronouns } from './labels'
@@ -155,12 +156,14 @@ export function PersonForm({
           pickFile(event.dataTransfer.files[0])
         }}
       >
-        <Polaroid
-          seed={person?.id ?? 'new'}
-          photoUrl={photoUrl}
-          size="md"
-          caption={photoUrl ? caption : undefined}
-        />
+        <PhotoDrop key={cropped?.preview} drop={Boolean(cropped)} className="flex-none">
+          <Polaroid
+            seed={person?.id ?? 'new'}
+            photoUrl={photoUrl}
+            size="md"
+            caption={photoUrl ? caption : undefined}
+          />
+        </PhotoDrop>
         <div className="flex flex-col items-start gap-1.5">
           <FileButton ref={photoInput} accept="image/*" onFile={pickFile}>
             <ImagePlus aria-hidden />

@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'motion/react'
 import { useState, type ReactNode } from 'react'
 import { PersonCard } from '@/components/notebook/PersonCard'
 import { Polaroid } from '@/components/notebook/Polaroid'
@@ -19,6 +20,8 @@ import { setAppearance, useAppearance, type Appearance } from '@/lib/appearance'
 import { notify } from '@/lib/notify'
 import { InkUnderline } from '@/motion/InkUnderline'
 import { PageFade, Shared } from '@/motion/PageTurn'
+import { PhotoDrop } from '@/motion/PhotoDrop'
+import { StickAndPeel } from '@/motion/StickAndPeel'
 import { sharedPerson } from '@/motion/sharedIds'
 
 /*
@@ -118,6 +121,52 @@ function InkDemo() {
       </div>
       <Button variant="secondary" onClick={() => setSaves((n) => n + 1)}>
         Save again
+      </Button>
+    </div>
+  )
+}
+
+/** Stick a note on, or click one to peel it off. */
+function StickDemo() {
+  const [notes, setNotes] = useState([1, 2])
+  return (
+    <div className="flex flex-col items-start gap-4">
+      <ul className="flex flex-wrap gap-4">
+        <AnimatePresence initial={false}>
+          {notes.map((note) => (
+            <StickAndPeel key={note}>
+              <button
+                type="button"
+                aria-label={`Peel off note ${note}`}
+                onClick={() => setNotes((all) => all.filter((other) => other !== note))}
+              >
+                <StickyNote seed={String(note)} className="w-32 text-left">
+                  Note {note}
+                </StickyNote>
+              </button>
+            </StickAndPeel>
+          ))}
+        </AnimatePresence>
+      </ul>
+      <Button
+        variant="secondary"
+        onClick={() => setNotes((all) => [...all, Math.max(0, ...all) + 1])}
+      >
+        Stick it
+      </Button>
+    </div>
+  )
+}
+
+function PhotoDropDemo() {
+  const [drops, setDrops] = useState(0)
+  return (
+    <div className="flex items-center gap-6">
+      <PhotoDrop key={drops} drop={drops > 0} className="flex-none">
+        <Polaroid seed="demo-drop" size="md" caption="Emma" />
+      </PhotoDrop>
+      <Button variant="secondary" onClick={() => setDrops((n) => n + 1)}>
+        Drop a photo
       </Button>
     </div>
   )
@@ -426,12 +475,15 @@ export default function DesignSystem() {
 
       <Section title="Motion">
         <p className="mb-4 type-small text-ink-soft">
-          Page turn: tap the card. Ink underline: save again. With Motion on Reduce (or your device
-          set to reduce motion) nothing moves; things just fade in.
+          Page turn: tap the card. Ink underline: save again. Sticky notes: stick one on, click one
+          to peel it off. Polaroid: drop a photo. The filter slide is on People. With Motion on
+          Reduce (or your device set to reduce motion) nothing moves; things just fade in.
         </p>
         <div className="flex flex-col gap-6">
           <PageTurnDemo />
           <InkDemo />
+          <StickDemo />
+          <PhotoDropDemo />
         </div>
       </Section>
 
