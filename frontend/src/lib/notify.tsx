@@ -36,3 +36,8 @@ export function notify({ title, description, action, duration = DEFAULT_DURATION
     { duration },
   )
 }
+
+/** Run a write; if it fails, say so in a toast. */
+export function attempt(failed: string, write: () => Promise<unknown>) {
+  write().catch((error: Error) => notify({ title: failed, description: error.message }))
+}

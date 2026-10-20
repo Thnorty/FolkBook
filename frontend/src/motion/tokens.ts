@@ -41,6 +41,8 @@ export const DURATION = {
   roll: 0.25,
   /** One letter of a search that found no one dropping off the line. Decorative. */
   letterFall: 0.4,
+  /** Paper bits falling around a photo on someone's birthday. Decorative. */
+  confetti: 0.6,
   /** A dialog or sheet leaving (sliding down on phones). Also in src/index.css. */
   dialogOut: 0.22,
   /** With reduced motion, every effect becomes a plain fade this long. */

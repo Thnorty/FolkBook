@@ -8,8 +8,10 @@ import type { ReactNode } from 'react'
 import { FlyFrom, type FlyOrigin } from '@/motion/FlyFrom'
 import { Shared } from '@/motion/PageTurn'
 import { sharedPerson } from '@/motion/sharedIds'
+import { BirthdayPaper, BirthdayToday } from './BirthdayToday'
 import { PRONOUNS } from './labels'
 import type { PersonDetail } from './queries'
+import { useBirthdayToday } from './useBirthdayToday'
 import { usePersonForm } from './usePersonForm'
 import { firstNameOf } from '@/lib/names'
 
@@ -28,6 +30,7 @@ type ProfileHeaderProps = {
 
 export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: ProfileHeaderProps) {
   const { openEdit } = usePersonForm()
+  const birthday = useBirthdayToday(person)
   const travel = (id: string, from: DOMRect | undefined, content: ReactNode) =>
     pageTurn ? <Shared id={id}>{content}</Shared> : <FlyFrom from={from}>{content}</FlyFrom>
 
@@ -41,17 +44,20 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
       {!person.is_mine && person.owner && <SharedBy person={person} owner={person.owner.name} />}
       {person.kept && <KeptFrom personId={person.id} kept={person.kept} />}
       <div className="flex items-end gap-5">
-        {travel(
-          sharedPerson.photo(person.id),
-          flyFrom?.photo,
-          <Polaroid
-            seed={person.id}
-            size="lg"
-            photoUrl={person.photo?.url}
-            caption={person.photo?.caption}
-            alt={person.name}
-          />,
-        )}
+        <div className="relative">
+          {travel(
+            sharedPerson.photo(person.id),
+            flyFrom?.photo,
+            <Polaroid
+              seed={person.id}
+              size="lg"
+              photoUrl={person.photo?.url}
+              caption={person.photo?.caption}
+              alt={person.name}
+            />,
+          )}
+          {birthday && <BirthdayPaper personId={person.id} today={birthday.today} />}
+        </div>
         <div className="ml-auto flex gap-2">
           {person.can_edit && (
             <Button variant="secondary" onClick={() => openEdit(person.id)}>
@@ -73,6 +79,9 @@ export function ProfileHeader({ person, pageTurn = true, flyFrom, menu }: Profil
           <p className="type-small text-ink-faint">{PRONOUNS[person.pronouns]}</p>
         )}
         {person.how_we_met && <p className="text-ink-soft">{person.how_we_met}</p>}
+        {birthday && (
+          <BirthdayToday person={person} today={birthday.today} turns={birthday.turns} />
+        )}
         {person.last_talked_on && (
           <p className="type-meta text-ink-faint">
             Last talked {formatRelativeDay(person.last_talked_on)}

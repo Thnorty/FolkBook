@@ -22,6 +22,7 @@ import { notify } from '@/lib/notify'
 import { InkUnderline } from '@/motion/InkUnderline'
 import { PageFade, Shared } from '@/motion/PageTurn'
 import { PhotoDrop } from '@/motion/PhotoDrop'
+import { PaperConfetti } from '@/motion/PaperConfetti'
 import { StickAndPeel } from '@/motion/StickAndPeel'
 import { sharedPerson } from '@/motion/sharedIds'
 
@@ -189,6 +190,21 @@ function StampDemo() {
       </ol>
       <Button variant="secondary" onClick={() => setLogs((n) => n + 1)}>
         Log it
+      </Button>
+    </div>
+  )
+}
+
+function ConfettiDemo() {
+  const [birthdays, setBirthdays] = useState(0)
+  return (
+    <div className="flex items-center gap-6">
+      <div className="relative flex-none">
+        <Polaroid seed="demo-birthday" size="md" caption="Selin" />
+        {birthdays > 0 && <PaperConfetti key={birthdays} seed={`demo-${birthdays}`} />}
+      </div>
+      <Button variant="secondary" onClick={() => setBirthdays((n) => n + 1)}>
+        Happy birthday
       </Button>
     </div>
   )
@@ -498,8 +514,9 @@ export default function DesignSystem() {
       <Section title="Motion">
         <p className="mb-4 type-small text-ink-soft">
           Page turn: tap the card. Ink underline: save again. Sticky notes: stick one on, click one
-          to peel it off. Polaroid: drop a photo. Stamp: log it. The filter slide is on People. With
-          Motion on Reduce (or your device set to reduce motion) nothing moves; things just fade in.
+          to peel it off. Polaroid: drop a photo. Stamp: log it. Birthday: happy birthday. The
+          filter slide is on People. With Motion on Reduce (or your device set to reduce motion)
+          nothing moves; things just fade in.
         </p>
         <div className="flex flex-col gap-6">
           <PageTurnDemo />
@@ -507,6 +524,7 @@ export default function DesignSystem() {
           <StickDemo />
           <PhotoDropDemo />
           <StampDemo />
+          <ConfettiDemo />
         </div>
       </Section>
 

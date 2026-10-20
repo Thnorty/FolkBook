@@ -6,6 +6,7 @@ import { setAppearance } from '@/lib/appearance'
 import { FallingLetters } from './FallingLetters'
 import { InkUnderline } from './InkUnderline'
 import { MotionProvider } from './MotionProvider'
+import { PaperConfetti } from './PaperConfetti'
 import { PhotoDrop } from './PhotoDrop'
 import { Stamp } from './Stamp'
 import { RollingNumber } from './RollingNumber'
@@ -191,5 +192,20 @@ describe('reduced motion', () => {
     const { rerender } = render(letters('zo'))
     rerender(letters('zoe'))
     expect(screen.getByText('e').style.transform).toContain('rotate')
+  })
+
+  it('lets paper fall on a birthday, but none when reduced', () => {
+    const paper = () =>
+      render(
+        <MotionProvider>
+          <PaperConfetti seed="emma" />
+        </MotionProvider>,
+      ).container.querySelectorAll('[data-confetti] > span')
+
+    expect(paper().length).toBeGreaterThan(0)
+    cleanup()
+
+    act(() => setAppearance({ motion: 'reduce' }))
+    expect(paper()).toHaveLength(0)
   })
 })
