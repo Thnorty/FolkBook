@@ -121,7 +121,12 @@ export function loggedSummary(
 
 /** "1 memory aid", "2 timeline entries". */
 export function countOf(count: number, one: string, many = `${one}s`): string {
-  return `${count} ${count === 1 ? one : many}`
+  return `${count} ${nounFor(count, one, many)}`
+}
+
+/** The word that goes after a count: "person" for 1, "people" otherwise. */
+export function nounFor(count: number, one: string, many = `${one}s`): string {
+  return count === 1 ? one : many
 }
 
 /** How often to keep in touch: "Every week", "Every 2 months". */

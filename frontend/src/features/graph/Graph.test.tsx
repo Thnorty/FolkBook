@@ -131,7 +131,7 @@ describe('graph', () => {
     renderApp('/graph')
 
     expect(await screen.findByRole('button', { name: 'Me' })).toBeInTheDocument()
-    expect(screen.getByText('3 people · 3 connections')).toBeInTheDocument()
+    expect(screen.getByText(/connections/)).toHaveTextContent(/^3 people · 3 connections$/)
     expect(await lines()).toEqual(['me–emma', 'emma–kerem (dashed)', 'emma–tom'])
 
     await userEvent.click(screen.getByRole('button', { name: 'Tom Bergqvist' }))

@@ -37,6 +37,8 @@ export const DURATION = {
   filterSlide: 0.24,
   /** A rubber stamp pressing onto an entry just logged. Decorative. */
   stamp: 0.3,
+  /** A count rolling to its new value. */
+  roll: 0.25,
   /** A dialog or sheet leaving (sliding down on phones). Also in src/index.css. */
   dialogOut: 0.22,
   /** With reduced motion, every effect becomes a plain fade this long. */
