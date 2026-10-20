@@ -161,6 +161,7 @@ A wizard at `/people/import` (Upload · Choose · Duplicates · Space · Done). 
 
 ### 3.12 Today (home screen)
 Sections, each hidden when empty; with nothing at all, an empty state (Add someone · Quick capture). Dates come from the device, so "today" follows the user's time zone.
+The header greets you for the time of day on the device's clock, with a small doodle: ☀ *Good morning* (from 5:00), cup *Good afternoon* (12:00), sunset *Good evening* (17:00), moon *Still up?* (22:00). It changes by itself if the page stays open.
 1. **Birthdays** (today and the next 7 days): "Turns 34 today" → *Wish* logs "Birthday wishes" in one tap (Undo)
 2. **Keep in touch:** nudge cards (see DECISIONS for when someone is due), with a pinned memory aid as a hint → *We talked* (logs "Talked" today) · *Snooze* (a week) · *Stop*; each with Undo
 3. **Remember?** a random memory aid on a sticky note → *Show another*

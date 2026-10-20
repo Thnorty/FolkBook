@@ -160,6 +160,21 @@ describe('Today', () => {
     expect(requests).toContain('?today=2026-09-22')
   })
 
+  it('greets you for the time of day', async () => {
+    server()
+    renderApp('/')
+
+    expect(await screen.findByText('Good morning')).toBeInTheDocument()
+  })
+
+  it('notices when you are up late', async () => {
+    vi.setSystemTime(new Date(2026, 8, 22, 23, 30))
+    server()
+    renderApp('/')
+
+    expect(await screen.findByText('Still up?')).toBeInTheDocument()
+  })
+
   it('sends birthday wishes in one tap, with Undo', async () => {
     const { writes } = server()
     renderApp('/')

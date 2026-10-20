@@ -22,6 +22,7 @@ import { spacesQuery, type Space } from '@/features/spaces/queries'
 import { peopleCount } from '@/features/spaces/labels'
 import { formatDay, formatRelativeDay, isoDay, isoTime } from '@/lib/dates'
 import { notify } from '@/lib/notify'
+import { Greeting } from './Greeting'
 import {
   birthdaysQuery,
   blanksQuery,
@@ -98,7 +99,11 @@ export function TodayPage() {
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
       <PageHeader
         title="Today"
-        meta={meta}
+        meta={
+          <>
+            <Greeting /> · {meta}
+          </>
+        }
         actions={
           // Phones have no Ctrl/⌘+K: search opens as a page.
           <Button asChild variant="ghost" className="md:hidden" aria-label="Search">
