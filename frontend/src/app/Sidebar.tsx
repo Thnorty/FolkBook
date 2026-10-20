@@ -8,6 +8,7 @@ import { peopleCountQuery } from '@/features/people/queries'
 import { spacesQuery } from '@/features/spaces/queries'
 import { useSpaceForm } from '@/features/spaces/useSpaceForm'
 import { cn } from '@/lib/utils'
+import { RollingNumber } from '@/motion/RollingNumber'
 import { Logo } from './Logo'
 import { SECTIONS, SHORTCUTS } from './nav'
 import { UserMenu } from './UserMenu'
@@ -51,7 +52,9 @@ export function Sidebar({ user, onSearch }: { user: CurrentUser; onSearch: () =>
                 <Icon className="size-4" />
                 {label}
                 {to === '/people' && peopleCount !== undefined && (
-                  <span className={COUNT}>{peopleCount}</span>
+                  <span className={COUNT}>
+                    <RollingNumber value={peopleCount} />
+                  </span>
                 )}
               </Link>
             </li>

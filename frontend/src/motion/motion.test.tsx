@@ -7,6 +7,7 @@ import { InkUnderline } from './InkUnderline'
 import { MotionProvider } from './MotionProvider'
 import { PhotoDrop } from './PhotoDrop'
 import { Stamp } from './Stamp'
+import { RollingNumber } from './RollingNumber'
 import { StickAndPeel } from './StickAndPeel'
 import { useReducedMotion } from './useReducedMotion'
 
@@ -126,5 +127,39 @@ describe('reduced motion', () => {
     const reduced = stamp()
     expect(reduced.style.opacity).toBe('0')
     expect(reduced.style.transform).not.toContain('scale')
+  })
+
+  it('rolls a count up to its new value, the old one hidden from screen readers', async () => {
+    const count = (value: number) => (
+      <MotionProvider>
+        <RollingNumber value={value} />
+      </MotionProvider>
+    )
+    const { rerender } = render(count(2))
+    expect(screen.getByText('2').style.transform).not.toContain('translate')
+    await act(() => import('./features'))
+
+    rerender(count(3))
+    expect(screen.getByText('3').style.transform).toContain('translateY(100%)')
+    expect(screen.getByText('2')).toHaveAttribute('aria-hidden', 'true')
+    expect(screen.getByText('3')).not.toHaveAttribute('aria-hidden')
+    await waitFor(() => expect(screen.queryByText('2')).not.toBeInTheDocument())
+
+    rerender(count(1))
+    expect(screen.getByText('1').style.transform).toContain('translateY(-100%)')
+  })
+
+  it('swaps a count with a fade when motion is reduced', async () => {
+    act(() => setAppearance({ motion: 'reduce' }))
+    const count = (value: number) => (
+      <MotionProvider>
+        <RollingNumber value={value} />
+      </MotionProvider>
+    )
+    const { rerender } = render(count(2))
+    await act(() => import('./features'))
+    rerender(count(3))
+    expect(screen.getByText('3').style.opacity).toBe('0')
+    expect(screen.getByText('3').style.transform).not.toContain('translate')
   })
 })

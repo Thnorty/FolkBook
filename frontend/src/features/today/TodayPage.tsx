@@ -8,7 +8,8 @@ import { StickyNote } from '@/components/notebook/StickyNote'
 import { Button } from '@/components/ui/button'
 import { AccessEndedCards } from '@/features/kept/AccessEndedCards'
 import { accessEndedQuery } from '@/features/kept/queries'
-import { countOf, intervalLabel } from '@/features/person/labels'
+import { Count } from '@/features/person/Count'
+import { intervalLabel } from '@/features/person/labels'
 import { ProfileSection as Section } from '@/features/person/ProfileSection'
 import {
   deleteInteraction,
@@ -88,22 +89,19 @@ export function TodayPage() {
     sections.recent.length === 0
 
   const meta = [
+    <Greeting key="greeting" />,
     longDate.format(new Date()),
-    sections.birthdays.length > 0 && countOf(sections.birthdays.length, 'birthday'),
-    sections.due.length > 0 && countOf(sections.due.length, 'nudge'),
+    sections.birthdays.length > 0 && (
+      <Count key="birthdays" value={sections.birthdays.length} one="birthday" />
+    ),
+    sections.due.length > 0 && <Count key="nudges" value={sections.due.length} one="nudge" />,
   ]
-    .filter(Boolean)
-    .join(' · ')
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
       <PageHeader
         title="Today"
-        meta={
-          <>
-            <Greeting /> · {meta}
-          </>
-        }
+        meta={meta}
         actions={
           // Phones have no Ctrl/⌘+K: search opens as a page.
           <Button asChild variant="ghost" className="md:hidden" aria-label="Search">

@@ -7,7 +7,7 @@ import { currentUserQuery } from '@/api/session'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { PeekPanel } from '@/features/people/PeekPanel'
-import { countOf } from '@/features/person/labels'
+import { Count } from '@/features/person/Count'
 import { usePersonForm } from '@/features/person/usePersonForm'
 import { SHORTCUTS } from '@/app/nav'
 import { ApiError } from '@/api/errors'
@@ -199,8 +199,10 @@ function NetworkView({ search: { how: asked, focus, hops } }: { search: GraphSea
         <PageHeader
           title="Graph"
           meta={
-            summary &&
-            `${countOf(summary.people, 'person', 'people')} · ${countOf(summary.connections, 'connection')}`
+            summary && [
+              <Count key="people" value={summary.people} one="person" many="people" />,
+              <Count key="connections" value={summary.connections} one="connection" />,
+            ]
           }
           actions={
             <ModeSwitch

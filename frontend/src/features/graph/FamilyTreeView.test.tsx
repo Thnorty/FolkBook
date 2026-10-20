@@ -99,7 +99,7 @@ describe('family tree mode', () => {
     const treeOf = screen.getByRole('button', { name: 'Pick whose tree' }).parentElement!
     expect(within(treeOf).getByText('Tree of')).toBeInTheDocument()
     expect(within(treeOf).getByText('Ela Demir')).toBeInTheDocument()
-    expect(screen.getByText('Family · 11 people')).toBeInTheDocument()
+    expect(screen.getByText(/Family ·/)).toHaveTextContent(/^Family · 11 people$/)
     expect(screen.getByText('2 generations up · 1 down')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Family only' })).toBeNull()
   })

@@ -230,6 +230,7 @@ Inspired by the kind of details collected on [Design Spells](https://designspell
 - **Sticky notes:** memory aids tilt slightly and "stick" when added; peel animation on delete
 - **Polaroid photo:** a newly cropped photo drops into its frame in the person form, with a slight rotation (not on the profile, where the photo already travels with the page turn)
 - **Date stamp:** an entry just logged gets a "Logged" rubber stamp on the timeline; it presses on and stays until you leave the page
+- **Rolling counts:** counts in page headers and the sidebar roll to their new value like a counter wheel
 - **Long-press person card (mobile):** radial or popup quick menu: log interaction, add memory aid, open in graph
 - **Ink path in graph:** "How do I know…?" draws the path hop by hop like a pen stroke
 - **Tabbed dividers:** switching spaces slides the colored fill like a notebook divider. People picks a space with filter chips, not tabs, so the picked chip's fill slides under the others to the next one and the list crossfades

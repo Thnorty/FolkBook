@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { PeekPanel } from '@/features/people/PeekPanel'
 import { PersonSearch } from '@/features/people/PersonSearch'
+import { Count } from '@/features/person/Count'
 import { countOf } from '@/features/person/labels'
 import { useConnectionForm } from '@/features/person/useConnectionForm'
 import { firstNameOf } from '@/lib/names'
@@ -65,7 +66,12 @@ export function FamilyTreeView({ rootId }: { rootId: string }) {
       <div className="flex h-full min-h-0 min-w-0 flex-col">
         <PageHeader
           title="Graph"
-          meta={tree.data && `Family · ${countOf(shown.length, 'person', 'people')}`}
+          meta={
+            tree.data && [
+              'Family',
+              <Count key="people" value={shown.length} one="person" many="people" />,
+            ]
+          }
           actions={<ModeSwitch mode="tree" onChange={() => void navigate({ search: {} })} />}
         />
         <div className="mt-4 flex flex-wrap items-center gap-2">

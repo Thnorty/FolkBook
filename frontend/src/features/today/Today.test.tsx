@@ -156,7 +156,7 @@ describe('Today', () => {
     ).toBeInTheDocument()
     expect(within(await section('Shared with you')).getByText('Hackathon 2026')).toBeInTheDocument()
     expect(within(await section('Recently added')).getByText('Tom Bergqvist')).toBeInTheDocument()
-    expect(screen.getByText(/2 birthdays · 1 nudge/)).toBeInTheDocument()
+    expect(screen.getByText(/ nudge$/)).toHaveTextContent(/2 birthdays · 1 nudge$/)
     expect(requests).toContain('?today=2026-09-22')
   })
 
