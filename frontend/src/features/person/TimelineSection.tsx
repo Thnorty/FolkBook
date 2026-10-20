@@ -25,6 +25,7 @@ export function TimelineSection({ personId, canLog }: TimelineSectionProps) {
   const { openEntry } = useInteractionForm()
   const [showAll, setShowAll] = useState(false)
   const items = page?.items ?? []
+  const added = useAdded(personId, page && items.map((item) => item.id))
   const shown = showAll ? items : items.slice(0, FIRST)
 
   return (
@@ -51,6 +52,7 @@ export function TimelineSection({ personId, canLog }: TimelineSectionProps) {
                 kind={INTERACTION_KINDS[item.kind]}
                 title={item.label || INTERACTION_KINDS[item.kind]}
                 onOpen={() => openEntry(item)}
+                stamped={added.has(item.id)}
               >
                 {item.note || undefined}
               </TimelineItem>
@@ -66,6 +68,27 @@ export function TimelineSection({ personId, canLog }: TimelineSectionProps) {
     </ProfileSection>
   )
 }
+
+/**
+ * The entries that turned up after the timeline first loaded: the ones just logged. Showing
+ * more of the list or changing an entry doesn't count; another person starts again.
+ */
+function useAdded(personId: string, ids: string[] | undefined): ReadonlySet<string> {
+  type Seen = { personId: string; ids: ReadonlySet<string>; added: ReadonlySet<string> }
+  const [seen, setSeen] = useState<Seen | null>(null)
+  if (!ids) return seen?.personId === personId ? seen.added : NONE
+  if (seen?.personId !== personId) {
+    setSeen({ personId, ids: new Set(ids), added: NONE })
+    return NONE
+  }
+  const fresh = ids.filter((id) => !seen.ids.has(id))
+  if (fresh.length === 0) return seen.added
+  const added = new Set([...seen.added, ...fresh])
+  setSeen({ personId, ids: new Set([...seen.ids, ...fresh]), added })
+  return added
+}
+
+const NONE: ReadonlySet<string> = new Set()
 
 /** "+ Log", also on the L key while their page is open. */
 function LogButton({ personId }: { personId: string }) {

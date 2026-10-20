@@ -6,6 +6,7 @@ import { setAppearance } from '@/lib/appearance'
 import { InkUnderline } from './InkUnderline'
 import { MotionProvider } from './MotionProvider'
 import { PhotoDrop } from './PhotoDrop'
+import { Stamp } from './Stamp'
 import { StickAndPeel } from './StickAndPeel'
 import { useReducedMotion } from './useReducedMotion'
 
@@ -108,5 +109,22 @@ describe('reduced motion', () => {
     const reduced = photo(true)
     expect(reduced.style.opacity).toBe('0')
     expect(reduced.style.transform).not.toContain('rotate')
+  })
+
+  it('presses a stamp on from bigger than life, or fades it in when reduced', () => {
+    const stamp = () =>
+      render(
+        <MotionProvider>
+          <Stamp>Logged</Stamp>
+        </MotionProvider>,
+      ).getByText('Logged')
+
+    expect(stamp().style.transform).toContain('scale(1.5)')
+    cleanup()
+
+    act(() => setAppearance({ motion: 'reduce' }))
+    const reduced = stamp()
+    expect(reduced.style.opacity).toBe('0')
+    expect(reduced.style.transform).not.toContain('scale')
   })
 })

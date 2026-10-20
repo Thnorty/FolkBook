@@ -174,6 +174,26 @@ function PhotoDropDemo() {
   )
 }
 
+function StampDemo() {
+  const [logs, setLogs] = useState(0)
+  return (
+    <div className="flex items-start gap-6">
+      <ol className="w-64">
+        <TimelineItem
+          key={logs}
+          date="2026-09-12"
+          kind="Call"
+          title="Called about the move"
+          stamped={logs > 0}
+        />
+      </ol>
+      <Button variant="secondary" onClick={() => setLogs((n) => n + 1)}>
+        Log it
+      </Button>
+    </div>
+  )
+}
+
 function ChoiceDemo() {
   const [kind, setKind] = useState('Partner')
   const [day, setDay] = useState('Today')
@@ -478,14 +498,15 @@ export default function DesignSystem() {
       <Section title="Motion">
         <p className="mb-4 type-small text-ink-soft">
           Page turn: tap the card. Ink underline: save again. Sticky notes: stick one on, click one
-          to peel it off. Polaroid: drop a photo. The filter slide is on People. With Motion on
-          Reduce (or your device set to reduce motion) nothing moves; things just fade in.
+          to peel it off. Polaroid: drop a photo. Stamp: log it. The filter slide is on People. With
+          Motion on Reduce (or your device set to reduce motion) nothing moves; things just fade in.
         </p>
         <div className="flex flex-col gap-6">
           <PageTurnDemo />
           <InkDemo />
           <StickDemo />
           <PhotoDropDemo />
+          <StampDemo />
         </div>
       </Section>
 
