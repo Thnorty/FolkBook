@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { ApiError } from '@/api/errors'
+import { InkDivider } from '@/components/notebook/InkDivider'
 import { cn } from '@/lib/utils'
 import type { FlyOrigin } from '@/motion/FlyFrom'
 import { usePageTitle } from '@/lib/usePageTitle'
@@ -79,9 +80,10 @@ export function ProfileView({ personId, compact = false, flyFrom, onGone }: Prof
       <PageFade afterTurn={!compact} className="flex flex-col gap-9">
         {!data.is_mine && (
           // Someone else keeps the profile above; everything below is yours alone.
-          <p className="-mb-4 border-t border-line pt-4 type-label text-ink-faint">
-            Your side · only you see this
-          </p>
+          <div className="-mb-4">
+            <InkDivider seed="Your side" className="mb-4" />
+            <p className="type-label text-ink-faint">Your side · only you see this</p>
+          </div>
         )}
         <RememberSection personId={personId} />
         <NotesSection personId={personId} firstName={firstName} />

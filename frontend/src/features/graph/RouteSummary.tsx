@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { ApiError } from '@/api/errors'
+import { InkDivider } from '@/components/notebook/InkDivider'
 import { Button } from '@/components/ui/button'
 import { personQuery } from '@/features/person/queries'
 import { useConnectionForm } from '@/features/person/useConnectionForm'
@@ -76,24 +77,27 @@ export function RouteSummary({ personId, shown, onShow, onClear }: RouteSummaryP
         </ol>
         {why && <p className="mt-3 type-small text-ink-soft">{why}</p>}
         {routes.length > 1 && (
-          <ul className="mt-3 flex flex-col gap-1 border-t border-line pt-3">
-            {routes.slice(1).map((other, index) =>
-              index + 1 === shown ? (
-                <li key={index}>
-                  <Button variant="ghost" onClick={() => onShow(0)}>
-                    Back to the shortest
-                  </Button>
-                </li>
-              ) : (
-                <li key={index} className="flex items-baseline gap-2 type-small text-ink-soft">
-                  <span className="min-w-0 flex-1">{alsoVia(other)}</span>
-                  <Button variant="ghost" onClick={() => onShow(index + 1)}>
-                    Show
-                  </Button>
-                </li>
-              ),
-            )}
-          </ul>
+          <>
+            <InkDivider seed="Other ways" className="mt-3" />
+            <ul className="mt-3 flex flex-col gap-1">
+              {routes.slice(1).map((other, index) =>
+                index + 1 === shown ? (
+                  <li key={index}>
+                    <Button variant="ghost" onClick={() => onShow(0)}>
+                      Back to the shortest
+                    </Button>
+                  </li>
+                ) : (
+                  <li key={index} className="flex items-baseline gap-2 type-small text-ink-soft">
+                    <span className="min-w-0 flex-1">{alsoVia(other)}</span>
+                    <Button variant="ghost" onClick={() => onShow(index + 1)}>
+                      Show
+                    </Button>
+                  </li>
+                ),
+              )}
+            </ul>
+          </>
         )}
         <div className="mt-4 flex flex-wrap gap-2">
           <Button asChild variant="secondary">

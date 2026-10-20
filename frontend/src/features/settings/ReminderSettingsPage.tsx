@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { InkDivider } from '@/components/notebook/InkDivider'
 import { CheckboxField } from '@/components/ui/checkbox-field'
 import { Choice } from '@/components/ui/choice'
 import { labelClass } from '@/components/ui/label'
@@ -184,7 +185,8 @@ export function ReminderSettingsPage() {
       </SettingsPart>
 
       {settings.email_ready && (
-        <div className="border-t border-line pt-5">
+        <div>
+          <InkDivider seed="Test digest" className="mb-5" />
           <SendTestEmail goesTo={settings.send_to} send={sendTestDigest} />
         </div>
       )}

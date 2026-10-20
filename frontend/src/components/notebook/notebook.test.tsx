@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { InkDivider } from './InkDivider'
 import { PersonCard } from './PersonCard'
 import { SpaceChip, SpaceTab } from './spaces'
 import { StickyNote } from './StickyNote'
@@ -97,5 +98,29 @@ describe('TimelineItem', () => {
     expect(within(item).getByText(/Coffee$/)).toBeInTheDocument()
     expect(within(item).getByText('Coffee at Kronotrop')).toBeInTheDocument()
     expect(within(item).getByText('Showed me the drawings.')).toBeInTheDocument()
+  })
+})
+
+describe('InkDivider', () => {
+  const stroke = (seed: string) => {
+    const { container, unmount } = render(<InkDivider seed={seed} />)
+    const path = container.querySelector('path')
+    const drawn = `${path?.getAttribute('d')} ${path?.getAttribute('transform')}`
+    unmount()
+    return drawn
+  }
+
+  it('is drawn the same way every time for the same seed', () => {
+    expect(stroke('Password')).toBe(stroke('Password'))
+  })
+
+  it('is drawn differently for different seeds', () => {
+    const seeds = ['Password', 'Devices', 'Appearance', 'Reminders', 'Email', 'AI', 'Account']
+    expect(new Set(seeds.map(stroke)).size).toBeGreaterThan(1)
+  })
+
+  it('is decoration only, hidden from screen readers', () => {
+    const { container } = render(<InkDivider seed="Password" />)
+    expect(container.firstElementChild).toHaveAttribute('aria-hidden', 'true')
   })
 })

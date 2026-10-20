@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { InkDivider } from '@/components/notebook/InkDivider'
 import { usePageTitle } from '@/lib/usePageTitle'
 
 type PageHeaderProps = {
@@ -14,10 +15,13 @@ export function PageHeader({ title, meta, actions }: PageHeaderProps) {
   usePageTitle(title)
 
   return (
-    <header className="flex flex-wrap items-end gap-x-3.5 gap-y-1 border-b border-line pb-3.5">
-      <h1 className="type-display">{title}</h1>
-      {meta && <p className="pb-1 type-meta text-ink-faint">{meta}</p>}
-      {actions && <div className="ml-auto flex gap-2">{actions}</div>}
+    <header>
+      <div className="flex flex-wrap items-end gap-x-3.5 gap-y-1">
+        <h1 className="type-display">{title}</h1>
+        {meta && <p className="pb-1 type-meta text-ink-faint">{meta}</p>}
+        {actions && <div className="ml-auto flex gap-2">{actions}</div>}
+      </div>
+      <InkDivider seed={title} className="mt-3.5" />
     </header>
   )
 }
