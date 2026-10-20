@@ -209,6 +209,9 @@ describe('People list', () => {
     renderApp('/people?q=zzz')
 
     expect(await screen.findByText('No one matches.')).toBeInTheDocument()
+    // The letters of the search drop off the line, over a note in the hand font.
+    expect(screen.getByText('no one by that name')).toBeInTheDocument()
+    expect(screen.getAllByText('z')).toHaveLength(3)
     await userEvent.click(screen.getByRole('button', { name: 'Clear filters' }))
 
     await waitFor(async () => expect(await cards()).toHaveLength(4))

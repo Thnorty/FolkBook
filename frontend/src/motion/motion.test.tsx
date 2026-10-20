@@ -3,6 +3,7 @@ import { AnimatePresence } from 'motion/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { setAppearance } from '@/lib/appearance'
+import { FallingLetters } from './FallingLetters'
 import { InkUnderline } from './InkUnderline'
 import { MotionProvider } from './MotionProvider'
 import { PhotoDrop } from './PhotoDrop'
@@ -161,5 +162,34 @@ describe('reduced motion', () => {
     rerender(count(3))
     expect(screen.getByText('3').style.opacity).toBe('0')
     expect(screen.getByText('3').style.transform).not.toContain('translate')
+  })
+
+  it('drops the letters of a word off the line, or fades them in place when reduced', () => {
+    const letters = () =>
+      render(
+        <MotionProvider>
+          <FallingLetters text="zoe" />
+        </MotionProvider>,
+      )
+    const { unmount } = letters()
+    // They start upright on the line and fall from there.
+    expect(screen.getByText('z').style.transform).not.toContain('rotate')
+    unmount()
+
+    act(() => setAppearance({ motion: 'reduce' }))
+    letters()
+    expect(screen.getByText('z').style.opacity).toBe('0')
+    expect(screen.getByText('z').style.transform).not.toContain('translate')
+  })
+
+  it('shows letters typed afterwards already fallen, without dropping them again', () => {
+    const letters = (text: string) => (
+      <MotionProvider>
+        <FallingLetters text={text} />
+      </MotionProvider>
+    )
+    const { rerender } = render(letters('zo'))
+    rerender(letters('zoe'))
+    expect(screen.getByText('e').style.transform).toContain('rotate')
   })
 })

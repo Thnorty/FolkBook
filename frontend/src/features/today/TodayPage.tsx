@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { PageHeader } from '@/components/PageHeader'
+import { Doodle } from '@/components/notebook/Doodle'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { StickyNote } from '@/components/notebook/StickyNote'
 import { Button } from '@/components/ui/button'
@@ -429,6 +430,12 @@ function EmptyToday() {
   const { openNew } = usePersonForm()
   return (
     <div className="flex flex-col items-center px-4 py-12 text-center">
+      <Doodle viewBox="0 0 56 48" className="mb-2 h-12 w-14 text-ink-soft">
+        <path d="M10 5h19l7 7v29a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+        <path d="M29 5v7h7M13 21h15M13 27h10" />
+        <path d="m33 37 13-13 3.5 3.5-13 13L32 42Z" />
+        <path d="m43.5 26.5 3.5 3.5" />
+      </Doodle>
       <p aria-hidden className="type-hand text-ink-soft">
         nothing to remember yet
       </p>

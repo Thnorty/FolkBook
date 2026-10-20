@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Doodle } from '@/components/notebook/Doodle'
 import { usePartOfDay, type PartOfDay } from '@/lib/partOfDay'
 
 // Small ink doodles, drawn on a 16×16 grid.
@@ -48,18 +49,9 @@ export function Greeting() {
   const { words, doodle } = GREETINGS[usePartOfDay()]
   return (
     <span>
-      <svg
-        aria-hidden
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.25}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="mr-1.5 inline size-4 align-text-bottom text-ink-soft"
-      >
+      <Doodle viewBox="0 0 16 16" className="mr-1.5 inline size-4 align-text-bottom text-ink-soft">
         {doodle}
-      </svg>
+      </Doodle>
       {words}
     </span>
   )
