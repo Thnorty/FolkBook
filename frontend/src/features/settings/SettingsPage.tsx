@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { InkDivider } from '@/components/notebook/InkDivider'
 import { usePageTitle } from '@/lib/usePageTitle'
 
 /** One settings page: its title, what it's for, and its parts. */
@@ -38,7 +39,8 @@ export function SettingsPart({
   children?: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-3 border-t border-line pt-5">
+    <div className="flex flex-col gap-3">
+      <InkDivider seed={title} className="mb-2" />
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h3 className="type-heading">{title}</h3>
         {action && <div className="ml-auto">{action}</div>}

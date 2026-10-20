@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type FormEvent } from 'react'
+import { InkDivider } from '@/components/notebook/InkDivider'
 import { Button } from '@/components/ui/button'
 import { Choice } from '@/components/ui/choice'
 import { Input } from '@/components/ui/input'
@@ -228,7 +229,8 @@ function SmtpForm({ settings }: { settings: MailSettings }) {
         />
       </div>
 
-      <div className="flex flex-wrap items-start gap-3 border-t border-line pt-4">
+      <InkDivider seed="Send a test email" />
+      <div className="flex flex-wrap items-start gap-3">
         <SendTestEmail
           goesTo={settings.send_to}
           // The form as it is, saved or not; the browser checks the fields first.

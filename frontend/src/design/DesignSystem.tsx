@@ -1,5 +1,6 @@
 import { AnimatePresence } from 'motion/react'
 import { useState, type ReactNode } from 'react'
+import { InkDivider } from '@/components/notebook/InkDivider'
 import { PersonCard } from '@/components/notebook/PersonCard'
 import { Polaroid } from '@/components/notebook/Polaroid'
 import { SpaceChip, SpaceTab, type SpaceColor } from '@/components/notebook/spaces'
@@ -45,7 +46,8 @@ const NOTE_COLORS: NoteColor[] = ['yellow', 'pink', 'green', 'blue']
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="border-t border-line pt-5">
+    <section>
+      <InkDivider seed={title} className="mb-5" />
       <h2 className="mb-4 type-label text-ink-faint">{title}</h2>
       {children}
     </section>
