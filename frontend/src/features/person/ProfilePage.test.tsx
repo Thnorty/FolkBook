@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
@@ -330,6 +330,40 @@ describe('profile page', () => {
     expect(
       await within(await section('Keep in touch')).findByText('Every 2 months'),
     ).toBeInTheDocument()
+  })
+
+  it('stamps the entry just logged, not the ones already there', async () => {
+    const coffee = {
+      id: 'i1',
+      person_id: 'emma',
+      kind: 'met',
+      label: 'Coffee at Kronotrop',
+      occurred_on: '2026-09-12',
+      note: '',
+    }
+    let items = [coffee]
+    server({
+      'GET /api/interactions': () => json({ items, count: items.length }),
+      'POST /api/interactions': async (request) => {
+        const entry = { id: 'i2', label: '', note: '', ...(await request.json()) }
+        items = [entry, ...items]
+        return json(entry, 201)
+      },
+    })
+    renderApp('/people/emma')
+    const timeline = await section('Timeline')
+    await within(timeline).findByText('Coffee at Kronotrop')
+    expect(within(timeline).queryByText('Logged')).not.toBeInTheDocument()
+
+    await userEvent.click(within(timeline).getByRole('button', { name: /Log/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Log with Emma' })
+    await userEvent.click(within(dialog).getByRole('radio', { name: 'Call' }))
+    fireEvent.keyDown(dialog, { key: 'Enter', ctrlKey: true })
+
+    await waitFor(() => expect(within(timeline).getAllByRole('listitem')).toHaveLength(2))
+    const [called, older] = within(timeline).getAllByRole('listitem')
+    expect(within(called).getByText('Logged')).toBeInTheDocument()
+    expect(within(older).queryByText('Logged')).not.toBeInTheDocument()
   })
 
   it('says when they are snoozed, and wakes them up', async () => {

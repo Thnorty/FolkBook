@@ -35,6 +35,8 @@ export const DURATION = {
   polaroidDrop: 0.42,
   /** The picked filter's fill sliding to the chip just picked. */
   filterSlide: 0.24,
+  /** A rubber stamp pressing onto an entry just logged. Decorative. */
+  stamp: 0.3,
   /** A dialog or sheet leaving (sliding down on phones). Also in src/index.css. */
   dialogOut: 0.22,
   /** With reduced motion, every effect becomes a plain fade this long. */

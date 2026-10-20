@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { formatDay, formatTime } from '@/lib/dates'
+import { Stamp } from '@/motion/Stamp'
 
 type TimelineItemProps = {
   /** Calendar day from the API, e.g. "2026-09-12". */
@@ -12,10 +13,20 @@ type TimelineItemProps = {
   children?: ReactNode
   /** Makes the entry a button, e.g. to change it. */
   onOpen?: () => void
+  /** Just logged: a "Logged" stamp presses onto it. */
+  stamped?: boolean
 }
 
 /** One entry on a person's timeline: a dot on the line, the date, what happened. */
-export function TimelineItem({ date, time, kind, title, children, onOpen }: TimelineItemProps) {
+export function TimelineItem({
+  date,
+  time,
+  kind,
+  title,
+  children,
+  onOpen,
+  stamped = false,
+}: TimelineItemProps) {
   const content = (
     <>
       <span className="block type-meta text-ink-faint">
@@ -24,6 +35,7 @@ export function TimelineItem({ date, time, kind, title, children, onOpen }: Time
           {time && ` · ${formatTime(time)}`}
         </time>
         {kind && ` · ${kind}`}
+        {stamped && <Stamp className="ml-2">Logged</Stamp>}
       </span>
       <span className="mt-0.5 block type-heading">{title}</span>
       {children && (
