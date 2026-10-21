@@ -13,6 +13,7 @@ from api_keys import services
 from api_keys.auth import api_key_auth
 from api_keys.schemas import ApiKeyIn
 from config.api import api as folkbook_api
+from core.tokens import new_token
 from spaces import services as space_services
 from tests.api_client import ApiClient
 
@@ -83,7 +84,7 @@ def test_writes_need_no_csrf_token(api, world):
 def test_bad_keys_are_401(api, world, problem):
     key = key_for(world.ela)
     if problem == "unknown":
-        key = services.new_key()
+        key = new_token(services.PREFIX)
     elif problem == "expired":
         world.ela.api_keys.update(expires_at=timezone.now() - datetime.timedelta(seconds=1))
     elif problem == "disabled owner":
@@ -102,7 +103,9 @@ def test_bad_keys_are_401(api, world, problem):
 def test_a_bad_key_never_falls_back_to_the_login_cookie(api, world, client):
     client.force_login(world.ela)
 
-    response = client.get("/api/people", headers={"Authorization": f"Bearer {services.new_key()}"})
+    response = client.get(
+        "/api/people", headers={"Authorization": f"Bearer {new_token(services.PREFIX)}"}
+    )
 
     assert response.status_code == 401
     assert response.json() == INVALID

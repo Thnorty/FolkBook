@@ -1,10 +1,7 @@
 """Personal API keys: making them, and revoking them."""
 
 import datetime
-import hashlib
 import math
-import secrets
-import string
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -14,26 +11,17 @@ from django.utils import timezone
 from access.policy import Access, visible_spaces
 from api_keys.models import ApiKey
 from api_keys.schemas import ApiKeyIn
+from core.tokens import hash_token, new_token
 
 PREFIX = "fb_live_"
 RATE_LIMIT = 120
 WINDOW = datetime.timedelta(minutes=1)
-LETTERS = string.ascii_letters + string.digits
 EXPIRY = {
     "30d": datetime.timedelta(days=30),
     "90d": datetime.timedelta(days=90),
     "1y": datetime.timedelta(days=365),
     "never": None,
 }
-
-
-def new_key() -> str:
-    return PREFIX + "".join(secrets.choice(LETTERS) for _ in range(32))
-
-
-def hash_key(key: str) -> str:
-    # Keys are long and random, so a fast hash is enough (unlike passwords).
-    return hashlib.sha256(key.encode()).hexdigest()
 
 
 @transaction.atomic
@@ -43,12 +31,12 @@ def create_api_key(access: Access, data: ApiKeyIn) -> tuple[ApiKey, str]:
     if not name:
         raise ValidationError({"name": "Give the key a name."})
     spaces = _spaces(access, data.space_ids)
-    key = new_key()
+    key = new_token(PREFIX)
     expires_in = EXPIRY[data.expires_in]
     api_key = ApiKey.objects.create(
         owner=access.user,
         name=name,
-        hashed=hash_key(key),
+        hashed=hash_token(key),
         last_five=key[-5:],
         read_only=data.read_only,
         include_private=data.include_private,

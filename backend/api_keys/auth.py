@@ -7,6 +7,7 @@ from accounts.models import User
 from api_keys import services
 from api_keys.models import ApiKey
 from api_keys.services import InvalidApiKey
+from core.tokens import hash_token
 
 
 class ApiKeyAuth(HttpBearer):
@@ -23,7 +24,7 @@ class ApiKeyAuth(HttpBearer):
         # instead, with full access, when a logged-in browser sends a bad key.
         api_key = (
             ApiKey.objects.select_related("owner")
-            .filter(hashed=services.hash_key(token), owner__is_active=True)
+            .filter(hashed=hash_token(token), owner__is_active=True)
             .first()
         )
         if api_key is None or api_key.expired:
