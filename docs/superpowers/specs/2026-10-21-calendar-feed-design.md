@@ -64,7 +64,7 @@ A router at `/api/calendars`, taking only the login cookie (`auth=django_auth`, 
 A new page after Reminders (`/settings/calendar`, `SETTINGS_SECTIONS`), built like Settings → API keys:
 
 - An intro line: "Birthdays in the calendar app you already use. Each link is private: anyone with it can see the names and birthdays in it."
-- The list of links: name; "Everyone you can see" or the spaces' names; "Last used 2 hours ago" or "Not used yet"; **Revoke**, which asks first in a `ConfirmDialog` ("Calendars using this link stop updating").
+- The list of links: name; "Everyone you can see" or the spaces' names; "Last used 2 hours ago" or "Not used yet"; **Revoke**, which asks first in place, the way Settings → API keys does ("Calendars using this link stop updating").
 - An empty state: one line and **New calendar link**.
 - **New calendar link** opens a `<FormDialog small>`:
   - name (required, 60 characters);
