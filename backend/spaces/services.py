@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.functions import Lower
@@ -13,6 +13,7 @@ from access.policy import (
     can_change_space_people,
     can_leave_space,
     can_manage_space,
+    visible_spaces,
 )
 from accounts.models import User
 from core.api import Conflict
@@ -198,3 +199,16 @@ def _change(
         about=gone.display_name,
         told=told or {},
     )
+
+
+def picked_spaces(access: Access, ids: list | None, *, all_label: str) -> list[Space] | None:
+    """The spaces chosen to narrow something (an API key, a calendar link): None for all.
+    Each must be one the user can see."""
+    if ids is None:
+        return None
+    if not ids:
+        raise ValidationError({"space_ids": f"Pick at least one space, or {all_label}."})
+    spaces = list(visible_spaces(access).filter(pk__in=ids))
+    if len(spaces) != len(set(ids)):
+        raise ValidationError({"space_ids": "That space isn't one you can pick."})
+    return spaces

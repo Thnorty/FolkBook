@@ -27,6 +27,7 @@ from django.db.models import (
 
 from accounts.models import User
 from api_keys.models import ApiKey
+from calendars.models import CalendarFeed
 from imports.models import Import
 from interactions.models import Interaction
 from people.models import AccessEnded, ContactMethod, HiddenPerson, MemoryAid, Note, Person
@@ -384,3 +385,8 @@ def can_write_private(access: Access, person: Person) -> bool:
 def visible_api_keys(access: Access) -> QuerySet[ApiKey]:
     """The user's own API keys. Nobody else's, not even an admin's view."""
     return ApiKey.objects.filter(owner=access.user)
+
+
+def visible_calendar_feeds(access: Access) -> QuerySet[CalendarFeed]:
+    """The user's own calendar links. Nobody else's."""
+    return CalendarFeed.objects.filter(owner=access.user)

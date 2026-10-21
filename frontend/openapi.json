@@ -4544,6 +4544,130 @@
         ]
       }
     },
+    "/api/calendars": {
+      "get": {
+        "operationId": "calendars_api_list_calendar_feeds",
+        "summary": "List Calendar Feeds",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedCalendarFeedOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "Your calendar links, newest first. The links themselves are never sent again.",
+        "tags": [
+          "calendars"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "calendars_api_create_calendar_feed",
+        "summary": "Create Calendar Feed",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedCalendarFeedOut"
+                }
+              }
+            }
+          }
+        },
+        "description": "A new link. The response has the link itself: the only time it's sent.",
+        "tags": [
+          "calendars"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarFeedIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
+    "/api/calendars/{feed_id}": {
+      "delete": {
+        "operationId": "calendars_api_revoke_calendar_feed",
+        "summary": "Revoke Calendar Feed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "feed_id",
+            "schema": {
+              "format": "uuid",
+              "title": "Feed Id",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "calendars"
+        ],
+        "security": [
+          {
+            "SessionAuth": []
+          }
+        ]
+      }
+    },
     "/api/ai": {
       "get": {
         "operationId": "ai_api_get_ai",
@@ -9475,6 +9599,174 @@
           "name"
         ],
         "title": "ApiKeyIn",
+        "type": "object"
+      },
+      "CalendarFeedOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "last_five": {
+            "title": "Last Five",
+            "type": "string"
+          },
+          "limited": {
+            "title": "Limited",
+            "type": "boolean"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceRef"
+            },
+            "title": "Spaces",
+            "type": "array"
+          },
+          "last_fetched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Fetched At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "last_five",
+          "limited",
+          "spaces",
+          "last_fetched_at",
+          "created_at"
+        ],
+        "title": "CalendarFeedOut",
+        "type": "object"
+      },
+      "PagedCalendarFeedOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarFeedOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "title": "PagedCalendarFeedOut",
+        "type": "object"
+      },
+      "CreatedCalendarFeedOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "last_five": {
+            "title": "Last Five",
+            "type": "string"
+          },
+          "limited": {
+            "title": "Limited",
+            "type": "boolean"
+          },
+          "spaces": {
+            "items": {
+              "$ref": "#/components/schemas/SpaceRef"
+            },
+            "title": "Spaces",
+            "type": "array"
+          },
+          "last_fetched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Fetched At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "last_five",
+          "limited",
+          "spaces",
+          "last_fetched_at",
+          "created_at",
+          "url"
+        ],
+        "title": "CreatedCalendarFeedOut",
+        "type": "object"
+      },
+      "CalendarFeedIn": {
+        "properties": {
+          "name": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "space_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space Ids"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CalendarFeedIn",
         "type": "object"
       },
       "AiProviderOut": {

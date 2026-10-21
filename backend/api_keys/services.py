@@ -1,24 +1,22 @@
 """Personal API keys: making them, and revoking them."""
 
 import datetime
-import hashlib
 import math
-import secrets
-import string
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import F, Q
 from django.utils import timezone
 
-from access.policy import Access, visible_spaces
+from access.policy import Access
 from api_keys.models import ApiKey
 from api_keys.schemas import ApiKeyIn
+from core.tokens import hash_token, new_token
+from spaces.services import picked_spaces
 
 PREFIX = "fb_live_"
 RATE_LIMIT = 120
 WINDOW = datetime.timedelta(minutes=1)
-LETTERS = string.ascii_letters + string.digits
 EXPIRY = {
     "30d": datetime.timedelta(days=30),
     "90d": datetime.timedelta(days=90),
@@ -27,28 +25,19 @@ EXPIRY = {
 }
 
 
-def new_key() -> str:
-    return PREFIX + "".join(secrets.choice(LETTERS) for _ in range(32))
-
-
-def hash_key(key: str) -> str:
-    # Keys are long and random, so a fast hash is enough (unlike passwords).
-    return hashlib.sha256(key.encode()).hexdigest()
-
-
 @transaction.atomic
 def create_api_key(access: Access, data: ApiKeyIn) -> tuple[ApiKey, str]:
     """A new key and the key itself, which is never stored or shown again."""
     name = data.name.strip()
     if not name:
         raise ValidationError({"name": "Give the key a name."})
-    spaces = _spaces(access, data.space_ids)
-    key = new_key()
+    spaces = picked_spaces(access, data.space_ids, all_label="All spaces")
+    key = new_token(PREFIX)
     expires_in = EXPIRY[data.expires_in]
     api_key = ApiKey.objects.create(
         owner=access.user,
         name=name,
-        hashed=hash_key(key),
+        hashed=hash_token(key),
         last_five=key[-5:],
         read_only=data.read_only,
         include_private=data.include_private,
@@ -105,14 +94,3 @@ def access_for_key(api_key: ApiKey) -> Access:
 def revoke_api_key(api_key: ApiKey) -> None:
     """Anything using it stops working right away."""
     api_key.delete()
-
-
-def _spaces(access: Access, ids: list | None) -> list | None:
-    if ids is None:
-        return None
-    if not ids:
-        raise ValidationError({"space_ids": "Pick at least one space, or All spaces."})
-    spaces = list(visible_spaces(access).filter(pk__in=ids))
-    if len(spaces) != len(set(ids)):
-        raise ValidationError({"space_ids": "That space isn't one you can pick."})
-    return spaces

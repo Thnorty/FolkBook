@@ -12,6 +12,7 @@ from ai.api import router as ai_router
 from api_keys.api import router as api_keys_router
 from api_keys.auth import KEY_OR_LOGIN
 from api_keys.services import InvalidApiKey, TooManyRequests
+from calendars.api import router as calendars_router
 from capture.api import router as capture_router
 from core.api import Conflict, validation_detail
 from exports.api import router as export_router
@@ -52,6 +53,7 @@ api.add_router("/search", search_router)
 api.add_router("/export", export_router)
 api.add_router("/imports", imports_router)
 api.add_router("/api-keys", api_keys_router, auth=django_auth)
+api.add_router("/calendars", calendars_router, auth=django_auth)
 api.add_router("/ai", ai_router, auth=django_auth)
 api.add_router("/capture", capture_router, auth=django_auth)
 api.add_router("/mail", mail_router, auth=django_auth)
