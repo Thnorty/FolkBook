@@ -4,6 +4,7 @@ import { Info, Maximize, Minus, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { GraphCanvasRef } from 'reagraph'
 import { currentUserQuery } from '@/api/session'
+import { Doodle } from '@/components/notebook/Doodle'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { PeekPanel } from '@/features/people/PeekPanel'
@@ -402,6 +403,22 @@ function FilterBar({
 
 const PROMPTS = ['mum?', 'best friend?', 'a colleague?', 'neighbour?', 'that climbing crew?']
 
+/** Dashed bubbles for the people who'll join you. */
+function Prompts({ prompts }: { prompts: string[] }) {
+  return (
+    <div className="flex flex-wrap justify-center gap-2">
+      {prompts.map((prompt) => (
+        <span
+          key={prompt}
+          className="rounded-full border border-dashed border-line-strong px-3 py-1 type-hand text-ink-soft"
+        >
+          {prompt}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 /** Just you so far (screens 3m, 3n). */
 function EmptyGraph() {
   const { openNew } = usePersonForm()
@@ -409,15 +426,13 @@ function EmptyGraph() {
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-8">
       <PageHeader title="Graph" meta="Just you" />
       <div className="flex flex-col items-center px-4 py-12 text-center">
-        <div aria-hidden className="flex flex-wrap justify-center gap-2">
-          {PROMPTS.map((prompt) => (
-            <span
-              key={prompt}
-              className="rounded-full border border-dashed border-line-strong px-3 py-1 type-hand text-ink-soft"
-            >
-              {prompt}
-            </span>
-          ))}
+        <div aria-hidden className="flex flex-col items-center">
+          <Prompts prompts={PROMPTS.slice(0, 2)} />
+          <Doodle viewBox="0 0 160 44" className="h-11 w-40 text-ink-soft">
+            <path strokeDasharray="2 4" d="M72 18 44 4M88 18l28-14M72 26 40 40M88 26l32 14" />
+            <circle cx="80" cy="22" r="5" fill="currentColor" className="text-ink" />
+          </Doodle>
+          <Prompts prompts={PROMPTS.slice(2)} />
         </div>
         <h2 className="mt-6 type-title">Your graph starts with you</h2>
         <p className="mt-2 max-w-sm text-ink-soft">

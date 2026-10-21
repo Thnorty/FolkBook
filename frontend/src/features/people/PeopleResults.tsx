@@ -1,7 +1,9 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
+import { Doodle } from '@/components/notebook/Doodle'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { FallingLetters } from '@/motion/FallingLetters'
 import type { FlyOrigin } from '@/motion/FlyFrom'
 import { PersonRow, PersonTile } from './PersonLink'
 import { peopleListQuery, type PeopleFilters } from './queries'
@@ -84,11 +86,24 @@ export function PeopleResults({
   )
 }
 
-/** "No one matches" with a way out. */
-export function NoMatch({ onClear }: { onClear: () => void }) {
+/** "No one matches" with a way out. What you searched for drops off the line. */
+export function NoMatch({ search, onClear }: { search?: string; onClear: () => void }) {
   return (
-    <div className="py-10 text-center">
-      <p className="text-ink-soft">No one matches.</p>
+    <div className="flex flex-col items-center py-10 text-center">
+      {search ? (
+        <>
+          <FallingLetters text={search} />
+          <p aria-hidden className="type-hand text-ink-soft">
+            no one by that name
+          </p>
+        </>
+      ) : (
+        <Doodle viewBox="0 0 40 40" className="size-10 text-ink-soft">
+          <circle cx="17" cy="17" r="9" />
+          <path d="M23.5 23.5 32 32M13 15.5c.6-1.6 2-2.6 3.8-2.7" />
+        </Doodle>
+      )}
+      <p className="mt-4 text-ink-soft">No one matches.</p>
       <Button variant="secondary" className="mt-4" onClick={onClear}>
         Clear filters
       </Button>

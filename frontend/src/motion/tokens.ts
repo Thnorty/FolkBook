@@ -39,6 +39,8 @@ export const DURATION = {
   stamp: 0.3,
   /** A count rolling to its new value. */
   roll: 0.25,
+  /** One letter of a search that found no one dropping off the line. Decorative. */
+  letterFall: 0.4,
   /** A dialog or sheet leaving (sliding down on phones). Also in src/index.css. */
   dialogOut: 0.22,
   /** With reduced motion, every effect becomes a plain fade this long. */

@@ -141,6 +141,7 @@ export function PeoplePage() {
             empty={
               filtered ? (
                 <NoMatch
+                  search={q}
                   onClear={() =>
                     setSearch({
                       q: undefined,

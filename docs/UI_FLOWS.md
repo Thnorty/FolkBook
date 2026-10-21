@@ -238,7 +238,7 @@ Inspired by the kind of details collected on [Design Spells](https://designspell
 - **Delete = tear out:** profile **⋯ → Tear out of the book…** → a confirm dialog lists what goes with them (connections, your memory aids, timeline and note, the spaces they leave) and warns who in a shared space will stop seeing them, by name ("Bora Kaya will no longer see Deniz there"; past four names, "and N others"), and offers **Download a copy first** (a .zip of just them, see Decisions) → the page tears away and a 10-second Undo toast appears
 - **Birthday occasion:** subtle confetti / doodle on a person's profile on their birthday
 - **Hand-drawn dividers:** lines between sections and under page titles are drawn in ink, each wavering a little differently (a stable pick per section)
-- **Doodle empty states:** hand-drawn illustrations for empty Today, empty graph, no results
+- **Doodle empty states:** small ink drawings for empty states: a blank page and pencil on an empty Today; you as a dot with pencil lines out to the people to come on an empty graph; when a People search finds no one, its letters drop off the line ("no one by that name"), and a magnifier when only filters found no one
 - **Easter egg:** tapping your own "Me" polaroid a few times flips it to a hidden back side
 - **Reduce motion:** every effect has a simple fade fallback
 
