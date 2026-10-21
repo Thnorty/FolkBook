@@ -72,7 +72,7 @@ These rules are the product. Breaking one is a critical bug.
   - Something the user can't see is **404**, never 403, so its existence isn't revealed. Visible but not allowed is **403**; a clash with existing data is **409** (`core.api.Conflict`); invalid input is **422**.
   - Errors always look like `{"detail": ...}`.
   - When the AI a request depends on fails (key refused, no answer in time, an answer that makes no sense, unreachable), the answer is **424** with the reason in the app's words: a 5xx would only show the app's generic message.
-  - Account-level routers take the login cookie only (`auth=django_auth`): `/auth`, `/users`, `/invites`, `/api-keys`, `/ai`, `/capture`, `/mail`… An API key gets 401 there. `tests/api_keys/test_sign_in.py` says which side every router is on.
+  - Account-level routers take the login cookie only (`auth=django_auth`): `/auth`, `/users`, `/invites`, `/api-keys`, `/calendars`, `/ai`, `/capture`, `/mail`… An API key gets 401 there. `tests/api_keys/test_sign_in.py` says which side every router is on.
   - Lists are paginated: `{"items": [...], "count": N}`, 50 per page. Their query count must not grow with the number of rows (there's a test for each list).
   - Order names with `core.db.by_name()` (ICU collation), never plain `order_by("name")`.
   - A schema field that must hide data (e.g. contact details) gets an explicit resolver that returns the filtered value.

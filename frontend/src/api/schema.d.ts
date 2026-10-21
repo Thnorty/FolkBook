@@ -1548,6 +1548,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/calendars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Calendar Feeds
+         * @description Your calendar links, newest first. The links themselves are never sent again.
+         */
+        get: operations["calendars_api_list_calendar_feeds"];
+        put?: never;
+        /**
+         * Create Calendar Feed
+         * @description A new link. The response has the link itself: the only time it's sent.
+         */
+        post: operations["calendars_api_create_calendar_feed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendars/{feed_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Calendar Feed */
+        delete: operations["calendars_api_revoke_calendar_feed"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ai": {
         parameters: {
             query?: never;
@@ -3414,6 +3455,68 @@ export interface components {
              * @enum {string}
              */
             expires_in?: "30d" | "90d" | "1y" | "never";
+        };
+        /** CalendarFeedOut */
+        CalendarFeedOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Last Five */
+            last_five: string;
+            /** Limited */
+            limited: boolean;
+            /** Spaces */
+            spaces: components["schemas"]["SpaceRef"][];
+            /** Last Fetched At */
+            last_fetched_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PagedCalendarFeedOut */
+        PagedCalendarFeedOut: {
+            /** Items */
+            items: components["schemas"]["CalendarFeedOut"][];
+            /** Count */
+            count: number;
+        };
+        /** CreatedCalendarFeedOut */
+        CreatedCalendarFeedOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Last Five */
+            last_five: string;
+            /** Limited */
+            limited: boolean;
+            /** Spaces */
+            spaces: components["schemas"]["SpaceRef"][];
+            /** Last Fetched At */
+            last_fetched_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Url */
+            url: string;
+        };
+        /** CalendarFeedIn */
+        CalendarFeedIn: {
+            /** Name */
+            name: string;
+            /** Space Ids */
+            space_ids?: string[] | null;
         };
         /** AiProviderOut */
         AiProviderOut: {
@@ -6336,6 +6439,73 @@ export interface operations {
             header?: never;
             path: {
                 key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    calendars_api_list_calendar_feeds: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PagedCalendarFeedOut"];
+                };
+            };
+        };
+    };
+    calendars_api_create_calendar_feed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarFeedIn"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedCalendarFeedOut"];
+                };
+            };
+        };
+    };
+    calendars_api_revoke_calendar_feed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feed_id: string;
             };
             cookie?: never;
         };
