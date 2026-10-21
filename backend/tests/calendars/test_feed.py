@@ -207,3 +207,16 @@ def test_polling_records_last_use_at_most_once_a_minute(world, clock):
     clock.now = NOW + datetime.timedelta(seconds=61)
     client.get(path)
     assert CalendarFeed.objects.get().last_fetched_at == clock.now
+
+
+def test_a_name_cant_add_events_or_properties_to_the_feed(world, clock):
+    Person.objects.filter(pk=world.oskar.pk).update(
+        name="Oskar\rEND:VEVENT\r\nBEGIN:VEVENT\nSUMMARY:Injected", birth_day=5, birth_month=11
+    )
+
+    text = Client().get(link(world.ela)).content.decode()
+
+    # The name stays inside its one SUMMARY line, escaped.
+    assert len(re.findall(r"^BEGIN:VEVENT\r$", text, re.M)) == 1
+    assert "\r" not in text.replace("\r\n", "")
+    assert not re.search(r"^SUMMARY:Injected", text, re.M)

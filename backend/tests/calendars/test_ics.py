@@ -11,6 +11,13 @@ def test_text_is_escaped():
     assert escape("A, B; C\\ D\nE") == "A\\, B\\; C\\\\ D\\nE"
 
 
+def test_carriage_returns_and_control_characters_cant_start_a_line():
+    # A bare CR is a line break to some calendar apps: it would let a name add properties.
+    assert escape("Ann\r\nLee") == "Ann\\nLee"
+    assert escape("Ann\rBEGIN:VEVENT") == "Ann\\nBEGIN:VEVENT"
+    assert escape("A\x00B\x07C\x7fD\tE") == "ABCD\tE"
+
+
 def test_long_lines_fold_at_75_octets_without_splitting_a_letter():
     line = "SUMMARY:" + "Ş" * 40
 

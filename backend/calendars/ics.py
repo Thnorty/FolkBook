@@ -16,10 +16,19 @@ class Event:
 
 
 def escape(text: str) -> str:
-    """Text as a property value: backslashes, commas, semicolons and line breaks escaped."""
+    """Text as a property value: backslashes, commas, semicolons and line breaks escaped.
+
+    A bare carriage return counts as a line break too, and other control characters are
+    dropped: either could end the line early and let a name add properties or events."""
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = "".join(char for char in text if char in "\n\t" or not _is_control(char))
     for char, escaped in (("\\", "\\\\"), (";", "\\;"), (",", "\\,"), ("\n", "\\n")):
         text = text.replace(char, escaped)
     return text
+
+
+def _is_control(char: str) -> bool:
+    return char < " " or char == "\x7f"
 
 
 def fold(line: str) -> str:
