@@ -1,6 +1,7 @@
 """The calendar feed: what a calendar app gets when it asks with a private link."""
 
 import datetime
+import logging
 import re
 
 import pytest
@@ -207,6 +208,31 @@ def test_polling_records_last_use_at_most_once_a_minute(world, clock):
     clock.now = NOW + datetime.timedelta(seconds=61)
     client.get(path)
     assert CalendarFeed.objects.get().last_fetched_at == clock.now
+
+
+def test_a_link_that_doesnt_open_never_puts_its_token_in_the_log(world, clock, caplog):
+    path = link(world.ela)
+    token = path.removeprefix("/api/calendars/feed/").removesuffix(".ics")
+    world.ela.is_active = False  # the link still exists, and works again once she's back
+    world.ela.save()
+    caplog.set_level(logging.INFO)
+
+    assert Client().get(path).status_code == 404
+
+    assert caplog.records, "the 404 is still logged"
+    assert token not in caplog.text and token[7:] not in caplog.text
+
+
+def test_a_feed_that_fails_never_puts_its_token_in_the_log(world, clock, caplog, monkeypatch):
+    path = link(world.ela)
+    token = path.removeprefix("/api/calendars/feed/").removesuffix(".ics")
+    monkeypatch.setattr("calendars.api.feed.feed_text", lambda *args: 1 / 0)
+    caplog.set_level(logging.INFO)
+
+    assert Client().get(path).status_code == 500
+
+    assert "ZeroDivisionError" in caplog.text  # the admin still gets the whole story
+    assert token not in caplog.text and token[7:] not in caplog.text
 
 
 def test_a_name_cant_add_events_or_properties_to_the_feed(world, clock):

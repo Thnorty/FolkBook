@@ -117,11 +117,40 @@ DATABASES = {
 # The server's log is its console output (docker compose logs): warnings and errors,
 # with their tracebacks, go there whether DEBUG is on or off. (Django's default sends
 # errors only by email to ADMINS when DEBUG is off, which FolkBook doesn't set up.)
+# The loggers that write a request's path (a 4xx/5xx, the dev server's access log, an
+# unexpected error) never write a calendar feed's token (core/logging.py).
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "filters": {"redact_feed_tokens": {"()": "core.logging.RedactFeedTokens"}},
+    # The dev server's access log, as Django sets it up: configuring the logger again
+    # (for the filter) would otherwise leave it without a handler.
+    "formatters": {
+        "django.server": {
+            "()": "django.utils.log.ServerFormatter",
+            "format": "[{server_time}] {message}",
+            "style": "{",
+        }
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+        "django.server": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "django.server",
+        },
+    },
     "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "django.request": {"filters": ["redact_feed_tokens"]},
+        "folkbook": {"filters": ["redact_feed_tokens"]},
+        "django.server": {
+            "handlers": ["django.server"],
+            "level": "INFO",
+            "propagate": False,
+            "filters": ["redact_feed_tokens"],
+        },
+    },
 }
 
 AUTH_PASSWORD_VALIDATORS = [
