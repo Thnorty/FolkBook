@@ -1,3 +1,4 @@
+import { limitedToLabel } from '@/features/spaces/labels'
 import type { ApiKey } from './queries'
 
 /** What the wording needs from a key: the list's rows and the new key's summary use it. */
@@ -7,12 +8,7 @@ export const PRIVATE_LABEL = '+ private notes'
 
 export const accessLabel = (key: Scoped) => (key.read_only ? 'read-only' : 'read-write')
 
-/** A limited key whose spaces are all gone sees nothing; it never widens to all spaces. */
-export function spacesLabel(key: Scoped): string {
-  if (!key.limited) return 'All spaces'
-  if (key.spaces.length === 0) return 'No spaces left'
-  return key.spaces.map((space) => space.name).join(', ')
-}
+export const spacesLabel = (key: Scoped) => limitedToLabel(key, 'All spaces')
 
 /** "Obsidian sync · read-write + private notes · Friends, Family" */
 export function scopeSummary(key: Scoped): string {

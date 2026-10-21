@@ -24,6 +24,7 @@ import { AboutSettings, AppearanceSettings } from './features/settings/OtherSett
 import { ReminderSettingsPage } from './features/settings/ReminderSettingsPage'
 import { AiSettings } from './features/ai/AiSettings'
 import { ApiKeysSettings } from './features/apiKeys/ApiKeysSettings'
+import { CalendarSettings } from './features/calendars/CalendarSettings'
 import { InvitesSettings, UsersSettings } from './features/settings/AdminSettings'
 import { ImportExportSettings } from './features/settings/ImportExportSettings'
 import { EmailSettings } from './features/mail/EmailSettings'
@@ -121,6 +122,11 @@ const settingsTree = settingsRoute.addChildren([
     getParentRoute: () => settingsRoute,
     path: 'reminders',
     component: ReminderSettingsPage,
+  }),
+  createRoute({
+    getParentRoute: () => settingsRoute,
+    path: 'calendar',
+    component: CalendarSettings,
   }),
   createRoute({
     getParentRoute: () => settingsRoute,

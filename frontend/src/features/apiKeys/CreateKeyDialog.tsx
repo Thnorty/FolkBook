@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { CheckboxField } from '@/components/ui/checkbox-field'
 import { Choice } from '@/components/ui/choice'
@@ -9,13 +9,11 @@ import { Label, labelClass } from '@/components/ui/label'
 import { SpacePicker } from '@/features/spaces/SpacePicker'
 import { formatDay } from '@/lib/dates'
 import { useCopy } from '@/lib/useCopy'
+import { useCreateShownOnce } from '@/lib/useCreateShownOnce'
 import { createApiKey, type ApiKeyIn, type CreatedApiKey } from './queries'
 import { scopeSummary } from './scope'
 
 const FORM_ID = 'api-key-form'
-/** How long the new key stays put before a submit can close it: the press (or the second tap
- * of a double tap) that made the key mustn't also close it, unseen. */
-const SETTLE_MS = 500
 const SCOPES = [
   { readOnly: true, label: 'Read-only', note: 'Look up people and links' },
   { readOnly: false, label: 'Read-write', note: 'Also add and edit people' },
@@ -33,30 +31,10 @@ const EXPIRES: { value: NonNullable<ApiKeyIn['expires_in']>; label: string }[] =
  */
 export function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const queryClient = useQueryClient()
-  const [created, setCreated] = useState<CreatedApiKey | null>(null)
-  // Ctrl/⌘+Enter submits with requestSubmit(), which a disabled button doesn't stop.
-  const sent = useRef(false)
-  const create = useMutation({
-    // The answer holds the key, so it goes into this dialog's state and the mutation keeps
-    // nothing: the mutation cache outlives the dialog.
-    mutationFn: async (body: ApiKeyIn) => setCreated(await createApiKey(queryClient, body)),
-    onError: () => (sent.current = false),
-  })
-  const send = (body: ApiKeyIn) => {
-    if (sent.current) return
-    sent.current = true
-    create.mutate(body)
-  }
-  // Closing while the key is being made would make a key nobody ever sees.
-  const close = () => {
-    if (!create.isPending) onClose()
-  }
-  const [settled, setSettled] = useState(false)
-  useEffect(() => {
-    if (!created) return
-    const timer = setTimeout(() => setSettled(true), SETTLE_MS)
-    return () => clearTimeout(timer)
-  }, [created])
+  const { created, settled, pending, error, send, close } = useCreateShownOnce(
+    (body: ApiKeyIn) => createApiKey(queryClient, body),
+    onClose,
+  )
 
   return (
     <FormDialog
@@ -64,7 +42,7 @@ export function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () 
       title={created ? 'Key created' : 'Create API key'}
       formId={FORM_ID}
       submitLabel={created ? 'Done' : 'Create'}
-      busy={create.isPending || (created !== null && !settled)}
+      busy={pending || (created !== null && !settled)}
       open={open}
       onClose={close}
       // A stray tap beside the shown-once key would lose it; ✕ and Esc still close.
@@ -73,12 +51,7 @@ export function CreateKeyDialog({ open, onClose }: { open: boolean; onClose: () 
       {created ? (
         <KeyCreated created={created} settled={settled} onDone={onClose} />
       ) : (
-        <KeyForm
-          busy={create.isPending}
-          error={create.error?.message}
-          onSubmit={send}
-          onCancel={close}
-        />
+        <KeyForm busy={pending} error={error} onSubmit={send} onCancel={close} />
       )}
     </FormDialog>
   )
