@@ -4,6 +4,7 @@ export const SETTINGS_SECTIONS = [
   { to: '/settings/api-keys', label: 'API keys', admin: false },
   { to: '/settings/ai', label: 'AI', admin: false },
   { to: '/settings/reminders', label: 'Reminders', admin: false },
+  { to: '/settings/calendar', label: 'Calendar', admin: false },
   { to: '/settings/import-export', label: 'Import / export', admin: false },
   { to: '/settings/appearance', label: 'Appearance', admin: false },
   { to: '/settings/about', label: 'About', admin: false },
