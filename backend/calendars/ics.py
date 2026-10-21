@@ -1,11 +1,14 @@
 """iCalendar text (RFC 5545) for calendar feeds: just the all-day events they need."""
 
 import datetime
+import unicodedata
 from dataclasses import dataclass
 
 # Calendar apps ask again after this long (some honor one hint, some the other).
 REFRESH = "PT6H"
 LINE_OCTETS = 75
+# Read as the end of a line by some parsers (Python's splitlines among them).
+LINE_BREAKS = {"\n", "\r", "\x0b", "\x0c", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029"}
 
 
 @dataclass(frozen=True)
@@ -18,17 +21,22 @@ class Event:
 def escape(text: str) -> str:
     """Text as a property value: backslashes, commas, semicolons and line breaks escaped.
 
-    A bare carriage return counts as a line break too, and other control characters are
-    dropped: either could end the line early and let a name add properties or events."""
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    text = "".join(char for char in text if char in "\n\t" or not _is_control(char))
+    Anything a parser might read as the end of a line (a bare carriage return, Unicode's
+    line and paragraph separators) counts as a line break too, and other control characters
+    are dropped: either could end the line early and let a name add properties or events."""
+    text = text.replace("\r\n", "\n")
+    text = "".join(_plain(char) for char in text)
     for char, escaped in (("\\", "\\\\"), (";", "\\;"), (",", "\\,"), ("\n", "\\n")):
         text = text.replace(char, escaped)
     return text
 
 
-def _is_control(char: str) -> bool:
-    return char < " " or char == "\x7f"
+def _plain(char: str) -> str:
+    if char in LINE_BREAKS:
+        return "\n"
+    if char == "\t":
+        return char
+    return "" if unicodedata.category(char) == "Cc" else char
 
 
 def fold(line: str) -> str:

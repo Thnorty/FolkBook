@@ -18,6 +18,12 @@ def test_carriage_returns_and_control_characters_cant_start_a_line():
     assert escape("A\x00B\x07C\x7fD\tE") == "ABCD\tE"
 
 
+def test_unicode_line_breaks_and_c1_controls_cant_start_a_line_either():
+    # Some parsers split on these too (Python's splitlines does).
+    assert escape("A\u0085B\u2028C\u2029D") == "A\\nB\\nC\\nD"
+    assert escape("A\x80B\x9fC") == "ABC"
+
+
 def test_long_lines_fold_at_75_octets_without_splitting_a_letter():
     line = "SUMMARY:" + "Ş" * 40
 
