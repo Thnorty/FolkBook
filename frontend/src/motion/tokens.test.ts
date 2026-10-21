@@ -14,9 +14,9 @@ function settleTime({ stiffness, damping }: typeof STICK_SPRING): number {
 
 describe('motion tokens', () => {
   it('keep UI transitions within 450ms and decorative effects within 700ms', () => {
-    const { ink, ...ui } = DURATION
+    const { ink, confetti, ...ui } = DURATION
     for (const duration of Object.values(ui)) expect(duration).toBeLessThanOrEqual(LIMITS.ui)
-    expect(ink).toBeLessThanOrEqual(LIMITS.decorative)
+    for (const duration of [ink, confetti]) expect(duration).toBeLessThanOrEqual(LIMITS.decorative)
   })
 
   it('let a sticky note come to rest within the decorative limit', () => {

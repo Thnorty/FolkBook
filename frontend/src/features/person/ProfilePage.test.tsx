@@ -1,6 +1,6 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { clearCookies, fakeServer, json } from '@/test/fakeServer'
 import { renderApp } from '@/test/renderApp'
 import { intervalLabel, relationLabel } from './labels'
@@ -139,6 +139,7 @@ function server(overrides: Overrides = {}) {
         count: 1,
       }),
     'GET /api/keep-in-touch/emma': () => json(keepInTouch),
+    'GET /api/today/birthdays': () => json([]),
     'PUT /api/keep-in-touch/emma': async (request) => {
       await record(request)
       keepInTouch = { ...keepInTouch, ...(writes.at(-1)!.body as object), next_nudge_on: null }
@@ -151,7 +152,11 @@ function server(overrides: Overrides = {}) {
 
 const section = (name: string) => screen.findByRole('region', { name })
 
-afterEach(clearCookies)
+afterEach(() => {
+  vi.useRealTimers()
+  clearCookies()
+  localStorage.clear()
+})
 
 describe('profile page', () => {
   it('shows who they are', async () => {
@@ -567,5 +572,66 @@ describe('labels', () => {
     expect(relationLabel('sibling', 'they')).toBe('sibling')
     expect(relationLabel('partner', 'she')).toBe('partner')
     expect(relationLabel('cousin', 'he')).toBe('cousin')
+  })
+})
+
+describe('birthday on the profile', () => {
+  const birthday = (on: string) => ({
+    'GET /api/today/birthdays': () => json([{ person: { ...EMMA, photo: null }, on, turns: 34 }]),
+  })
+  const paper = () => document.querySelectorAll('[data-confetti]')
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 2, 12, 10, 0)) // 12 March 2026, Emma's birthday
+  })
+
+  it('celebrates them on the day, and wishes them happy birthday in one tap', async () => {
+    const logged: unknown[] = []
+    server({
+      ...birthday('2026-03-12'),
+      'POST /api/interactions': async (request) => {
+        const body = await request.json()
+        logged.push(body)
+        return json({ id: 'i9', note: '', ...body }, 201)
+      },
+    })
+    renderApp('/people/emma')
+
+    expect(await screen.findByText('Turns 34 today')).toBeInTheDocument()
+    expect(paper()).toHaveLength(1)
+    await userEvent.click(screen.getByRole('button', { name: 'Wish' }))
+
+    expect(await screen.findByText('Logged: birthday wishes to Emma')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument()
+    expect(logged).toEqual([
+      expect.objectContaining({
+        person_id: 'emma',
+        kind: 'message',
+        label: 'Birthday wishes',
+        occurred_on: '2026-03-12',
+      }),
+    ])
+  })
+
+  it('stays quiet on other days', async () => {
+    server(birthday('2027-03-12'))
+    renderApp('/people/emma')
+
+    await screen.findByRole('heading', { level: 1, name: 'Emma Yılmaz' })
+    await screen.findByText('Kid: Arda, 6')
+    expect(screen.queryByText('Turns 34 today')).not.toBeInTheDocument()
+  })
+
+  it('lets the paper fall only the first time their page opens that day', async () => {
+    server(birthday('2026-03-12'))
+    renderApp('/people/emma')
+    await screen.findByText('Turns 34 today')
+    expect(paper()).toHaveLength(1)
+    cleanup()
+
+    renderApp('/people/emma')
+    await screen.findByText('Turns 34 today')
+    expect(paper()).toHaveLength(0)
   })
 })

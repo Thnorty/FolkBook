@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { AccessEndedCards } from '@/features/kept/AccessEndedCards'
 import { accessEndedQuery } from '@/features/kept/queries'
 import { Count } from '@/features/person/Count'
-import { intervalLabel } from '@/features/person/labels'
+import { birthdayDetail, intervalLabel } from '@/features/person/labels'
 import { ProfileSection as Section } from '@/features/person/ProfileSection'
 import {
   deleteInteraction,
@@ -23,8 +23,9 @@ import { usePersonForm } from '@/features/person/usePersonForm'
 import { spacesQuery, type Space } from '@/features/spaces/queries'
 import { peopleCount } from '@/features/spaces/labels'
 import { formatDay, formatRelativeDay, isoDay, isoTime } from '@/lib/dates'
-import { notify } from '@/lib/notify'
+import { attempt, notify } from '@/lib/notify'
 import { Greeting } from './Greeting'
+import { useWish } from './useWish'
 import {
   birthdaysQuery,
   blanksQuery,
@@ -45,11 +46,6 @@ const longDate = new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
 })
 const weekday = new Intl.DateTimeFormat(undefined, { weekday: 'long', timeZone: 'UTC' })
-
-/** Run a write; if it fails, say so in a toast. */
-function attempt(failed: string, write: () => Promise<unknown>) {
-  write().catch((error: Error) => notify({ title: failed, description: error.message }))
-}
 
 /** The home screen: what's worth your attention today (screens 1e, 1f, 4n, 6g). */
 export function TodayPage() {
@@ -200,36 +196,17 @@ function Row({
 }
 
 function Birthdays({ birthdays, today }: { birthdays: Birthday[]; today: string }) {
-  const queryClient = useQueryClient()
-
-  const wish = (birthday: Birthday) =>
-    attempt("Couldn't log that", async () => {
-      const entry = await logInteraction(queryClient, {
-        person_id: birthday.person.id,
-        kind: 'message',
-        label: 'Birthday wishes',
-        occurred_on: today,
-        occurred_at: isoTime(),
-      })
-      notify({
-        title: `Logged: birthday wishes to ${firstNameOf(birthday.person.name)}`,
-        action: {
-          label: 'Undo',
-          onClick: () =>
-            attempt("Couldn't undo that", () => deleteInteraction(queryClient, entry.id)),
-        },
-      })
-    })
+  const wish = useWish()
 
   return (
     <Section title="Birthdays">
       <ul className="flex flex-col">
         {birthdays.map((birthday) => {
           const isToday = birthday.on === today
-          const when = isToday ? 'today' : weekday.format(new Date(`${birthday.on}T00:00:00Z`))
-          const detail = birthday.turns
-            ? `Turns ${birthday.turns} ${isToday ? 'today' : `on ${when}`}`
-            : `Birthday ${isToday ? 'today' : `on ${when}`}`
+          const when = isToday
+            ? 'today'
+            : `on ${weekday.format(new Date(`${birthday.on}T00:00:00Z`))}`
+          const detail = birthdayDetail(birthday.turns, when)
           return (
             <Row
               key={birthday.person.id}
@@ -239,7 +216,7 @@ function Birthdays({ birthdays, today }: { birthdays: Birthday[]; today: string 
               detail={detail}
             >
               {isToday ? (
-                <Button variant="secondary" onClick={() => wish(birthday)}>
+                <Button variant="secondary" onClick={() => wish(birthday.person, today)}>
                   Wish
                 </Button>
               ) : (

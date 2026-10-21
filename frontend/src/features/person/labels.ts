@@ -136,3 +136,8 @@ export function intervalLabel(days: number): string {
   if (days % 7 === 0) return days === 7 ? 'Every week' : `Every ${days / 7} weeks`
   return days === 1 ? 'Every day' : `Every ${days} days`
 }
+
+/** "Turns 34 today", "Birthday on Thursday": `when` is "today" or "on Thursday". */
+export function birthdayDetail(turns: number | null | undefined, when: string): string {
+  return turns ? `Turns ${turns} ${when}` : `Birthday ${when}`
+}
