@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "exports",
     "imports",
     "api_keys",
+    "calendars",
     "ai",
     "capture",
     "invites",

@@ -31,6 +31,7 @@ COOKIE_ONLY = (
     "/api/ai",  # AI keys belong to the account, never to a script's key
     "/api/capture",  # it uses the account's AI
     "/api/mail",  # the server's email settings, for admins
+    "/api/calendars",  # links that show the whole book, made from the account
 )
 # The book: API keys work here. A new router goes in one list or the other, on purpose.
 TAKES_KEYS = (

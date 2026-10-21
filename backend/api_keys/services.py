@@ -8,10 +8,11 @@ from django.db import transaction
 from django.db.models import F, Q
 from django.utils import timezone
 
-from access.policy import Access, visible_spaces
+from access.policy import Access
 from api_keys.models import ApiKey
 from api_keys.schemas import ApiKeyIn
 from core.tokens import hash_token, new_token
+from spaces.services import picked_spaces
 
 PREFIX = "fb_live_"
 RATE_LIMIT = 120
@@ -30,7 +31,7 @@ def create_api_key(access: Access, data: ApiKeyIn) -> tuple[ApiKey, str]:
     name = data.name.strip()
     if not name:
         raise ValidationError({"name": "Give the key a name."})
-    spaces = _spaces(access, data.space_ids)
+    spaces = picked_spaces(access, data.space_ids, all_label="All spaces")
     key = new_token(PREFIX)
     expires_in = EXPIRY[data.expires_in]
     api_key = ApiKey.objects.create(
@@ -93,14 +94,3 @@ def access_for_key(api_key: ApiKey) -> Access:
 def revoke_api_key(api_key: ApiKey) -> None:
     """Anything using it stops working right away."""
     api_key.delete()
-
-
-def _spaces(access: Access, ids: list | None) -> list | None:
-    if ids is None:
-        return None
-    if not ids:
-        raise ValidationError({"space_ids": "Pick at least one space, or All spaces."})
-    spaces = list(visible_spaces(access).filter(pk__in=ids))
-    if len(spaces) != len(set(ids)):
-        raise ValidationError({"space_ids": "That space isn't one you can pick."})
-    return spaces
