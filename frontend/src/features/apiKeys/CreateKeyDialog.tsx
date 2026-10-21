@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { CheckboxField } from '@/components/ui/checkbox-field'
@@ -6,7 +6,7 @@ import { Choice } from '@/components/ui/choice'
 import { FormDialog, FormDialogFooter } from '@/components/ui/form-dialog'
 import { Input } from '@/components/ui/input'
 import { Label, labelClass } from '@/components/ui/label'
-import { spacesQuery } from '@/features/spaces/queries'
+import { SpacePicker } from '@/features/spaces/SpacePicker'
 import { formatDay } from '@/lib/dates'
 import { useCopy } from '@/lib/useCopy'
 import { createApiKey, type ApiKeyIn, type CreatedApiKey } from './queries'
@@ -92,7 +92,6 @@ type KeyFormProps = {
 }
 
 function KeyForm({ busy, error, onSubmit, onCancel }: KeyFormProps) {
-  const spaces = useQuery(spacesQuery).data?.items ?? []
   const [name, setName] = useState('')
   const [readOnly, setReadOnly] = useState(true)
   // No space ticked means all spaces, so the form never asks for a key with none.
@@ -100,10 +99,6 @@ function KeyForm({ busy, error, onSubmit, onCancel }: KeyFormProps) {
   const [includePrivate, setIncludePrivate] = useState(false)
   const [expiresIn, setExpiresIn] = useState<NonNullable<ApiKeyIn['expires_in']>>('90d')
 
-  const toggle = (spaceId: string) =>
-    setSpaceIds((ids) =>
-      ids.includes(spaceId) ? ids.filter((id) => id !== spaceId) : [...ids, spaceId],
-    )
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     onSubmit({
@@ -149,30 +144,12 @@ function KeyForm({ busy, error, onSubmit, onCancel }: KeyFormProps) {
           ))}
         </div>
       </fieldset>
-      <fieldset>
-        <legend className={labelClass}>Limited to spaces</legend>
-        <div className="flex flex-wrap gap-1.5">
-          {spaces.map((space) => (
-            <Choice
-              key={space.id}
-              name="spaces"
-              type="checkbox"
-              checked={spaceIds.includes(space.id)}
-              onChange={() => toggle(space.id)}
-            >
-              {space.name}
-            </Choice>
-          ))}
-          <Choice
-            name="spaces"
-            type="checkbox"
-            checked={spaceIds.length === 0}
-            onChange={() => setSpaceIds([])}
-          >
-            All spaces
-          </Choice>
-        </div>
-      </fieldset>
+      <SpacePicker
+        legend="Limited to spaces"
+        allLabel="All spaces"
+        value={spaceIds}
+        onChange={setSpaceIds}
+      />
       <CheckboxField
         checked={includePrivate}
         onChange={setIncludePrivate}
